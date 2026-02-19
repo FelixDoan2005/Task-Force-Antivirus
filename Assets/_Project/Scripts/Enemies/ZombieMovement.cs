@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ZombieMover : MonoBehaviour
+public class ZombieMovement : MonoBehaviour
 {
     public Transform target;
     public float speed = 3f;
