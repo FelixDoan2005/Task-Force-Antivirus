@@ -29,9 +29,6 @@ public class ZombieSpawner : MonoBehaviour
         GameObject z = Instantiate(zombiePrefab, transform.position, Quaternion.identity);
         alive++;
 
-        ZombieMovement mover = z.GetComponent<ZombieMovement>();
-        if (mover != null) mover.target = wallTarget;
-
         // when zombie is destroyed later, decrement alive
         ZombieLifeTracker t = z.AddComponent<ZombieLifeTracker>();
         t.spawner = this;
