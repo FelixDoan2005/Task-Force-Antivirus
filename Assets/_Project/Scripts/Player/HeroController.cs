@@ -6,6 +6,7 @@ public class HeroController : MonoBehaviour
 {
     [Header("References")]
     public Transform cameraPivot;
+    public Transform followCamera;
 
     [Header("Movement")]
     public float moveSpeed = 6f;
@@ -26,13 +27,22 @@ public class HeroController : MonoBehaviour
 
     [Header("Look")]
     public float mouseSensitivity = 0.02f; // start around 0.015 - 0.03
-    public bool lockVerticalLook = true;
+    public bool lockVerticalLook = false;
+    // assign Main Camera transform
+    public float minCamDistance = 1.2f;     // closer when looking down
+    public float maxCamDistance = 0.8f;     // further when looking up
+    public float camHeightOffset = 0.0f;    // keep 0 for now
 
     CharacterController controller;
     Vector3 velocity;
 
     float lastGroundedTime = -999f;
     float lastJumpPressedTime = -999f;
+    float pitch;
+    float basePivotY;
+    Vector3 baseCameraLocalPos;
+    Transform camTransform;
+
 
     void Awake()
     {
@@ -40,26 +50,62 @@ public class HeroController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        pitch = 10f;
+        basePivotY = cameraPivot.localPosition.y;
+        camTransform = Camera.main.transform;
+        baseCameraLocalPos = camTransform.localPosition;
+        camTransform = followCamera;
+        if (camTransform != null)
+            baseCameraLocalPos = camTransform.localPosition;
     }
 
     void Update()
     {
-        LookHorizontalOnly();
+        Look();
         MoveAndJump();
     }
 
-    void LookHorizontalOnly()
+    void Look()
     {
         if (Mouse.current == null) return;
 
         Vector2 mouseDelta = 60f * mouseSensitivity * Time.deltaTime * Mouse.current.delta.ReadValue();
 
-        // Horizontal only
+        // yaw (left/right) rotates the hero
         transform.Rotate(Vector3.up * mouseDelta.x);
 
-        // keep camera level
-        if (cameraPivot != null && lockVerticalLook)
-            cameraPivot.localRotation = Quaternion.identity;
+        // pitch (up/down) rotates the camera pivot
+        pitch -= mouseDelta.y;
+
+        // clamp so you can't flip the camera
+        pitch = Mathf.Clamp(pitch, -45f, 45f);
+
+        if (cameraPivot != null)
+        {
+            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            // small vertical slide based on pitch (tweak values)
+            float t = Mathf.InverseLerp(-20f, 45f, pitch); // 0..1
+            float yOffset = Mathf.Lerp(0f, 0.4f, t);  // down when looking down, up when looking up
+
+            Vector3 p = cameraPivot.localPosition;
+            p.y = basePivotY + yOffset;
+            cameraPivot.localPosition = p;
+        }
+
+        if (camTransform != null)
+        {
+            float camT = Mathf.InverseLerp(45f, -45f, pitch); // 0..1 across full pitch range
+            float dist = Mathf.Lerp(minCamDistance, maxCamDistance, camT);
+            float neutralBoost = 0.8f * (1f - Mathf.Abs(camT - 0.5f) * 2f); // 0 at extremes, max at center
+            dist += neutralBoost;
+
+            Vector3 c = baseCameraLocalPos;
+            c.z = -dist; // behind the pivot
+            camTransform.localPosition = c;
+        }
+
+        Debug.Log("Moving camTransform: " + (camTransform ? camTransform.name : "null") + " localPos=" + (camTransform ? camTransform.localPosition.ToString() : ""));
     }
 
     void MoveAndJump()

@@ -156,7 +156,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: -20, y: -0.000017166138}
-  m_SizeDelta: {x: 300, y: 25}
+  m_SizeDelta: {x: 500, y: 25}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &57031411
 MonoBehaviour:
@@ -574,7 +574,7 @@ Transform:
   m_GameObject: {fileID: 451735788}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 2.6, z: -3}
+  m_LocalPosition: {x: 0.4, y: 2.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -745,6 +745,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeroController
   cameraPivot: {fileID: 451735789}
+  followCamera: {fileID: 330585546}
   moveSpeed: 6
   sprintSpeed: 10
   gravity: -20
@@ -754,6 +755,9 @@ MonoBehaviour:
   fallMultiplier: 1.6
   mouseSensitivity: 0.1
   lockVerticalLook: 1
+  minCamDistance: 1.6
+  maxCamDistance: 3.2
+  camHeightOffset: 0
 --- !u!143 &689043506
 CharacterController:
   m_ObjectHideFlags: 0
@@ -904,7 +908,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -120.00007, y: -0.000017166138}
-  m_SizeDelta: {x: 200, y: 25}
+  m_SizeDelta: {x: 300, y: 25}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &691659586
 MonoBehaviour:
@@ -1500,7 +1504,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WallHealth
   maxHealth: 100
-  currentHealth: 100
+  currentHealth: 100000
 --- !u!1 &1637355284
 GameObject:
   m_ObjectHideFlags: 0
