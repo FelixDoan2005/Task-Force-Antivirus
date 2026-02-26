@@ -56,11 +56,19 @@ public class Archer : MonoBehaviour
     {
         if (Mouse.current == null) return;
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        // if (Mouse.current.leftButton.wasPressedThisFrame)
+        // {
+        //     isDrawing = true;
+        //     drawStartTime = Time.time;
+        //     CombatDebugHUD.Instance.SetLine("Bow: Drawing");
+        // }
+
+        if (Mouse.current.leftButton.wasReleasedThisFrame && isDrawing && Time.time >= nextFireTime)
         {
-            isDrawing = true;
-            drawStartTime = Time.time;
-            
+            float drawTime = Time.time - drawStartTime;
+            Shoot(drawTime);
+            nextFireTime = Time.time + fireCooldown;
+            isDrawing = false;
         }
 
         if (Mouse.current.leftButton.wasReleasedThisFrame && isDrawing && Time.time >= nextFireTime)
@@ -69,6 +77,7 @@ public class Archer : MonoBehaviour
             Shoot(drawTime);
             nextFireTime = Time.time + fireCooldown;
             isDrawing = false;
+            CombatDebugHUD.Instance.SetLine("Weapon: Bow");
         }
 
         if (crosshairRect != null)
@@ -123,5 +132,37 @@ public class Archer : MonoBehaviour
 
         Ray shotRay = new(firePoint.position, shootDir);
         Debug.DrawRay(shotRay.origin, shotRay.direction * arrowRange, Color.red, 0.2f);
+    }
+
+    void OnDisable()
+    {
+        isDrawing = false;
+
+        if (crosshairRect != null)
+        {
+            crosshairRect.localScale = Vector3.one * crosshairStartScale;
+            crosshairRect.sizeDelta = crosshairStartSize;
+        }
+    }
+
+    public void StartDraw()
+    {
+        isDrawing = true;
+        drawStartTime = Time.time;
+    }
+
+    public void ReleaseDraw()
+    {
+        if (!isDrawing || Time.time < nextFireTime) return;
+
+        float drawTime = Time.time - drawStartTime;
+        Shoot(drawTime);
+        nextFireTime = Time.time + fireCooldown;
+        isDrawing = false;
+    }
+
+    public bool IsDrawing()
+    {
+        return isDrawing;
     }
 }

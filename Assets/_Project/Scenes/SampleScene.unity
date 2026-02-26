@@ -210,6 +210,66 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroHealthBarUI
   heroHealth: {fileID: 689043510}
   fillImage: {fileID: 1637355286}
+--- !u!1 &301843011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 301843012}
+  - component: {fileID: 301843013}
+  m_Layer: 6
+  m_Name: Bow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &301843012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301843011}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1860431953}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &301843013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 301843011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ddf2490c1e916d4a9abd94a2df32d9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Archer
+  arrowPrefab: {fileID: 3754937375215014316, guid: b001c7ae635b7b14d8c95d36787042f3, type: 3}
+  playerCamera: {fileID: 330585545}
+  firePoint: {fileID: 1726489956}
+  arrowRange: 100
+  arrowDamage: 3
+  fireCooldown: 0.5
+  minArrowSpeed: 10
+  maxArrowSpeed: 100
+  maxDrawTime: 1.25
+  aimAssistRange: 200
+  crosshairRect: {fileID: 510844387}
+  crosshairStartScale: 1.6
+  crosshairDrawScale: 0.4
+  crosshairLerpSpeed: 12
+  crosshairStartSize: {x: 16, y: 16}
+  crosshairDrawSize: {x: 12, y: 12}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -780,9 +840,8 @@ GameObject:
   - component: {fileID: 689043505}
   - component: {fileID: 689043504}
   - component: {fileID: 689043510}
-  - component: {fileID: 689043511}
   m_Layer: 3
-  m_Name: Hero_Archer
+  m_Name: Hero
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -925,9 +984,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 451735789}
   - {fileID: 495335703}
+  - {fileID: 451735789}
   - {fileID: 1726489956}
+  - {fileID: 1860431953}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &689043510
@@ -944,34 +1004,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroHealth
   maxHealth: 100
   currentHealth: 100
---- !u!114 &689043511
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 689043503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ddf2490c1e916d4a9abd94a2df32d9e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Archer
-  arrowPrefab: {fileID: 3754937375215014316, guid: b001c7ae635b7b14d8c95d36787042f3, type: 3}
-  playerCamera: {fileID: 0}
-  firePoint: {fileID: 1726489956}
-  arrowRange: 100
-  arrowDamage: 3
-  fireCooldown: 0.5
-  minArrowSpeed: 10
-  maxArrowSpeed: 100
-  maxDrawTime: 1.25
-  aimAssistRange: 200
-  crosshairRect: {fileID: 510844387}
-  crosshairStartScale: 1.6
-  crosshairDrawScale: 0.4
-  crosshairLerpSpeed: 12
-  crosshairStartSize: {x: 16, y: 16}
-  crosshairDrawSize: {x: 8, y: 8}
 --- !u!1 &691659584
 GameObject:
   m_ObjectHideFlags: 0
@@ -1705,6 +1737,54 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1465565103
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1465565104}
+  - component: {fileID: 1465565105}
+  m_Layer: 3
+  m_Name: Sword
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1465565104
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465565103}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1860431953}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1465565105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1465565103}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34022084a74772142bdd3740081ac4c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SwordWeapon
+  damage: 5
+  range: 2
+  cooldown: 0.6
+  playerCamera: {fileID: 0}
 --- !u!1 &1555323496
 GameObject:
   m_ObjectHideFlags: 0
@@ -1938,6 +2018,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 689043509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1860431952
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1860431953}
+  m_Layer: 3
+  m_Name: Weapons
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1860431953
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1860431952}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 301843012}
+  - {fileID: 1465565104}
+  m_Father: {fileID: 689043509}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2050896633
 GameObject:
   m_ObjectHideFlags: 0
@@ -1970,7 +2083,7 @@ MonoBehaviour:
   zombiePrefab: {fileID: 3802212209892273281, guid: 685cebae43d486049b46b6f8e7dd5364, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 1.5
-  maxAlive: 0
+  maxAlive: 1
 --- !u!4 &2050896635
 Transform:
   m_ObjectHideFlags: 0

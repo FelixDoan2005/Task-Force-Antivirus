@@ -16,12 +16,8 @@ public class HeroHealth : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
-        Debug.Log("HERO TAKE DAMAGE CALLED amount=" + amount);
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0.0f, maxHealth);
-        
-
-        Debug.Log("Hero HP: " + currentHealth);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth); // notify UI
 

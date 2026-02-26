@@ -11,8 +11,6 @@ public class ZombieAttack : MonoBehaviour
     void Update()
     {
         IDamageable target = FindNearestTarget();
-        Debug.Log("Chosen target = " + (target == null ? "NONE" : target.GetType().Name));
-
         if (target == null) return;
 
         timer += Time.deltaTime;
@@ -21,7 +19,6 @@ public class ZombieAttack : MonoBehaviour
         if (timer >= interval)
         {
             timer = 0f;
-            Debug.Log("Zombie ATTACKING now");
             target.TakeDamage(damagePerHit);
         }
     }
@@ -29,12 +26,6 @@ public class ZombieAttack : MonoBehaviour
     IDamageable FindNearestTarget()
     {
         Collider[] nearbyColliders = Physics.OverlapSphere(transform.position, attackRange);
-
-        Debug.Log("Overlap hits: " + nearbyColliders.Length);
-        foreach (var collider in nearbyColliders)
-        {
-            Debug.Log(" - hit: " + collider.name + " root: " + collider.transform.root.name);
-        }
 
         IDamageable closest = null;
         float closestDist = Mathf.Infinity;
@@ -48,7 +39,6 @@ public class ZombieAttack : MonoBehaviour
             IDamageable damageable = collider.GetComponentInParent<IDamageable>();
             if (damageable == null) continue;
 
-            Debug.Log("Zombie sees damageable: " + collider.transform.root.name + " via collider: " + collider.name);
             Vector3 closestPoint = collider.ClosestPoint(transform.position);
             float dist = (closestPoint - transform.position).sqrMagnitude;
 

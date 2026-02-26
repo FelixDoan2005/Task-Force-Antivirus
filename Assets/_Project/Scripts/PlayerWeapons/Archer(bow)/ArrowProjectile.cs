@@ -35,8 +35,8 @@ public class ArrowProjectile : MonoBehaviour
         if (zh != null)
             zh.TakeDamage(damage);
 
-        rb.isKinematic = true;
         rb.linearVelocity = Vector3.zero;
+        rb.isKinematic = true;
         if (zh != null)
             transform.SetParent(collision.transform);
 

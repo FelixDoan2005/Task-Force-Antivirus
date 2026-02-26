@@ -104,8 +104,6 @@ public class HeroController : MonoBehaviour
             c.z = -dist; // behind the pivot
             camTransform.localPosition = c;
         }
-
-        Debug.Log("Moving camTransform: " + (camTransform ? camTransform.name : "null") + " localPos=" + (camTransform ? camTransform.localPosition.ToString() : ""));
     }
 
     void MoveAndJump()
