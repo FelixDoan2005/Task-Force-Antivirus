@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class ZombieHealth : MonoBehaviour
+public abstract class ZombieHealthBase : MonoBehaviour
 {
     public float maxHealth = 10f;
-    float currentHealth;
+    protected float currentHealth;
 
-    void Awake()
+    protected virtual void Awake()
     {
         currentHealth = maxHealth;
     }
@@ -15,12 +15,10 @@ public class ZombieHealth : MonoBehaviour
         currentHealth -= amount;
 
         if (currentHealth <= 0f)
-        {
             Die();
-        }
     }
 
-    void Die()
+    protected virtual void Die()
     {
         Destroy(gameObject);
     }

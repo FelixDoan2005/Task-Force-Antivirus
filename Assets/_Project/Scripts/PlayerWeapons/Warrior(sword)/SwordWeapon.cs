@@ -28,14 +28,24 @@ public class SwordWeapon : MonoBehaviour
     {
         if (attackPoint == null) return;
 
-        Collider[] hits = Physics.OverlapSphere(attackPoint.position, range);
+        // visualise the swing sphere
+        Vector3 p = attackPoint.position;
+        Debug.DrawRay(p, Vector3.forward  * range, Color.red,    0.2f);
+        Debug.DrawRay(p, Vector3.back     * range, Color.red,    0.2f);
+        Debug.DrawRay(p, Vector3.left     * range, Color.red,    0.2f);
+        Debug.DrawRay(p, Vector3.right    * range, Color.red,    0.2f);
+        Debug.DrawRay(p, Vector3.up       * range, Color.yellow, 0.2f);
+        Debug.DrawRay(p, Vector3.down     * range, Color.yellow, 0.2f);
+
+        Collider[] hits = Physics.OverlapSphere(p, range);
 
         foreach (Collider c in hits)
         {
-            ZombieHealth zh = c.GetComponentInParent<ZombieHealth>();
+            ZombieHealthBase zh = c.GetComponentInParent<ZombieHealthBase>();
             if (zh != null)
             {
                 zh.TakeDamage(damage);
+                Debug.DrawLine(p, c.transform.position, Color.green, 0.2f);
                 Debug.Log("Sword hit zombie");
             }
         }

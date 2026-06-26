@@ -131,7 +131,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZombieMover
   speed: 3
   stopDistance: 1.2
-  detectionRange: 20
+  detectionRange: 50
 --- !u!114 &1466477616271819477
 MonoBehaviour:
   m_ObjectHideFlags: 0
