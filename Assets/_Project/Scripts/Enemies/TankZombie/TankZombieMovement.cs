@@ -39,7 +39,7 @@ public class TankZombieMovement : MonoBehaviour
             if (hit.transform.root == transform.root) continue;
 
             IDamageable damageable = hit.GetComponentInParent<IDamageable>();
-            if (damageable == null) continue;
+            if (damageable == null || !damageable.IsTargetable) continue;
 
             Vector3 closestPoint = hit.ClosestPoint(transform.position);
             float dist = (closestPoint - transform.position).sqrMagnitude;

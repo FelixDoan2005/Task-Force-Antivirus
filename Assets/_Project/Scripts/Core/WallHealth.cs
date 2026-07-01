@@ -6,7 +6,9 @@ public class WallHealth : MonoBehaviour, IDamageable
     public float maxHealth = 100f;
     public float currentHealth;
 
-    public event Action<float, float> OnHealthChanged; // (current, max)
+    public bool IsTargetable => true;
+
+    public event Action<float, float> OnHealthChanged;
 
     void Awake()
     {
@@ -16,7 +18,6 @@ public class WallHealth : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
-
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
 
