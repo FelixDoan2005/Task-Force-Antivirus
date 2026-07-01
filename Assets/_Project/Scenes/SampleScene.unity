@@ -210,6 +210,54 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HeroHealthBarUI
   heroHealth: {fileID: 689043510}
   fillImage: {fileID: 1637355286}
+--- !u!1 &127885314
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 127885315}
+  - component: {fileID: 127885316}
+  m_Layer: 0
+  m_Name: SpeedZombieSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &127885315
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127885314}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -20, y: 1.2, z: -15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &127885316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127885314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
+  zombiePrefab: {fileID: 3802212209892273281, guid: 18bb561977217ab4096d27beb54f2ef3, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 4
+  maxAlive: 10
 --- !u!1 &301843011
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,6 +1041,7 @@ GameObject:
   - component: {fileID: 689043510}
   - component: {fileID: 689043511}
   - component: {fileID: 689043512}
+  - component: {fileID: 689043513}
   m_Layer: 3
   m_Name: Hero
   m_TagString: Untagged
@@ -1141,6 +1190,7 @@ Transform:
   - {fileID: 451735789}
   - {fileID: 1726489956}
   - {fileID: 1860431953}
+  - {fileID: 1471427744}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &689043510
@@ -1185,6 +1235,20 @@ MonoBehaviour:
   swordObject: {fileID: 1465565103}
   swordWeapon: {fileID: 1465565105}
   archer: {fileID: 301843013}
+--- !u!114 &689043513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689043503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7414c06eaf31d064ea10efc92ce49aca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerRespawn
+  spawnPoint: {fileID: 1471427744}
+  respawnDelay: 5
 --- !u!1 &691659584
 GameObject:
   m_ObjectHideFlags: 0
@@ -1845,6 +1909,7 @@ Transform:
   m_Children:
   - {fileID: 2050896635}
   - {fileID: 1486071845}
+  - {fileID: 127885315}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1411188013
@@ -2001,6 +2066,37 @@ MonoBehaviour:
   cooldown: 0.6
   playerCamera: {fileID: 0}
   attackPoint: {fileID: 1726489956}
+--- !u!1 &1471427743
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1471427744}
+  m_Layer: 3
+  m_Name: HeroSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1471427744
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1471427743}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 689043509}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1486071844
 GameObject:
   m_ObjectHideFlags: 0
@@ -2047,8 +2143,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
   zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
   wallTarget: {fileID: 1555323497}
-  spawnInterval: 1.5
-  maxAlive: 20
+  spawnInterval: 6
+  maxAlive: 5
 --- !u!1 &1555323496
 GameObject:
   m_ObjectHideFlags: 0
@@ -2339,15 +2435,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2050896633}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
   zombiePrefab: {fileID: 3802212209892273281, guid: 685cebae43d486049b46b6f8e7dd5364, type: 3}
   wallTarget: {fileID: 1555323497}
-  spawnInterval: 1.5
-  maxAlive: 1
+  spawnInterval: 3
+  maxAlive: 20
 --- !u!4 &2050896635
 Transform:
   m_ObjectHideFlags: 0

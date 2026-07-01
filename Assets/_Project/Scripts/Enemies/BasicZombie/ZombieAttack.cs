@@ -37,7 +37,7 @@ public class ZombieAttack : MonoBehaviour
 
             // IMPORTANT: parent search
             IDamageable damageable = collider.GetComponentInParent<IDamageable>();
-            if (damageable == null) continue;
+            if (damageable == null || !damageable.IsTargetable) continue;
 
             Vector3 closestPoint = collider.ClosestPoint(transform.position);
             float dist = (closestPoint - transform.position).sqrMagnitude;
