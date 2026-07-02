@@ -52,6 +52,7 @@ public class ZombieAttack : MonoBehaviour
         return closest;
     }
 
+    //for debugging and seeing range
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, attackRange);
