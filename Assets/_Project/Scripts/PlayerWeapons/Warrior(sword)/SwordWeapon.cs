@@ -12,6 +12,7 @@ public class SwordWeapon : MonoBehaviour
     public float arcAngle = 5f;
 
     private bool swingLeftToRight = true;
+    public float swingDuration = 0.3f;
     public float delayBetweenHits = 5f;
     public void Attack()
     {
@@ -52,23 +53,6 @@ public class SwordWeapon : MonoBehaviour
                                              // returns -1 if z2<z1 so stays meaning hits larger angle i.e. right -> left
                                              // returns +1 if z2>z2 so swaps meaning hits larger angle i.e. right -> left
 
-            // targets.Sort((z1, z2) =>
-            // {
-            //     if (swingLeftToRight)
-            //     {
-            //         if (z1.angle < z2.angle) return -1;
-            //         if (z1.angle > z2.angle) return 1;
-            //         return 0;
-            //     }
-            //     else
-            //     {
-            //         if (z2.angle < z1.angle) return -1;
-            //         if (z2.angle > z1.angle) return 1;
-            //         return 0;
-            //     }
-            // });
-            //     }
-
             StartCoroutine(SwingDamage(targets, p));
             swingLeftToRight = !swingLeftToRight;
     }
@@ -81,11 +65,19 @@ public class SwordWeapon : MonoBehaviour
 
         Debug.DrawRay(p, Quaternion.Euler(0,  arcAngle, 0) * viewForward * range, Color.cyan, 0.5f);
         Debug.DrawRay(p, Quaternion.Euler(0, -arcAngle, 0) * viewForward * range, Color.cyan, 0.5f);
+        
+        float startTime = Time.time;
+
         foreach (SwingSword t in targets)
         {
+            float normalisedAngle = (t.angle + arcAngle) / (2f * arcAngle);
+            if (!swingLeftToRight) normalisedAngle = 1f - normalisedAngle;
+
+            float hitTime = startTime + (swingDuration * normalisedAngle);
+            yield return new WaitUntil(() => Time.time >= hitTime);
             t.zombie.TakeDamage(damage);
             Debug.DrawLine(p, t.zombie.transform.position, Color.green, 0.2f);
-            yield return new WaitForSeconds(delayBetweenHits);
+
             
         }
     }
