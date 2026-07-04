@@ -257,7 +257,7 @@ MonoBehaviour:
   zombiePrefab: {fileID: 3802212209892273281, guid: 18bb561977217ab4096d27beb54f2ef3, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 4
-  maxAlive: 10
+  maxAlive: 0
 --- !u!1 &301843011
 GameObject:
   m_ObjectHideFlags: 0
@@ -1500,6 +1500,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 835404391}
   m_CullTransparentMesh: 1
+--- !u!1 &910520277
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910520278}
+  - component: {fileID: 910520279}
+  m_Layer: 0
+  m_Name: TankZombieSpawn (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &910520278
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910520277}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 22, y: 2, z: -15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &910520279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910520277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
+  zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 6
+  maxAlive: 1
 --- !u!1 &946796117
 GameObject:
   m_ObjectHideFlags: 0
@@ -1842,6 +1890,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1314324084}
   m_CullTransparentMesh: 1
+--- !u!1 &1331622919
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1331622920}
+  - component: {fileID: 1331622921}
+  m_Layer: 0
+  m_Name: TankZombieSpawn (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1331622920
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331622919}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 24, y: 2, z: -15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1331622921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331622919}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
+  zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 6
+  maxAlive: 1
 --- !u!1 &1352135001
 GameObject:
   m_ObjectHideFlags: 0
@@ -1909,6 +2005,8 @@ Transform:
   m_Children:
   - {fileID: 2050896635}
   - {fileID: 1486071845}
+  - {fileID: 910520278}
+  - {fileID: 1331622920}
   - {fileID: 127885315}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2064,8 +2162,9 @@ MonoBehaviour:
   damage: 5
   range: 6
   cooldown: 0.6
-  playerCamera: {fileID: 0}
+  playerCamera: {fileID: 330585545}
   attackPoint: {fileID: 1726489956}
+  arcAngle: 30
 --- !u!1 &1471427743
 GameObject:
   m_ObjectHideFlags: 0
@@ -2144,7 +2243,7 @@ MonoBehaviour:
   zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 6
-  maxAlive: 5
+  maxAlive: 1
 --- !u!1 &1555323496
 GameObject:
   m_ObjectHideFlags: 0
@@ -2443,7 +2542,7 @@ MonoBehaviour:
   zombiePrefab: {fileID: 3802212209892273281, guid: 685cebae43d486049b46b6f8e7dd5364, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 3
-  maxAlive: 20
+  maxAlive: 0
 --- !u!4 &2050896635
 Transform:
   m_ObjectHideFlags: 0
