@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class TankZombieAttack : MonoBehaviour
+public class SpeedVirusAttack : MonoBehaviour
 {
-    public float damagePerHit = 20f;
-    public float hitsPerSecond = 0.5f;
-    public float attackRange = 1.8f;
+    public float damagePerHit = 3f;
+    public float hitsPerSecond = 2f;
+    public float attackRange = 1.6f;
 
     float timer;
 

@@ -31,7 +31,7 @@ public class ArrowProjectile : MonoBehaviour
 
         if (hasHit) return;
             hasHit = true;
-        ZombieHealthBase zh = collision.collider.GetComponentInParent<ZombieHealthBase>();
+        VirusHealthBase zh = collision.collider.GetComponentInParent<VirusHealthBase>();
         if (zh != null)
             zh.TakeDamage(damage);
 

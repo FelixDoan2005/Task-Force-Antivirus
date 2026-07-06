@@ -12,11 +12,11 @@ GameObject:
   - component: {fileID: 6369449115262834576}
   - component: {fileID: 8428891026103986850}
   - component: {fileID: 2007531399777025431}
-  - component: {fileID: -1825398537022352083}
-  - component: {fileID: 8461258155537545170}
-  - component: {fileID: 6602947818543475581}
+  - component: {fileID: 7334733448345556808}
+  - component: {fileID: 1466477616271819477}
+  - component: {fileID: -9216518268357686974}
   m_Layer: 0
-  m_Name: TankZombie
+  m_Name: BasicVirus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: -10}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -117,7 +117,7 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-1825398537022352083
+--- !u!114 &7334733448345556808
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,28 +126,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 3802212209892273281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba78cc6528bddec42a4c3aa2dfc38a63, type: 3}
+  m_Script: {fileID: 11500000, guid: dbc2ce68cf3565b468ae69ad6a88cc76, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankZombieAttack
-  damagePerHit: 20
-  hitsPerSecond: 0.5
-  attackRange: 1.8
---- !u!114 &8461258155537545170
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3802212209892273281}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2d2c927c8115174a8b6818f7c7080da, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankZombieMovement
-  speed: 0
-  stopDistance: 1.5
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieMover
+  speed: 3
+  stopDistance: 1.2
   detectionRange: 50
---- !u!114 &6602947818543475581
+--- !u!114 &1466477616271819477
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -156,7 +141,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 3802212209892273281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: feb43ad1cab689b44bc55873a3e3e3ee, type: 3}
+  m_Script: {fileID: 11500000, guid: b029030c452b08a40a6fd4be1d748852, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TankZombieHealth
-  maxHealth: 100
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieAttack
+  damagePerHit: 5
+  hitsPerSecond: 1
+  attackRange: 1.6
+--- !u!114 &-9216518268357686974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3802212209892273281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb15cc577e92ca419a0ff8fea7a43c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieHealth
+  maxHealth: 10

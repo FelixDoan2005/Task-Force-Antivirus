@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ZombieMovement : MonoBehaviour
+public class BasicVirusMovement : MonoBehaviour
 {
     public float speed = 3f;
     public float stopDistance = 1.2f;

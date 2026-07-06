@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpeedZombieMovement : MonoBehaviour
+public class SpeedVirusMovement : MonoBehaviour
 {
     public float speed = 7f;
     public float stopDistance = 1.2f;

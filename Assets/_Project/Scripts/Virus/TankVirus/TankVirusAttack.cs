@@ -1,10 +1,10 @@
 using UnityEngine;
 
-public class ZombieAttack : MonoBehaviour
+public class TankVirusAttack : MonoBehaviour
 {
-    public float damagePerHit = 5f;
-    public float hitsPerSecond = 1f;
-    public float attackRange = 1.6f;
+    public float damagePerHit = 20f;
+    public float hitsPerSecond = 0.5f;
+    public float attackRange = 1.8f;
 
     float timer;
 
@@ -32,10 +32,8 @@ public class ZombieAttack : MonoBehaviour
 
         foreach (var collider in nearbyColliders)
         {
-            // ignore self
             if (collider.transform.root == transform.root) continue;
 
-            // IMPORTANT: parent search
             IDamageable damageable = collider.GetComponentInParent<IDamageable>();
             if (damageable == null || !damageable.IsTargetable) continue;
 
@@ -52,7 +50,6 @@ public class ZombieAttack : MonoBehaviour
         return closest;
     }
 
-    //for debugging and seeing range
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, attackRange);

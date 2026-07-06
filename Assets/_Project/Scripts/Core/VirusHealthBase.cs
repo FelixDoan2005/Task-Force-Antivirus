@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class ZombieHealthBase : MonoBehaviour
+public abstract class VirusHealthBase : MonoBehaviour
 {
     public float maxHealth = 10f;
     protected float currentHealth;
