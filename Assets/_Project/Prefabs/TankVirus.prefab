@@ -12,11 +12,11 @@ GameObject:
   - component: {fileID: 6369449115262834576}
   - component: {fileID: 8428891026103986850}
   - component: {fileID: 2007531399777025431}
-  - component: {fileID: -1861056658019991672}
-  - component: {fileID: -673617458893606403}
-  - component: {fileID: 3517235908189157260}
+  - component: {fileID: -1825398537022352083}
+  - component: {fileID: 8461258155537545170}
+  - component: {fileID: 6602947818543475581}
   m_Layer: 0
-  m_Name: SpeedZombie
+  m_Name: TankVirus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: -10}
-  m_LocalScale: {x: 0.75, y: 1.2, z: 0.75}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -117,7 +117,7 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-1861056658019991672
+--- !u!114 &-1825398537022352083
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -126,11 +126,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 3802212209892273281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7df654b9e47c8b44a9b198349de3b05, type: 3}
+  m_Script: {fileID: 11500000, guid: ba78cc6528bddec42a4c3aa2dfc38a63, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieHealth
-  maxHealth: 5
---- !u!114 &-673617458893606403
+  m_EditorClassIdentifier: Assembly-CSharp::TankZombieAttack
+  damagePerHit: 20
+  hitsPerSecond: 0.5
+  attackRange: 1.8
+--- !u!114 &8461258155537545170
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -139,13 +141,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 3802212209892273281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64970281a1b12f9408639f4ad792bf06, type: 3}
+  m_Script: {fileID: 11500000, guid: c2d2c927c8115174a8b6818f7c7080da, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieMovement
-  speed: 7
-  stopDistance: 1.2
-  detectionRange: 40
---- !u!114 &3517235908189157260
+  m_EditorClassIdentifier: Assembly-CSharp::TankZombieMovement
+  speed: 0
+  stopDistance: 1.5
+  detectionRange: 50
+--- !u!114 &6602947818543475581
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,9 +156,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3802212209892273281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8729a8346b1bfb448886e4ef8e4ded84, type: 3}
+  m_Script: {fileID: 11500000, guid: feb43ad1cab689b44bc55873a3e3e3ee, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieAttack
-  damagePerHit: 3
-  hitsPerSecond: 2
-  attackRange: 1.6
+  m_EditorClassIdentifier: Assembly-CSharp::TankZombieHealth
+  maxHealth: 100

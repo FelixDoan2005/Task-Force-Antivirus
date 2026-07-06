@@ -13,7 +13,7 @@ public class CrosshairTarget : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, range))
         {
-            if (hit.collider.GetComponentInParent<ZombieHealth>() != null)
+            if (hit.collider.GetComponentInParent<BasicVirusHealth>() != null)
                 SetColor(Color.red);
             else
                 SetColor(Color.white);

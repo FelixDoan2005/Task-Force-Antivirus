@@ -42,8 +42,8 @@ public class SwordWeapon : MonoBehaviour
             dirToTarget = dirToTarget.normalized;
 
             float angle = Vector3.SignedAngle(viewForward, dirToTarget, Vector3.up);
-            ZombieHealthBase zh = c.GetComponentInParent<ZombieHealthBase>();
-            if (Mathf.Abs(angle) <= arcAngle) targets.Add(new SwingSword {zombie = zh, angle = angle});
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (Mathf.Abs(angle) <= arcAngle) targets.Add(new SwingSword {virus = vh, angle = angle});
         }
         
         targets.Sort((z1, z2) => swingLeftToRight
@@ -75,15 +75,15 @@ public class SwordWeapon : MonoBehaviour
 
             float hitTime = startTime + (swingDuration * normalisedAngle);
             yield return new WaitUntil(() => Time.time >= hitTime);
-            t.zombie.TakeDamage(damage);
-            Debug.DrawLine(p, t.zombie.transform.position, Color.green, 0.2f);
+            t.virus.TakeDamage(damage);
+            Debug.DrawLine(p, t.virus.transform.position, Color.green, 0.2f);
 
             
         }
     }
     struct SwingSword
     {
-        public ZombieHealthBase zombie;
+        public VirusHealthBase virus;
         public float angle;
     }
 }
