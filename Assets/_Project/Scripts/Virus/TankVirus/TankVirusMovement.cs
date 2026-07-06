@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TankZombieMovement : MonoBehaviour
+public class TankVirusMovement : MonoBehaviour
 {
     public float speed = 1.5f;
     public float stopDistance = 1.5f;

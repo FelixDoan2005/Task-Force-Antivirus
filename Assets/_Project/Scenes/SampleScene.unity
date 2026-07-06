@@ -221,7 +221,7 @@ GameObject:
   - component: {fileID: 127885315}
   - component: {fileID: 127885316}
   m_Layer: 0
-  m_Name: SpeedZombieSpawn
+  m_Name: SpeedVirusSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -254,7 +254,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  zombiePrefab: {fileID: 3802212209892273281, guid: 18bb561977217ab4096d27beb54f2ef3, type: 3}
+  virusPrefab: {fileID: 3802212209892273281, guid: 18bb561977217ab4096d27beb54f2ef3, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 4
   maxAlive: 0
@@ -1511,7 +1511,7 @@ GameObject:
   - component: {fileID: 910520278}
   - component: {fileID: 910520279}
   m_Layer: 0
-  m_Name: TankZombieSpawn (1)
+  m_Name: TankVirusSpawn (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1544,7 +1544,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 6
   maxAlive: 1
@@ -1901,7 +1901,7 @@ GameObject:
   - component: {fileID: 1331622920}
   - component: {fileID: 1331622921}
   m_Layer: 0
-  m_Name: TankZombieSpawn (2)
+  m_Name: TankVirusSpawn (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1934,7 +1934,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 6
   maxAlive: 1
@@ -2207,7 +2207,7 @@ GameObject:
   - component: {fileID: 1486071845}
   - component: {fileID: 1486071846}
   m_Layer: 0
-  m_Name: TankZombieSpawn
+  m_Name: TankVirusSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2240,7 +2240,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  zombiePrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 6
   maxAlive: 1
@@ -2521,7 +2521,7 @@ GameObject:
   - component: {fileID: 2050896635}
   - component: {fileID: 2050896634}
   m_Layer: 0
-  m_Name: BasicZombieSpawn
+  m_Name: BasicVirusSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2539,7 +2539,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  zombiePrefab: {fileID: 3802212209892273281, guid: 685cebae43d486049b46b6f8e7dd5364, type: 3}
+  virusPrefab: {fileID: 3802212209892273281, guid: 685cebae43d486049b46b6f8e7dd5364, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 3
   maxAlive: 0

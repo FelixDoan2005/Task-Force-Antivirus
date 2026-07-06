@@ -66,7 +66,7 @@ public class PlayerShooter : MonoBehaviour
         {
             Debug.DrawLine(shotRay.origin, hit.point, Color.red, 0.2f);
 
-            ZombieHealth zh = hit.collider.GetComponentInParent<ZombieHealth>();
+            BasicVirusHealth zh = hit.collider.GetComponentInParent<BasicVirusHealth>();
             if (zh != null)
                 zh.TakeDamage(damage);
         }
