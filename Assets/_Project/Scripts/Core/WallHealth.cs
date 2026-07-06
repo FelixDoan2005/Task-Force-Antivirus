@@ -6,9 +6,11 @@ public class WallHealth : MonoBehaviour, IDamageable
     public float maxHealth = 100f;
     public float currentHealth;
 
-    public bool IsTargetable => true;
+    bool isDestroyed;
+    public bool IsTargetable => !isDestroyed;
 
     public event Action<float, float> OnHealthChanged;
+    public event Action OnWallDestroyed;
 
     void Awake()
     {
@@ -18,6 +20,8 @@ public class WallHealth : MonoBehaviour, IDamageable
 
     public void TakeDamage(float amount)
     {
+        if (isDestroyed) return;
+
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0f, maxHealth);
 
@@ -25,8 +29,8 @@ public class WallHealth : MonoBehaviour, IDamageable
 
         if (currentHealth <= 0f)
         {
-            Debug.Log("GAME OVER");
-            Time.timeScale = 0f;
+            isDestroyed = true;
+            OnWallDestroyed?.Invoke();
         }
     }
 }
