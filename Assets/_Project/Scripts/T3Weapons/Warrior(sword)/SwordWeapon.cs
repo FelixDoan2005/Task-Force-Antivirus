@@ -14,6 +14,13 @@ public class SwordWeapon : MonoBehaviour
     private bool swingLeftToRight = true;
     public float swingDuration = 0.3f;
     public float delayBetweenHits = 5f;
+
+    void Awake()
+    {
+        if (playerCamera == null)
+            playerCamera = Camera.main;
+    }
+
     public void Attack()
     {
         if (attackPoint == null) return;
