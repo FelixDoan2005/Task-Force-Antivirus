@@ -11,6 +11,7 @@ public class RifleWeapon : MonoBehaviour
     public float damage = 8f;
     public float range = 100f;
     public float fireRate = 12f; // rounds per second
+    public float pullOutTime = 2f;
 
     [Header("Ammo")]
     public int magazineSize = 30;
@@ -31,6 +32,7 @@ public class RifleWeapon : MonoBehaviour
     int currentAmmo;
     bool isReloading;
     float reloadEndTime;
+    float readyTime;
 
     public bool IsFiring { get; private set; }
     public int CurrentAmmo => currentAmmo;
@@ -43,6 +45,11 @@ public class RifleWeapon : MonoBehaviour
 
         hitMask = ~LayerMask.GetMask("Player");
         currentAmmo = magazineSize;
+    }
+
+    void OnEnable()
+    {
+        readyTime = Time.time + pullOutTime;
     }
 
     void Update()
@@ -63,6 +70,8 @@ public class RifleWeapon : MonoBehaviour
     {
         IsFiring = false;
 
+        if (Time.time < readyTime) return;
+
         if (isReloading) return;
 
         if (currentAmmo <= 0) return;
@@ -82,7 +91,7 @@ public class RifleWeapon : MonoBehaviour
     {
         if (isReloading || currentAmmo >= magazineSize || totalAmmo == 0) return;
 
-        if (totalAmmo + currentAmmo <= 30)
+        if (totalAmmo + currentAmmo <= magazineSize)
         {
             currentAmmo += totalAmmo;
             totalAmmo = 0;
