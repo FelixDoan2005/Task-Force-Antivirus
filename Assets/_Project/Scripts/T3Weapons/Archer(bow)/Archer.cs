@@ -35,13 +35,7 @@ public class Archer : MonoBehaviour
     void Awake()
     {
         if (playerCamera == null)
-        {
-            playerCamera = GetComponentInChildren<Camera>();
-        }
-        else if (playerCamera == null)
-        {
             playerCamera = Camera.main;
-        }
 
         hitMask = ~LayerMask.GetMask("Player");
 
@@ -96,7 +90,7 @@ public class Archer : MonoBehaviour
     {
         if (playerCamera == null || firePoint == null)
         {
-            Debug.LogError("PlayerShooter: Assign playerCamera and firePoint.");
+            Debug.LogError("Archer: Assign playerCamera and firePoint.");
             return;
         }
 

@@ -7,15 +7,15 @@ public class PlayerRespawn : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] public float respawnDelay = 5f;
 
-    HeroHealth heroHealth;
-    HeroController heroController;
+    PlayerHealth heroHealth;
+    PlayerController heroController;
     WeaponSwitcher weaponSwitcher;
     CharacterController characterController;
 
     void Awake()
     {
-        heroHealth = GetComponent<HeroHealth>();
-        heroController = GetComponent<HeroController>();
+        heroHealth = GetComponent<PlayerHealth>();
+        heroController = GetComponent<PlayerController>();
         weaponSwitcher = GetComponentInChildren<WeaponSwitcher>();
         characterController = GetComponent<CharacterController>();
     }
