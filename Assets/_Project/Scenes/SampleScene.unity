@@ -257,7 +257,7 @@ MonoBehaviour:
   virusPrefab: {fileID: 3802212209892273281, guid: 18bb561977217ab4096d27beb54f2ef3, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 4
-  maxAlive: 5
+  maxAlive: 0
 --- !u!1 &301843011
 GameObject:
   m_ObjectHideFlags: 0
@@ -304,7 +304,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Archer
   arrowPrefab: {fileID: 3754937375215014316, guid: b001c7ae635b7b14d8c95d36787042f3, type: 3}
   playerCamera: {fileID: 330585545}
-  firePoint: {fileID: 1726489956}
+  firePoint: {fileID: 2091873665}
   arrowRange: 100
   arrowDamage: 3
   fireCooldown: 0.5
@@ -405,7 +405,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0.10452846, y: -0, z: -0, w: 0.9945219}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -702,7 +702,7 @@ GameObject:
   - component: {fileID: 495335705}
   - component: {fileID: 495335704}
   m_Layer: 3
-  m_Name: HeroVisual
+  m_Name: PlayerVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -871,6 +871,10 @@ MonoBehaviour:
   - {fileID: 2129952568}
   - {fileID: 2146777294}
   - {fileID: 1314324086}
+  dotImage: {fileID: 1314324086}
+  crosshairRoot: {fileID: 510844386}
+  crosshairRect: {fileID: 510844387}
+  rifleCrosshairSize: {x: 40, y: 40}
   cam: {fileID: 330585545}
   range: 100
 --- !u!1 &574335838
@@ -1307,34 +1311,17 @@ GameObject:
   - component: {fileID: 689043507}
   - component: {fileID: 689043506}
   - component: {fileID: 689043505}
-  - component: {fileID: 689043504}
   - component: {fileID: 689043510}
   - component: {fileID: 689043511}
   - component: {fileID: 689043512}
   - component: {fileID: 689043513}
   m_Layer: 3
-  m_Name: Hero
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &689043504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 689043503}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7b76752f4e9daf43ae25d1f05ccc62b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerShooter
-  playerCamera: {fileID: 0}
-  firePoint: {fileID: 1726489956}
-  range: 100
-  damage: 5
 --- !u!114 &689043505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1459,6 +1446,7 @@ Transform:
   - {fileID: 495335703}
   - {fileID: 451735789}
   - {fileID: 1726489956}
+  - {fileID: 2091873665}
   - {fileID: 1860431953}
   - {fileID: 1471427744}
   m_Father: {fileID: 0}
@@ -1503,8 +1491,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponSwitcher
   bowObject: {fileID: 301843011}
   swordObject: {fileID: 1465565103}
+  rifleObject: {fileID: 1835716414}
   swordWeapon: {fileID: 1465565105}
   archer: {fileID: 301843013}
+  rifle: {fileID: 1835716416}
+  crosshairTarget: {fileID: 510844389}
 --- !u!114 &689043513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2629,7 +2620,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 10, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1314324086
 MonoBehaviour:
@@ -3068,7 +3059,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1471427744}
   m_Layer: 3
-  m_Name: HeroSpawn
+  m_Name: PlayerSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3696,7 +3687,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1726489956}
   m_Layer: 3
-  m_Name: FirePoint
+  m_Name: MeleeFirePoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3717,6 +3708,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 689043509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1835716414
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1835716415}
+  - component: {fileID: 1835716416}
+  m_Layer: 3
+  m_Name: Rifle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1835716415
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1835716414}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1860431953}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1835716416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1835716414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20b709aab55766d48828811182fb3bc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RifleWeapon
+  playerCamera: {fileID: 330585545}
+  firePoint: {fileID: 2091873665}
+  damage: 8
+  range: 100
+  fireRate: 10
+  magazineSize: 30
+  reloadTime: 2
+  totalAmmo: 360
+  amoNeeded: 0
+  tracerMaterial: {fileID: 0}
+  tracerColor: {r: 0.8867924, g: 0.11294055, b: 0.16190039, a: 1}
+  tracerWidth: 0.1
+  tracerLifetime: 0.03
 --- !u!1 &1860431952
 GameObject:
   m_ObjectHideFlags: 0
@@ -3748,6 +3796,7 @@ Transform:
   m_Children:
   - {fileID: 301843012}
   - {fileID: 1465565104}
+  - {fileID: 1835716415}
   m_Father: {fileID: 689043509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2050896633
@@ -3797,6 +3846,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2091873664
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2091873665}
+  m_Layer: 3
+  m_Name: 'RangeFirePoint '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2091873665
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091873664}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.375, y: 1.3, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 689043509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2129952566
 GameObject:

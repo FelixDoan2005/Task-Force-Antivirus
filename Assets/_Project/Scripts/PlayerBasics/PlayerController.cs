@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
-public class HeroController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [Header("References")]
     public Transform cameraPivot;
