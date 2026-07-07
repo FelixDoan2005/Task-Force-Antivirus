@@ -6,10 +6,13 @@ public class WeaponSwitcher : MonoBehaviour
     [Header("Assign your weapon GameObjects here")]
     [SerializeField] private GameObject bowObject;
     [SerializeField] private GameObject swordObject;
+    [SerializeField] private GameObject rifleObject;
     [SerializeField] private SwordWeapon swordWeapon;
     [SerializeField] private Archer archer;
+    [SerializeField] private RifleWeapon rifle;
+    [SerializeField] private CrosshairTarget crosshairTarget;
 
-    private int activeIndex = 0; // 0 = bow, 1 = sword
+    private int activeIndex = 0; // 0 = bow, 1 = sword, 2 = rifle
     private float attackUntilTime;
 
     //animations
@@ -30,6 +33,7 @@ public class WeaponSwitcher : MonoBehaviour
 
         if (Keyboard.current.digit1Key.wasPressedThisFrame) SetActive(0);
         if (Keyboard.current.digit2Key.wasPressedThisFrame) SetActive(1);
+        if (Keyboard.current.digit3Key.wasPressedThisFrame) SetActive(2);
 
         //sword
         if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame && activeIndex == 1)
@@ -53,8 +57,35 @@ public class WeaponSwitcher : MonoBehaviour
                 }
             }
         }
+
+        //rifle
+        if (activeIndex == 2 && rifle != null)
+        {
+            bool triggerHeld = Mouse.current != null && Mouse.current.leftButton.isPressed;
+            rifle.TryFire(triggerHeld);
+            if (rifle.IsFiring)
+                attackUntilTime = Time.time + 0.15f;
+        }
+
         if (CombatDebugHUD.Instance != null)
-            CombatDebugHUD.Instance.SetLine($"W:{(activeIndex==0?"Bow":"Sword")} A:{IsAttacking} D:{IsDrawingBow}");
+        {
+            string line = WeaponName();
+            if (activeIndex == 2 && rifle != null)
+                line += rifle.IsReloading ? " Reloading" : $" {rifle.CurrentAmmo}/{rifle.magazineSize} {rifle.totalAmmo}";
+
+            CombatDebugHUD.Instance.SetLine(line);
+        }
+    }
+
+    private string WeaponName()
+    {
+        return activeIndex switch
+        {
+            0 => "Bow",
+            1 => "Sword",
+            2 => "Rifle",
+            _ => "Unknown"
+        };
     }
 
     private void SetActive(int index)
@@ -63,10 +94,13 @@ public class WeaponSwitcher : MonoBehaviour
 
         if (bowObject != null) bowObject.SetActive(activeIndex == 0);
         if (swordObject != null) swordObject.SetActive(activeIndex == 1);
+        if (rifleObject != null) rifleObject.SetActive(activeIndex == 2);
+
+        if (crosshairTarget != null) crosshairTarget.SetWeaponMode(activeIndex);
 
         if (CombatDebugHUD.Instance != null)
         {
-            CombatDebugHUD.Instance.SetLine(activeIndex == 0 ? "Weapon: Bow" : "Weapon: Sword");
+            CombatDebugHUD.Instance.SetLine($"Weapon: {WeaponName()}");
         }
     }
 }
