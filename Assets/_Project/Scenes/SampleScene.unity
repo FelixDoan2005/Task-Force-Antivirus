@@ -1447,6 +1447,7 @@ Transform:
   - {fileID: 451735789}
   - {fileID: 1726489956}
   - {fileID: 2091873665}
+  - {fileID: 1983414306}
   - {fileID: 1860431953}
   - {fileID: 1471427744}
   m_Father: {fileID: 0}
@@ -1492,11 +1493,13 @@ MonoBehaviour:
   bowObject: {fileID: 301843011}
   swordObject: {fileID: 1465565103}
   rifleObject: {fileID: 1835716414}
-  pistolObject: {fileID: 0}
+  pistolObject: {fileID: 810280565}
+  grenadeObject: {fileID: 1136020328}
   swordWeapon: {fileID: 1465565105}
   archer: {fileID: 301843013}
   rifle: {fileID: 1835716416}
   pistol: {fileID: 810280567}
+  grenade: {fileID: 1136020330}
   crosshairTarget: {fileID: 510844389}
 --- !u!114 &689043513
 MonoBehaviour:
@@ -2265,6 +2268,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1136020329}
+  - component: {fileID: 1136020330}
   m_Layer: 3
   m_Name: Grenade
   m_TagString: Untagged
@@ -2287,6 +2291,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1860431953}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1136020330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1136020328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe333e51891ca424f86978c17e375ebc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrenadeWeapon
+  playerCamera: {fileID: 330585545}
+  throwPoint: {fileID: 1983414306}
+  grenadePrefab: {fileID: 3754937375215014316, guid: 2223b4c0bf55bc843b6991d78ddae1b1, type: 3}
+  damage: 100
+  minThrowSpeed: 8
+  maxThrowSpeed: 25
+  maxChargeTime: 1.25
+  arcAmount: 0.25
+  cooldown: 1.5
+  maxGrenades: 3
+  trajectoryLine: {fileID: 0}
+  trajectorySteps: 30
+  trajectoryTimeStep: 0.05
 --- !u!1 &1153156744
 GameObject:
   m_ObjectHideFlags: 0
@@ -3891,6 +3920,37 @@ Transform:
   - {fileID: 1835716415}
   - {fileID: 810280566}
   - {fileID: 1136020329}
+  m_Father: {fileID: 689043509}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1983414305
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1983414306}
+  m_Layer: 3
+  m_Name: GrenadeFirePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1983414306
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1983414305}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.375, y: 1.65, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 689043509}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2050896633
