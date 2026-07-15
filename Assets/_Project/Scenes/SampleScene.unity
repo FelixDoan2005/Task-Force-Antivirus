@@ -305,12 +305,15 @@ MonoBehaviour:
   arrowPrefab: {fileID: 3754937375215014316, guid: b001c7ae635b7b14d8c95d36787042f3, type: 3}
   playerCamera: {fileID: 330585545}
   firePoint: {fileID: 2091873665}
-  arrowRange: 100
-  arrowDamage: 3
+  arrowRange: 500
+  arrowDamage: 50
   fireCooldown: 0.5
+  arrowCount: 5
+  spreadAngle: 20
+  circleRadius: 1.5
   minArrowSpeed: 10
-  maxArrowSpeed: 100
-  maxDrawTime: 1.25
+  maxArrowSpeed: 200
+  maxDrawTime: 0.5
   aimAssistRange: 200
   crosshairRect: {fileID: 510844387}
   crosshairStartScale: 1.6
