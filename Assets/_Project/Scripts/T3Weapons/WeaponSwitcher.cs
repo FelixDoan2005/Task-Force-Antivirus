@@ -10,7 +10,7 @@ public class WeaponSwitcher : MonoBehaviour
     [SerializeField] private GameObject pistolObject;
     [SerializeField] private GameObject grenadeObject;
     [SerializeField] private SwordWeapon swordWeapon;
-    [SerializeField] private Archer archer;
+    [SerializeField] private MasterArcher archer;
     [SerializeField] private RifleWeapon rifle;
     [SerializeField] private PistolWeapon pistol;
     [SerializeField] private GrenadeWeapon grenade;

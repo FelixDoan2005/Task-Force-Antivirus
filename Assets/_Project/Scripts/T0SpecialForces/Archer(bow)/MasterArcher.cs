@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Archer : MonoBehaviour
+public class MasterArcher : MonoBehaviour
 
 {
     public GameObject arrowPrefab;
@@ -13,6 +13,9 @@ public class Archer : MonoBehaviour
     public float arrowRange = 60f;
     public float arrowDamage = 3f;
     public float fireCooldown = 0.5f;
+    public int arrowCount = 5;
+    public float spreadAngle = 20f; // total degrees the arrows fan across
+    public float circleRadius = 0.3f; // ring size for ADS focused-fire mode
     private float nextFireTime = 0f;
     private bool isDrawing = false;
     private float drawStartTime;
@@ -31,6 +34,9 @@ public class Archer : MonoBehaviour
     public Vector2 crosshairDrawSize  = new(10, 10);
 
     int hitMask;
+    bool isAiming;
+
+    public bool IsAiming => isAiming;
 
     void Awake()
     {
@@ -49,6 +55,8 @@ public class Archer : MonoBehaviour
     void Update()
     {
         if (Mouse.current == null) return;
+
+        isAiming = Mouse.current.rightButton.isPressed;
 
         // if (Mouse.current.leftButton.wasPressedThisFrame)
         // {
@@ -90,7 +98,7 @@ public class Archer : MonoBehaviour
     {
         if (playerCamera == null || firePoint == null)
         {
-            Debug.LogError("Archer: Assign playerCamera and firePoint.");
+            Debug.LogError("MasterArcher: Assign playerCamera and firePoint.");
             return;
         }
 
@@ -112,20 +120,59 @@ public class Archer : MonoBehaviour
         
 
         // WEAPON FIRE
-        Vector3 shootDir = (aimPoint - firePoint.position).normalized;
-        GameObject arrow = Instantiate(arrowPrefab, firePoint.position, Quaternion.LookRotation(shootDir, Vector3.up));
-        ArrowProjectile ap = arrow.GetComponent<ArrowProjectile>();
-
         float t = Mathf.Clamp01(drawTime / maxDrawTime);
         float speed = Mathf.Lerp(minArrowSpeed, maxArrowSpeed, t);
+
+        if (isAiming)
+            FireCircle(aimPoint, speed);
+        else
+            FireSpread(aimPoint, speed);
+    }
+
+    void FireSpread(Vector3 aimPoint, float speed)
+    {
+        Vector3 baseDir = (aimPoint - firePoint.position).normalized;
+
+        float startAngle = -spreadAngle / 2f;
+        float step = arrowCount > 1 ? spreadAngle / (arrowCount - 1) : 0f;
+
+        for (int i = 0; i < arrowCount; i++)
+        {
+            float angle = startAngle + step * i;
+            Vector3 shootDir = Quaternion.AngleAxis(angle, Vector3.up) * baseDir;
+
+            SpawnArrow(firePoint.position, shootDir, speed);
+        }
+    }
+
+    void FireCircle(Vector3 aimPoint, float speed)
+    {
+        Vector3 camRight = playerCamera.transform.right;
+        Vector3 camUp = playerCamera.transform.up;
+
+        for (int i = 0; i < arrowCount; i++)
+        {
+            float angle = i * (360f / arrowCount) * Mathf.Deg2Rad;
+            Vector3 offset = (Mathf.Cos(angle) * camRight + Mathf.Sin(angle) * camUp) * circleRadius;
+
+            Vector3 spawnPos = firePoint.position + offset;
+            Vector3 shootDir = (aimPoint - spawnPos).normalized;
+
+            SpawnArrow(spawnPos, shootDir, speed);
+        }
+    }
+
+    void SpawnArrow(Vector3 spawnPos, Vector3 shootDir, float speed)
+    {
+        GameObject arrow = Instantiate(arrowPrefab, spawnPos, Quaternion.LookRotation(shootDir, Vector3.up));
+        ArrowProjectile ap = arrow.GetComponent<ArrowProjectile>();
         if (ap != null)
         {
             ap.damage = arrowDamage;
             ap.speed = speed;
         }
 
-        Ray shotRay = new(firePoint.position, shootDir);
-        Debug.DrawRay(shotRay.origin, shotRay.direction * arrowRange, Color.red, 0.2f);
+        Debug.DrawRay(spawnPos, shootDir * arrowRange, Color.red, 0.2f);
     }
 
     void OnDisable()

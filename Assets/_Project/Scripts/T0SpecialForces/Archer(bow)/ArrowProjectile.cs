@@ -12,6 +12,7 @@ public class ArrowProjectile : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        Physics.IgnoreLayerCollision(gameObject.layer, gameObject.layer, true);
     }
 
     void Start()
