@@ -11,18 +11,18 @@ public class MasterArcher : MonoBehaviour
     public Transform firePoint;
 
     [Header("Weapon")]
-    public float arrowRange = 60f;
-    public float arrowDamage = 3f;
+    public float arrowRange = 500f;
+    public float arrowDamage = 50f;
     public float fireCooldown = 0.5f;
     public int arrowCount = 5;
     public float spreadAngle = 20f; // total degrees the arrows fan across
-    public float circleRadius = 1.5f; // ring size for ADS focused-fire mode
+    public float circleRadius = 0.4f; // ring size for ADS focused-fire mode
     private float nextFireTime = 0f;
     private bool isDrawing = false;
     private float drawStartTime;
     public float minArrowSpeed = 10f;
-    public float maxArrowSpeed = 100f;
-    public float maxDrawTime = 1.25f;
+    public float maxArrowSpeed = 200f;
+    public float maxDrawTime = 0.5f;
     public float aimAssistRange = 200f;
 
     [Header("ADS Zoom")]
@@ -34,15 +34,15 @@ public class MasterArcher : MonoBehaviour
     [Header("Crosshair")]
     public RectTransform crosshairRect;
     public float crosshairStartScale = 1.6f;   // bigger at rest
-    public float crosshairDrawScale  = 0.4f;   // smaller while drawing
+    public float crosshairDrawScale  = 0.8f;   // smaller while drawing
     public float crosshairLerpSpeed  = 12f;
     public Vector2 crosshairStartSize = new(16, 16);
-    public Vector2 crosshairDrawSize  = new(10, 10);
+    public Vector2 crosshairDrawSize  = new(12, 12);
 
     [Header("Q - Explosive Arrows")]
     public float explosiveCooldown = 8f;
-    public float explosiveArrowRadius = 3f;
-    public float explosiveArrowDamage = 15f;
+    public float explosiveArrowRadius = 5f;
+    public float explosiveArrowDamage = 100f;
     float explosiveReadyTime;
     bool nextShotExplosive;
 
@@ -57,11 +57,11 @@ public class MasterArcher : MonoBehaviour
 
     [Header("X - The Heavens Open (Ultimate)")]
     public float ultimateCooldown = 60f;
-    public int rainArrowCount = 100;
+    public int rainArrowCount = 500;
     public float rainSpawnHeight = 25f;
     public float rainSpreadRadius = 4f;
     public float rainSpawnDuration = 1.5f;
-    public float rainArrowDamage = 5f;
+    public float rainArrowDamage = 50f;
     public float rainArrowSpeed = 40f;
     float ultimateReadyTime;
     bool nextShotUltimate;
