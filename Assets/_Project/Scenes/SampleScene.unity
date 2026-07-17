@@ -310,17 +310,33 @@ MonoBehaviour:
   fireCooldown: 0.5
   arrowCount: 5
   spreadAngle: 20
-  circleRadius: 1.5
+  circleRadius: 0.5
   minArrowSpeed: 10
   maxArrowSpeed: 200
   maxDrawTime: 0.5
   aimAssistRange: 200
+  zoomFOV: 35
+  zoomSpeed: 10
   crosshairRect: {fileID: 510844387}
   crosshairStartScale: 1.6
   crosshairDrawScale: 0.8
   crosshairLerpSpeed: 12
   crosshairStartSize: {x: 16, y: 16}
   crosshairDrawSize: {x: 12, y: 12}
+  explosiveCooldown: 8
+  explosiveArrowRadius: 5
+  explosiveArrowDamage: 80
+  rapidFireCooldown: 12
+  rapidFireDuration: 5
+  rapidFireActiveCooldown: 0.1
+  rapidFireSpeedMultiplier: 5
+  ultimateCooldown: 60
+  rainArrowCount: 500
+  rainSpawnHeight: 25
+  rainSpreadRadius: 8
+  rainSpawnDuration: 1.5
+  rainArrowDamage: 50
+  rainArrowSpeed: 40
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -1853,7 +1869,7 @@ Transform:
   m_GameObject: {fileID: 910520277}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 22, y: 2, z: -15}
+  m_LocalPosition: {x: -2.6, y: 2, z: -5.33}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2809,7 +2825,7 @@ Transform:
   m_GameObject: {fileID: 1331622919}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 24, y: 2, z: -15}
+  m_LocalPosition: {x: 11.96, y: 2, z: -5.35}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3229,7 +3245,7 @@ Transform:
   m_GameObject: {fileID: 1486071844}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 20, y: 2, z: -15}
+  m_LocalPosition: {x: 6.19, y: 2, z: -5.74}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
