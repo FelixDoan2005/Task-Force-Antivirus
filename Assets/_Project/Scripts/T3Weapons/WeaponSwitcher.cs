@@ -23,6 +23,8 @@ public class WeaponSwitcher : MonoBehaviour
     public bool IsAttacking { get; private set; }
     public bool IsDrawingBow { get; private set; }
 
+    public int ActiveWeaponIndex => activeIndex;
+
     private void Start()
     {
         SetActive(0);
