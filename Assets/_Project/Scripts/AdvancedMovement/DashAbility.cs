@@ -9,7 +9,7 @@ public class DashAbility : MonoBehaviour
     [Header("Dash")]
     public float dashSpeed = 20f;
     public float dashDuration = 0.15f;
-    public float dashCooldown = 1f;
+    public float dashCooldown = 0.5f;
     public float doubleTapWindow = 0.3f;
 
     [Header("Weapon Restriction")]
