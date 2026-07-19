@@ -1334,6 +1334,8 @@ GameObject:
   - component: {fileID: 689043511}
   - component: {fileID: 689043512}
   - component: {fileID: 689043513}
+  - component: {fileID: 689043514}
+  - component: {fileID: 689043515}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -1360,13 +1362,18 @@ MonoBehaviour:
   gravity: -20
   jumpHeight: 1.2
   coyoteTime: 0.12
-  jumpBufferTime: 0.12
   fallMultiplier: 1.6
+  groundCheckRadius: 0.3
+  groundCheckOffset: 0.15
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   mouseSensitivity: 0.1
   lockVerticalLook: 1
   minCamDistance: 1.6
   maxCamDistance: 3.2
   camHeightOffset: 0
+  suspendGravity: 0
 --- !u!143 &689043506
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1534,6 +1541,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerRespawn
   spawnPoint: {fileID: 1471427744}
   respawnDelay: 5
+--- !u!114 &689043514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689043503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a34e7077faa9bcc408e928aaae5e852f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DashAbility
+  dashSpeed: 20
+  dashDuration: 0.15
+  dashCooldown: 0.5
+  doubleTapWindow: 0.3
+  weaponSwitcher: {fileID: 689043512}
+  allowedWeaponIndices: 00000000
+--- !u!114 &689043515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689043503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 060908bd86b8c1144a9d8b34ad132ff6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GrapplingHook
+  grappleSpeed: 30
+  grappleCooldown: 2
+  weaponSwitcher: {fileID: 689043512}
+  allowedWeaponIndices: 00000000
+  playerController: {fileID: 689043505}
+  playerCamera: {fileID: 330585545}
 --- !u!1 &691659584
 GameObject:
   m_ObjectHideFlags: 0
@@ -3296,8 +3339,8 @@ Transform:
   m_GameObject: {fileID: 1555323496}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
-  m_LocalScale: {x: 10, y: 2, z: 1}
+  m_LocalPosition: {x: 0, y: 10, z: 0}
+  m_LocalScale: {x: 10, y: 20, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

@@ -82,10 +82,11 @@ public class SwordWeapon : MonoBehaviour
 
             float hitTime = startTime + (swingDuration * normalisedAngle);
             yield return new WaitUntil(() => Time.time >= hitTime);
+
+            if (t.virus == null) continue;
+
             t.virus.TakeDamage(damage);
             Debug.DrawLine(p, t.virus.transform.position, Color.green, 0.2f);
-
-            
         }
     }
     struct SwingSword
