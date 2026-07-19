@@ -45,15 +45,19 @@ public class GrapplingHook : MonoBehaviour
             {
                 TryGrapple();
             }
-            if (Vector3.Distance(transform.position, grapplePoint) < 1f)
-            {
+
+            Vector3 dir = (grapplePoint - transform.position).normalized;
+            Vector3 beforeMove = transform.position;
+            controller.Move(grappleSpeed * Time.deltaTime * dir);
+
+            // if we barely moved despite trying to, something (the floor, a wall) blocked us - treat as arrived
+            float actualMoved = Vector3.Distance(beforeMove, transform.position);
+            float intendedMove = grappleSpeed * Time.deltaTime;
+            bool blocked = actualMoved < intendedMove * 0.1f;
+            bool closeEnough = Vector3.Distance(transform.position, grapplePoint) < 0.3f;
+
+            if (blocked || closeEnough)
                 playerController.suspendGravity = true;
-            }
-            else
-            {
-                Vector3 dir = (grapplePoint - transform.position).normalized;
-                controller.Move(grappleSpeed * Time.deltaTime * dir);
-            }
         }
     }
 
