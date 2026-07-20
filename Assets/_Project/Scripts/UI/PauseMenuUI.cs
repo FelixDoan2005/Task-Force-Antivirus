@@ -39,6 +39,9 @@ public class PauseMenuUI : MonoBehaviour
         if (pausePanel != null)
             pausePanel.SetActive(isPaused);
 
+        if (weaponSwitcher != null)
+            weaponSwitcher.SetWeaponInputEnabled(!isPaused);
+
         Time.timeScale = isPaused ? 0f : 1f;
         Cursor.lockState = isPaused ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = isPaused;
@@ -100,13 +103,25 @@ public class PauseMenuUI : MonoBehaviour
     // T1 - elite tier (4 slots, none built yet)
     public void SelectT1(int index)
     {
-        NotImplementedYet($"T1 slot {index}");
+        switch (index)
+        {
+            case 0: NotImplementedYet("Temp"); break;
+            case 1: NotImplementedYet("Temp"); break;
+            case 2: NotImplementedYet("Temp"); break;
+            case 3: NotImplementedYet("Temp"); break;
+        }
     }
 
     // T2 - breach squad tier (4 slots, none built yet)
     public void SelectT2(int index)
     {
-        NotImplementedYet($"T2 slot {index}");
+        switch (index)
+        {
+            case 0: NotImplementedYet("Temp"); break;
+            case 1: NotImplementedYet("Temp"); break;
+            case 2: NotImplementedYet("Temp"); break;
+            case 3: NotImplementedYet("Temp"); break;
+        }
     }
 
     // T3 - firewall grunt tier (4 slots)
@@ -116,8 +131,8 @@ public class PauseMenuUI : MonoBehaviour
         {
             case 0: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Sword); break; // Swordsmen
             case 1: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Riflemen); break; // Riflemen
-            case 2: NotImplementedYet("T3 slot 2"); break;
-            case 3: NotImplementedYet("T3 slot 3"); break;
+            case 2: NotImplementedYet("Temp"); break;
+            case 3: NotImplementedYet("Temp"); break;
         }
     }
 
@@ -129,7 +144,10 @@ public class PauseMenuUI : MonoBehaviour
     void SelectViaWeaponSwitcher(int weaponSwitcherIndex)
     {
         if (weaponSwitcher != null)
+        {
+            weaponSwitcher.SetWeaponInputEnabled(true);
             weaponSwitcher.SetActive(weaponSwitcherIndex);
+        }
 
         if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
