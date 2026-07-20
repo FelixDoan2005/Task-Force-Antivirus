@@ -202,7 +202,7 @@ public class MasterArcher : MonoBehaviour
     }
 
     void FireSpread(Vector3 baseDir, float speed)
-    {
+    {   
         float startAngle = -spreadAngle / 2f;
         float step = arrowCount > 1 ? spreadAngle / (arrowCount - 1) : 0f;
 
