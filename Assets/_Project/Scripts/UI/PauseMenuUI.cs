@@ -85,10 +85,51 @@ public class PauseMenuUI : MonoBehaviour
         if (pausePanel != null) pausePanel.SetActive(true);
     }
 
-    public void SelectClass(int index)
+    // T0 - demigod tier (4 slots)
+    public void SelectT0(int index)
+    {
+        switch (index)
+        {
+            case 0: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Bow); break; // MasterArcher
+            case 1: NotImplementedYet("BladeMaster"); break;
+            case 2: NotImplementedYet("Demon"); break;
+            case 3: NotImplementedYet("Jester"); break;
+        }
+    }
+
+    // T1 - elite tier (4 slots, none built yet)
+    public void SelectT1(int index)
+    {
+        NotImplementedYet($"T1 slot {index}");
+    }
+
+    // T2 - breach squad tier (4 slots, none built yet)
+    public void SelectT2(int index)
+    {
+        NotImplementedYet($"T2 slot {index}");
+    }
+
+    // T3 - firewall grunt tier (4 slots)
+    public void SelectT3(int index)
+    {
+        switch (index)
+        {
+            case 0: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Sword); break; // Swordsmen
+            case 1: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Riflemen); break; // Riflemen
+            case 2: NotImplementedYet("T3 slot 2"); break;
+            case 3: NotImplementedYet("T3 slot 3"); break;
+        }
+    }
+
+    void NotImplementedYet(string className)
+    {
+        Debug.Log($"{className} isn't built yet.");
+    }
+
+    void SelectViaWeaponSwitcher(int weaponSwitcherIndex)
     {
         if (weaponSwitcher != null)
-            weaponSwitcher.SetActive(index);
+            weaponSwitcher.SetActive(weaponSwitcherIndex);
 
         if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
