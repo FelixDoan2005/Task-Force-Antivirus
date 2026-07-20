@@ -125,7 +125,7 @@ public class WeaponSwitcher : MonoBehaviour
         };
     }
 
-    private void SetActive(int index)
+    public void SetActive(int index)
     {
         activeIndex = index;
 

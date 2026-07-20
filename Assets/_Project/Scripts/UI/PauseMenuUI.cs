@@ -6,6 +6,8 @@ public class PauseMenuUI : MonoBehaviour
 {
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private GameObject classSelectorPanel;
+    [SerializeField] private WeaponSwitcher weaponSwitcher;
 
     [Header("Scene Names")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
@@ -19,6 +21,9 @@ public class PauseMenuUI : MonoBehaviour
 
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
+
+        if (classSelectorPanel != null)
+            classSelectorPanel.SetActive(false);
     }
 
     void Update()
@@ -66,5 +71,31 @@ public class PauseMenuUI : MonoBehaviour
     {
         if (settingsPanel != null) settingsPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(true);
+    }
+
+    public void OnClassSelectorClicked()
+    {
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (classSelectorPanel != null) classSelectorPanel.SetActive(true);
+    }
+
+    public void OnClassSelectorBackClicked()
+    {
+        if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(true);
+    }
+
+    public void SelectClass(int index)
+    {
+        if (weaponSwitcher != null)
+            weaponSwitcher.SetActive(index);
+
+        if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(false);
+
+        isPaused = false;
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 }
