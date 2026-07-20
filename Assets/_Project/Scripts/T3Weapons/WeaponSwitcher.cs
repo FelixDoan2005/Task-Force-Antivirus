@@ -149,6 +149,14 @@ public class WeaponSwitcher : MonoBehaviour
         UpdateActiveObjects();
     }
 
+    public void SetWeaponInputEnabled(bool value)
+    {
+        enabled = value; // stops this script's own Update() (sword/rifle/pistol/grenade/bow-draw calls)
+
+        if (archer != null)
+            archer.enabled = value; // MasterArcher self-polls mouse input independently, so disable it directly too
+    }
+
     void UpdateActiveObjects()
     {
         bool isBow = currentClass == PlayerClass.Bow;
