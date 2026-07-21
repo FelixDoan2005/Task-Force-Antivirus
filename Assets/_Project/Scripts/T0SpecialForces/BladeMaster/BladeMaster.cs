@@ -1,0 +1,217 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class BladeMaster : MonoBehaviour
+{
+    [Header("Setup")]
+    public Camera playerCamera;
+    public Transform attackPoint;
+
+    [Header("Weapon")]
+    public float damage = 5f;
+    public float range = 2f;
+    public float cooldown = 0.6f;
+    public float swingDuration = 0.2f; // time over which a swing's hits land, staggered by which side of the arc they're on
+    public float meleeArc = 100f; // generous forward-facing cone (degrees) - anything roughly ahead and in range can be hit by any swing
+    public float forwardReach = 0.8f; // how far out in front of the body (fraction of range) the swing arcs sit
+
+    [Header("Combo")]
+    public int maxComboHits = 5;
+    public float comboWindow = 1f; // how long you have after a hit to click again and continue the combo
+
+    int comboStep; // 0 = first hit in the sequence
+    float lastAttackTime = -999f;
+
+    Vector3 Origin => attackPoint != null ? attackPoint.position : transform.position;
+    Vector3 Right => playerCamera.transform.right;
+    Vector3 Up => playerCamera.transform.up;
+    Vector3 Forward => playerCamera.transform.forward;
+
+    [Header("Q - TODO")]
+    public float qCooldown = 8f;
+    float qReadyTime;
+
+    [Header("E - TODO")]
+    public float eCooldown = 12f;
+    float eReadyTime;
+
+    [Header("X - TODO (Ultimate)")]
+    public float ultimateCooldown = 60f;
+    float ultimateReadyTime;
+
+    void Awake()
+    {
+        if (playerCamera == null)
+            playerCamera = Camera.main;
+    }
+
+    public void Attack()
+    {
+        if (Time.time - lastAttackTime > comboWindow)
+            comboStep = 0; // window expired, back to hit 1
+        else
+            comboStep = (comboStep + 1) % maxComboHits; // clicked in time, advance (loops after hit 5)
+
+        lastAttackTime = Time.time;
+
+        switch (comboStep)
+        {
+            case 0: Swing1_DiagonalUp(); break;
+            case 1: Swing2_TopRightToLeft(); break;
+            case 2: Swing3_HorizontalAcross(); break;
+            case 3: Swing4_BottomRightToTopLeft(); break;
+            case 4: Swing5_PullBackStab(); break;
+        }
+    }
+
+    // 1: red - sheathed at the left hip, diagonal slash up to the right at 45 degrees
+    void Swing1_DiagonalUp()
+    {
+        Slash(new Vector2(-1f, -1f), new Vector2(1f, 1f), Color.red);
+    }
+
+    // 2: blue - blade drops slightly from swing 1's end, then swings at a flatter angle from top-right to the left
+    void Swing2_TopRightToLeft()
+    {
+        DrawSwingArc(new Vector2(1f, 1f), new Vector2(1f, 0.5f), Color.gray, 0.15f); // the "drop" reposition, not a hit
+        Slash(new Vector2(1f, 0.5f), new Vector2(-0.8f, 0f), Color.blue); // steeper angle, more outward reach
+    }
+
+    // 3: green - starts exactly where swing 2 ends, straight across horizontally left to right
+    void Swing3_HorizontalAcross()
+    {
+        Slash(new Vector2(-0.8f, 0f), new Vector2(1f, 0f), Color.green);
+    }
+
+    // 4: yellow - same shallow angle as swing 2, but reversed: bottom-right to top-left
+    void Swing4_BottomRightToTopLeft()
+    {
+        Slash(new Vector2(1f, -0.2f), new Vector2(-1f, 0.5f), Color.yellow);
+    }
+
+    // 5: black - final hit, pull the blade back then thrust; shifted up/right from the holster (bottom-left) so it stabs from center-mass, not from the hip
+    void Swing5_PullBackStab()
+    {
+        Vector3 origin = Origin + (Right * 0.5f + Up * 0.5f) * (range * 0.3f);
+        Vector3 pullBackPoint = origin - Forward * (range * 0.4f);
+        Vector3 thrustPoint = origin + Forward * range;
+
+        Debug.DrawLine(origin, pullBackPoint, Color.black, 0.25f);
+        Debug.DrawLine(pullBackPoint, thrustPoint, Color.black, 0.25f);
+        HitStab(origin);
+    }
+
+    // draws a swing's slash line, then hits whatever falls within that same coloured arc
+    void Slash(Vector2 startLocal, Vector2 endLocal, Color color, float drawDuration = 0.25f)
+    {
+        DrawSwingArc(startLocal, endLocal, color, drawDuration);
+        HitSwingArc(startLocal, endLocal);
+    }
+
+    // draws the swing's slash path out in front of the body (pushed forward by forwardReach), so it can be tuned visually in Scene view
+    // NOTE: startLocal/endLocal are NOT normalized - their magnitude controls how far left/right/up/down that point reaches
+    void DrawSwingArc(Vector2 startLocal, Vector2 endLocal, Color color, float duration = 0.25f)
+    {
+        Vector3 origin = Origin;
+        Vector3 forwardOffset = Forward * range * forwardReach;
+        Vector3 startPoint = origin + forwardOffset + (Right * startLocal.x + Up * startLocal.y) * range;
+        Vector3 endPoint = origin + forwardOffset + (Right * endLocal.x + Up * endLocal.y) * range;
+
+        Debug.DrawLine(startPoint, endPoint, color, duration);
+    }
+
+    // eligibility is a generous forward-facing cone (meleeArc) - anything roughly ahead and in range gets hit, same as a real sword would
+    // connect with whatever's directly in front of you regardless of which decorative direction the swing animation goes.
+    // startLocal/endLocal only decide the ORDER hits land in (which side of the swing they're on), not whether they land at all.
+    void HitSwingArc(Vector2 startLocal, Vector2 endLocal)
+    {
+        Vector3 origin = Origin;
+        Vector3 startDir = (Forward * forwardReach + Right * startLocal.x + Up * startLocal.y).normalized;
+        Vector3 endDir = (Forward * forwardReach + Right * endLocal.x + Up * endLocal.y).normalized;
+        float startSide = Vector3.Dot(startDir, Right);
+        float endSide = Vector3.Dot(endDir, Right);
+
+        List<(VirusHealthBase virus, float t)> targets = new List<(VirusHealthBase, float)>();
+
+        Collider[] hits = Physics.OverlapSphere(origin, range);
+        foreach (Collider c in hits)
+        {
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (vh == null) continue;
+
+            Vector3 dirToTarget = (c.transform.position - origin).normalized;
+            if (Vector3.Angle(Forward, dirToTarget) > meleeArc * 0.5f) continue; // outside the melee cone entirely
+
+            float targetSide = Vector3.Dot(dirToTarget, Right);
+            float t = Mathf.InverseLerp(startSide, endSide, targetSide); // which side of the swing they're on, for stagger order only
+
+            targets.Add((vh, t));
+        }
+
+        targets.Sort((a, b) => a.t.CompareTo(b.t)); // hit order follows whichever side the blade swings in from
+
+        StartCoroutine(SwingDamage(targets, origin));
+    }
+
+    // staggers each hit across swingDuration based on how far along the arc the target is - same idea as SwordWeapon's SwingDamage
+    IEnumerator SwingDamage(List<(VirusHealthBase virus, float t)> targets, Vector3 origin)
+    {
+        float startTime = Time.time;
+        foreach (var target in targets)
+        {
+            float hitTime = startTime + swingDuration * target.t;
+            yield return new WaitUntil(() => Time.time >= hitTime);
+
+            if (target.virus == null) continue;
+
+            target.virus.TakeDamage(damage);
+            Debug.DrawLine(origin, target.virus.transform.position, Color.white, 0.2f);
+        }
+    }
+
+    // forward-facing hit check for the stab, since it thrusts along Forward instead of sweeping through the right/up arc
+    // uses the same generous meleeArc as the other swings, not the old narrow stabArc, so a target dead ahead doesn't get missed
+    // just because the stab's origin is shifted sideways/up toward center-mass
+    void HitStab(Vector3 origin)
+    {
+        Vector3 viewForward = Forward;
+
+        Collider[] hits = Physics.OverlapSphere(origin, range);
+        foreach (Collider c in hits)
+        {
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (vh == null) continue;
+
+            Vector3 dirToTarget = (c.transform.position - origin).normalized;
+            if (Vector3.Angle(viewForward, dirToTarget) > meleeArc * 0.5f) continue;
+
+            vh.TakeDamage(damage);
+            Debug.DrawLine(origin, vh.transform.position, Color.white, 0.2f);
+        }
+    }
+
+    void TryActivateQ()
+    {
+        if (Time.time < qReadyTime) return;
+        qReadyTime = Time.time + qCooldown;
+
+        // TODO: Q ability
+    }
+
+    void TryActivateE()
+    {
+        if (Time.time < eReadyTime) return;
+        eReadyTime = Time.time + eCooldown;
+
+        // TODO: E ability
+    }
+
+    void TryActivateUltimate()
+    {
+        if (Time.time < ultimateReadyTime) return;
+        ultimateReadyTime = Time.time + ultimateCooldown;
+
+        // TODO: X ultimate
+    }
+}
