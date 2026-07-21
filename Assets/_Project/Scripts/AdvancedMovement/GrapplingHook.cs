@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.Rendering;
 
 [RequireComponent(typeof(CharacterController))] //safety net
 public class GrapplingHook : MonoBehaviour
