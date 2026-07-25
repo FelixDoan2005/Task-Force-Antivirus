@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,6 +8,8 @@ public class BladeMaster : MonoBehaviour
     [Header("Setup")]
     public Camera playerCamera;
     public Transform attackPoint;
+    public CharacterController playerController; // BladeMaster lives on the weapon object, not the player root, so this needs to be wired up in the Inspector
+    public WeaponSwitcher weaponSwitcher; // used to check the player is actually in the BladeMaster class before letting abilities fire
 
     [Header("Weapon")]
     public float damage = 5f;
@@ -28,9 +31,19 @@ public class BladeMaster : MonoBehaviour
     Vector3 Up => playerCamera.transform.up;
     Vector3 Forward => playerCamera.transform.forward;
 
-    [Header("Q - TODO")]
+    [Header("Q - Dash Strike")]
     public float qCooldown = 8f;
+    public float dashSpeed = 25f;
+    public float dashDuration = 0.25f;
+    public float dashDistance = 50f; // TODO: not wired in yet - if you want to tune by distance instead of speed*duration, derive dashSpeed = dashDistance / dashDuration in TryActivateQ
+    public float dashHitRadius = 1f; // radius checked around the player each tick while dashing
+    public float dashDamage = 100f;
+
     float qReadyTime;
+    bool isDashing;
+    Vector3 dashDirection;
+    float dashEndTime;
+    HashSet<VirusHealthBase> hitDuringDash = new HashSet<VirusHealthBase>(); // so a single dash doesn't multi-hit the same target every frame
 
     [Header("E - TODO")]
     public float eCooldown = 12f;
@@ -44,6 +57,48 @@ public class BladeMaster : MonoBehaviour
     {
         if (playerCamera == null)
             playerCamera = Camera.main;
+    }
+
+    void Update()
+    {
+        if (Keyboard.current != null)
+        {
+            if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateQ();
+            if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateE();
+            if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
+        }
+
+        if (isDashing)
+        {
+            // TODO: move the player 
+            Vector3 beforeMove = playerCamera.transform.position;
+            float intendedMove = dashSpeed * Time.deltaTime;
+            playerController.Move(dashSpeed * Time.deltaTime * dashDirection);
+            float actualMoved = Vector3.Distance(beforeMove, playerController.transform.position);
+            bool blocked = actualMoved < intendedMove * 0.1f;
+            // TODO: deal damage along the path - each frame (or on a small tick timer), OverlapSphere at the
+            Collider[] hits = Physics.OverlapSphere(transform.position, dashHitRadius);
+
+            foreach (Collider c in hits)
+            {
+                VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+                if (vh==null) continue;
+
+                if (!hitDuringDash.Contains(vh))
+                {
+                    vh.TakeDamage(dashDamage);
+                    Debug.DrawLine(playerCamera.transform.position, vh.transform.position, Color.white, 0.2f);
+                    hitDuringDash.Add(vh);
+                }
+             }
+
+
+            if (Time.time >= dashEndTime || blocked)
+            {
+                isDashing = false;
+                hitDuringDash.Clear();
+            }
+        }
     }
 
     public void Attack()
@@ -194,9 +249,16 @@ public class BladeMaster : MonoBehaviour
     void TryActivateQ()
     {
         if (Time.time < qReadyTime) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
-        // TODO: Q ability
+        dashDirection = playerCamera.transform.forward;
+        dashDirection.y = 0f;
+        dashDirection = dashDirection.normalized;
+        dashSpeed = dashDistance / dashDuration; // tune by distance instead of speed directly
+        isDashing = true;
+        dashEndTime = Time.time + dashDuration;
+        hitDuringDash.Clear();
     }
 
     void TryActivateE()
