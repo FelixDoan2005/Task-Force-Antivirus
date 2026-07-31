@@ -9,6 +9,7 @@ public class BladeMaster : MonoBehaviour
     public Camera playerCamera;
     public Transform attackPoint;
     public CharacterController playerController; // BladeMaster lives on the weapon object, not the player root, so this needs to be wired up in the Inspector
+    public PlayerController playerMovement; // used to freeze movement (suspendGravity) during the ultimate's windup + blink sequence
     public WeaponSwitcher weaponSwitcher; // used to check the player is actually in the BladeMaster class before letting abilities fire
 
     [Header("Weapon")]
@@ -61,9 +62,15 @@ public class BladeMaster : MonoBehaviour
     float enhancedEndTime;
     bool nextSlashIsLeft = true; // alternates "/" (left) then "\" (right) each click while enhanced
 
-    [Header("X - TODO (Ultimate)")]
+    [Header("X - Ultimate: Blink Execution")]
     public float ultimateCooldown = 60f;
+    public float ultimateWindup = 5f; // how long the player stands idle before the blink sequence starts
+    public float ultimateRadius = 10f; // enemies within this radius (of where the windup started) get marked
+    public float ultimateDamagePerHit = 20f;
+    public float blinkInterval = 0.15f; // time between each blink/hit
+
     float ultimateReadyTime;
+    bool isUltimateActive; // true for the whole windup + blink sequence - blocks Attack()/Q/E while it runs
 
     void Awake()
     {
@@ -131,6 +138,8 @@ public class BladeMaster : MonoBehaviour
 
     public void Attack()
     {
+        if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
+
         if (isEnhanced)
         {
             FireEnhancedSlash();
@@ -293,6 +302,7 @@ public class BladeMaster : MonoBehaviour
     void TryActivateQ()
     {
         if (Time.time < qReadyTime) return;
+        if (isUltimateActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
@@ -308,6 +318,7 @@ public class BladeMaster : MonoBehaviour
     void TryActivateE()
     {
         if (Time.time < eReadyTime) return;
+        if (isUltimateActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
@@ -365,8 +376,80 @@ public class BladeMaster : MonoBehaviour
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
+        if (isUltimateActive) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         ultimateReadyTime = Time.time + ultimateCooldown;
 
-        // TODO: X ultimate
+        StartCoroutine(UltimateSequence());
+    }
+
+    IEnumerator UltimateSequence()
+    {
+        isUltimateActive = true;
+        if (playerMovement != null) playerMovement.suspendGravity = true;
+
+        Vector3 startPosition = playerController.transform.position;
+
+        // mark every enemy within ultimateRadius right away, so we can show the scan lines for the whole windup
+        List<VirusHealthBase> targets = new List<VirusHealthBase>();
+        Collider[] hits = Physics.OverlapSphere(startPosition, ultimateRadius);
+        foreach (Collider c in hits)
+        {
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (vh != null && !targets.Contains(vh))
+                targets.Add(vh);
+        }
+
+        // idle windup - draw a scan line to every marked target each frame, showing who's about to get hit
+        // TODO: play an idle/channel animation here once you have one
+        float windupTimer = 0f;
+        while (windupTimer < ultimateWindup)
+        {
+            windupTimer += Time.deltaTime;
+
+            foreach (VirusHealthBase target in targets)
+            {
+                if (target == null) continue;
+                Debug.DrawLine(startPosition, target.transform.position, Color.red, 0f);
+            }
+
+            yield return null;
+        }
+
+        // shuffle into a random order (Fisher-Yates)
+        for (int i = targets.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (targets[i], targets[j]) = (targets[j], targets[i]);
+        }
+
+        // blink to each target in turn and slash it
+        foreach (VirusHealthBase target in targets)
+        {
+            if (target == null) continue; // could've been destroyed by an earlier hit in this same sequence
+
+            Vector3 currentPosition = playerController.transform.position;
+            Vector3 approachDir = (target.transform.position - currentPosition).normalized;
+            Vector3 blinkPoint = target.transform.position - approachDir * range; // land just short of the enemy, at melee range
+
+            TeleportTo(blinkPoint);
+            target.TakeDamage(ultimateDamagePerHit);
+            Debug.DrawLine(blinkPoint, target.transform.position, Color.magenta, blinkInterval);
+
+            yield return new WaitForSeconds(blinkInterval);
+        }
+
+        TeleportTo(startPosition);
+
+        if (playerMovement != null) playerMovement.suspendGravity = false;
+        isUltimateActive = false;
+    }
+
+    // CharacterController fights direct position changes unless briefly disabled first
+    void TeleportTo(Vector3 position)
+    {
+        playerController.enabled = false;
+        playerController.transform.position = position;
+        playerController.enabled = true;
     }
 }
