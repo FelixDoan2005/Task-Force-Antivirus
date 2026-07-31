@@ -45,9 +45,21 @@ public class BladeMaster : MonoBehaviour
     float dashEndTime;
     HashSet<VirusHealthBase> hitDuringDash = new HashSet<VirusHealthBase>(); // so a single dash doesn't multi-hit the same target every frame
 
-    [Header("E - TODO")]
+    [Header("E - Ranged Slash")]
     public float eCooldown = 12f;
+    public Transform leftSlashPoint; // where the "/" slash originates from 
+    public Transform rightSlashPoint; // where the "\" slash originates from 
+    public GameObject enhancedCrosshair; // shown only while isEnhanced is true 
+    public float slashSpeed = 20f;
+    public float slashRange = 15f;
+    public float slashThickness = 0.5f; // 
+    public float slashDamage = 10f;
+
     float eReadyTime;
+    bool isEnhanced;
+    public float enhancedDuration = 5f;
+    float enhancedEndTime;
+    bool nextSlashIsLeft = true; // alternates "/" (left) then "\" (right) each click while enhanced
 
     [Header("X - TODO (Ultimate)")]
     public float ultimateCooldown = 60f;
@@ -68,6 +80,7 @@ public class BladeMaster : MonoBehaviour
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
+        //q ability
         if (isDashing)
         {
             // TODO: move the player 
@@ -99,10 +112,31 @@ public class BladeMaster : MonoBehaviour
                 hitDuringDash.Clear();
             }
         }
+
+        //e ability
+        if(isEnhanced)
+        {
+            if (Time.time >= enhancedEndTime)
+            {
+                isEnhanced = false;
+
+                if (enhancedCrosshair != null)
+                    enhancedCrosshair.SetActive(false);
+            }
+        }
+
+
+
     }
 
     public void Attack()
     {
+        if (isEnhanced)
+        {
+            FireEnhancedSlash();
+            return;
+        }
+
         if (Time.time - lastAttackTime > comboWindow)
             comboStep = 0; // window expired, back to hit 1
         else
@@ -118,6 +152,16 @@ public class BladeMaster : MonoBehaviour
             case 3: Swing4_BottomRightToTopLeft(); break;
             case 4: Swing5_PullBackStab(); break;
         }
+    }
+
+    // one click = one slash while enhanced, alternating "/" (left) and "\" (right) each time
+    void FireEnhancedSlash()
+    {
+        Vector3 centre = GetCrosshairPoint();
+        Transform origin = nextSlashIsLeft ? leftSlashPoint : rightSlashPoint;
+
+        StartCoroutine(FireSlash(origin.position, centre, nextSlashIsLeft));
+        nextSlashIsLeft = !nextSlashIsLeft;
     }
 
     // 1: red - sheathed at the left hip, diagonal slash up to the right at 45 degrees
@@ -264,9 +308,58 @@ public class BladeMaster : MonoBehaviour
     void TryActivateE()
     {
         if (Time.time < eReadyTime) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
-        // TODO: E ability
+        isEnhanced = true;
+        enhancedEndTime = Time.time + enhancedDuration;
+        nextSlashIsLeft = true; // always start each enhanced window with the "/" slash
+
+        if (enhancedCrosshair != null)
+            enhancedCrosshair.SetActive(true);
+    }
+
+    // where the reticle is currently pointing - same raycast CrosshairTarget.cs uses (screen centre),
+    // falls back to a fixed point straight ahead if nothing's hit within slashRange
+    Vector3 GetCrosshairPoint()
+    {
+        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        if (Physics.Raycast(ray, out RaycastHit hit, slashRange))
+            return hit.point;
+
+        return Origin + Forward * slashRange;
+    }
+
+    // sweeps a point from 'start' to 'end' over time, hitting (and piercing through) anything within slashThickness of its path
+    IEnumerator FireSlash(Vector3 start, Vector3 end, bool isLeftSlash)
+    {
+        HashSet<VirusHealthBase> alreadyHit = new HashSet<VirusHealthBase>();
+        float travelTime = Vector3.Distance(start, end) / slashSpeed;
+        float elapsed = 0f;
+
+        Vector3 tiltAxis = (isLeftSlash ? (Right + Up) : (Right - Up)).normalized; // "/" vs "\"
+        float visualLength = slashThickness * 2f;
+
+        while (elapsed < travelTime)
+        {
+            elapsed += Time.deltaTime;
+            Vector3 point = Vector3.Lerp(start, end, elapsed / travelTime);
+
+            Collider[] hits = Physics.OverlapSphere(point, slashThickness);
+            foreach (Collider c in hits)
+            {
+                VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+                if (vh == null || alreadyHit.Contains(vh)) continue;
+
+                vh.TakeDamage(slashDamage);
+                alreadyHit.Add(vh);
+                Debug.DrawLine(point, vh.transform.position, Color.white, 0.2f);
+            }
+
+            // draws the actual diagonal slash mark ("/" or "\") at the blade's current position, instead of a single tiny tick
+            Debug.DrawLine(point - tiltAxis * visualLength, point + tiltAxis * visualLength, Color.red, 0.15f);
+            yield return null;
+        }
     }
 
     void TryActivateUltimate()
