@@ -67,6 +67,7 @@ public class BladeMaster : MonoBehaviour
     public float ultimateWindup = 5f; // how long the player stands idle before the blink sequence starts
     public float ultimateRadius = 10f; // enemies within this radius (of where the windup started) get marked
     public float ultimateDamagePerHit = 20f;
+    public int totalSlashes = 50; // if fewer targets than this exist, extras stack onto whoever has the most health left
     public float blinkInterval = 0.15f; // time between each blink/hit
 
     float ultimateReadyTime;
@@ -400,6 +401,15 @@ public class BladeMaster : MonoBehaviour
                 targets.Add(vh);
         }
 
+        // safety exit - nothing to blink to, so don't waste the player's time standing idle. Cooldown's already
+        // ticking from the moment X was pressed, so nothing extra needed there.
+        if (targets.Count == 0)
+        {
+            isUltimateActive = false;
+            if (playerMovement != null) playerMovement.suspendGravity = false;
+            yield break;
+        }
+
         // idle windup - draw a scan line to every marked target each frame, showing who's about to get hit
         // TODO: play an idle/channel animation here once you have one
         float windupTimer = 0f;
@@ -416,21 +426,52 @@ public class BladeMaster : MonoBehaviour
             yield return null;
         }
 
-        // shuffle into a random order (Fisher-Yates)
-        for (int i = targets.Count - 1; i > 0; i--)
+        // build the 50-slash sequence: every target gets a slash first, then remaining slashes stack onto
+        // whichever target currently has the most (virtual) health left - so one big enemy gets all 50,
+        // and a room of equal-health enemies split them roughly evenly.
+        List<VirusHealthBase> hitSequence = new List<VirusHealthBase>();
+        Dictionary<VirusHealthBase, float> remainingHealth = new Dictionary<VirusHealthBase, float>();
+        foreach (VirusHealthBase t in targets)
+            remainingHealth[t] = t.CurrentHealth;
+
+        for (int i = 0; i < totalSlashes; i++)
         {
-            int j = Random.Range(0, i + 1);
-            (targets[i], targets[j]) = (targets[j], targets[i]);
+            VirusHealthBase best = null;
+            float bestHealth = float.NegativeInfinity;
+            foreach (VirusHealthBase t in targets)
+            {
+                if (t == null) continue;
+                if (remainingHealth[t] > bestHealth)
+                {
+                    bestHealth = remainingHealth[t];
+                    best = t;
+                }
+            }
+
+            if (best == null) break; // everything's already dead
+
+            hitSequence.Add(best);
+            remainingHealth[best] -= ultimateDamagePerHit;
         }
 
-        // blink to each target in turn and slash it
-        foreach (VirusHealthBase target in targets)
+        // shuffle the actual visit order so it plays out randomly, not "same enemy 5 times in a row"
+        for (int i = hitSequence.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            (hitSequence[i], hitSequence[j]) = (hitSequence[j], hitSequence[i]);
+        }
+
+        // blink to each target in turn and slash it - a fresh random spot around the target every single time,
+        // so repeat visits (same target hit multiple times, whether back-to-back or later in the sequence)
+        // never land in the same place twice
+        foreach (VirusHealthBase target in hitSequence)
         {
             if (target == null) continue; // could've been destroyed by an earlier hit in this same sequence
 
-            Vector3 currentPosition = playerController.transform.position;
-            Vector3 approachDir = (target.transform.position - currentPosition).normalized;
-            Vector3 blinkPoint = target.transform.position - approachDir * range; // land just short of the enemy, at melee range
+            float randomAngle = Random.Range(0f, 360f);
+            Vector3 randomDir = Quaternion.Euler(0f, randomAngle, 0f) * Vector3.forward;
+            Vector3 blinkPoint = target.transform.position + randomDir * range;
+            blinkPoint.y = target.transform.position.y; // keep it at the target's height instead of floating/embedding
 
             TeleportTo(blinkPoint);
             target.TakeDamage(ultimateDamagePerHit);
