@@ -36,8 +36,17 @@ public class PauseMenuUI : MonoBehaviour
     {
         isPaused = !isPaused;
 
-        if (pausePanel != null)
-            pausePanel.SetActive(isPaused);
+        if (isPaused)
+        {
+            if (pausePanel != null) pausePanel.SetActive(true);
+        }
+        else
+        {
+            // closing entirely - hide every panel, not just whichever one happens to be open
+            if (pausePanel != null) pausePanel.SetActive(false);
+            if (settingsPanel != null) settingsPanel.SetActive(false);
+            if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
+        }
 
         if (weaponSwitcher != null)
             weaponSwitcher.SetWeaponInputEnabled(!isPaused);
