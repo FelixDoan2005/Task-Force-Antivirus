@@ -51,6 +51,7 @@ public class BladeMaster : MonoBehaviour
     Vector3 dashDirection;
     float dashEndTime;
     HashSet<VirusHealthBase> hitDuringDash = new HashSet<VirusHealthBase>(); // so a single dash doesn't multi-hit the same target every frame
+    HashSet<Collider> ignoredDuringDash = new HashSet<Collider>(); // colliders we've told Physics to ignore for this dash, so we can restore them after
 
     [Header("E - Ranged Slash")]
     public float eCooldown = 12f;
@@ -107,13 +108,23 @@ public class BladeMaster : MonoBehaviour
         //q ability
         if (isDashing)
         {
-            // TODO: move the player 
-            Vector3 beforeMove = playerCamera.transform.position;
-            float intendedMove = dashSpeed * Time.deltaTime;
-            playerController.Move(dashSpeed * Time.deltaTime * dashDirection);
-            float actualMoved = Vector3.Distance(beforeMove, playerController.transform.position);
-            bool blocked = actualMoved < intendedMove * 0.1f;
-            // TODO: deal damage along the path - each frame (or on a small tick timer), OverlapSphere at the
+            // ignore collision with any virus we're about to run into, so the dash passes through them
+            // physically instead of the CharacterController stopping on contact - only walls/terrain should block it
+            // scan radius must cover this frame's full travel distance, not just dashHitRadius, or fast dashes
+            // can reach a virus before it's ever been added to the ignore list
+            float scanRadius = Mathf.Max(dashHitRadius, dashSpeed * Time.deltaTime) + 0.5f;
+            Collider[] nearby = Physics.OverlapSphere(playerController.transform.position, scanRadius);
+            foreach (Collider c in nearby)
+            {
+                if (c.GetComponentInParent<VirusHealthBase>() == null) continue;
+                if (ignoredDuringDash.Add(c))
+                    Physics.IgnoreCollision(playerController, c, true);
+            }
+
+            // CollisionFlags.Sides is Unity's own result from the Move() sweep - reliable even when the
+            // CharacterController slides along a wall hit at an angle, unlike inferring it from distance moved
+            CollisionFlags flags = playerController.Move(dashSpeed * Time.deltaTime * dashDirection);
+            bool blocked = (flags & CollisionFlags.Sides) != 0;
             Collider[] hits = Physics.OverlapSphere(transform.position, dashHitRadius);
 
             foreach (Collider c in hits)
@@ -134,6 +145,14 @@ public class BladeMaster : MonoBehaviour
             {
                 isDashing = false;
                 hitDuringDash.Clear();
+
+                // restore normal collision with everything this dash ignored
+                foreach (Collider c in ignoredDuringDash)
+                {
+                    if (c != null)
+                        Physics.IgnoreCollision(playerController, c, false);
+                }
+                ignoredDuringDash.Clear();
             }
         }
 
