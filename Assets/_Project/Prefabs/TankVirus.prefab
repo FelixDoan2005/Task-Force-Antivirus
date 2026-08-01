@@ -159,4 +159,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: feb43ad1cab689b44bc55873a3e3e3ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieHealth
-  maxHealth: 10000
+  maxHealth: 100
