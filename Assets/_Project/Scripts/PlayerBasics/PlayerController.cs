@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 6f;
     public float sprintSpeed = 10f;
     public float gravity = -20f;
+    public float speedMultiplier = 1f; // e.g. 0.2f while blocking = moves at 20% speed
 
     [Header("Jump")]
     public float jumpHeight = 1.2f;
@@ -156,7 +157,7 @@ public class PlayerController : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
             speed = sprintSpeed;
 
-        controller.Move(speed * Time.deltaTime * move);
+        controller.Move(speed * speedMultiplier * Time.deltaTime * move);
 
         // Grounding
         bool grounded = CheckGrounded();
