@@ -4,16 +4,19 @@ using System.Collections;
 
 public class SwordWeapon : MonoBehaviour
 {
+    [Header("Setup")]
+    public Camera playerCamera;
+    public Transform attackPoint;
+
+    [Header("Weapon")]
     public float damage = 5f;
     public float range = 2f;
     public float cooldown = 0.6f;
-    public Camera playerCamera;
-    public Transform attackPoint;
     public float arcAngle = 5f;
-
-    private bool swingLeftToRight = true;
     public float swingDuration = 0.3f;
     public float delayBetweenHits = 5f;
+
+    private bool swingLeftToRight = true;
 
     void Awake()
     {

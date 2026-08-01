@@ -36,8 +36,17 @@ public class PauseMenuUI : MonoBehaviour
     {
         isPaused = !isPaused;
 
-        if (pausePanel != null)
-            pausePanel.SetActive(isPaused);
+        if (isPaused)
+        {
+            if (pausePanel != null) pausePanel.SetActive(true);
+        }
+        else
+        {
+            // closing entirely - hide every panel, not just whichever one happens to be open
+            if (pausePanel != null) pausePanel.SetActive(false);
+            if (settingsPanel != null) settingsPanel.SetActive(false);
+            if (classSelectorPanel != null) classSelectorPanel.SetActive(false);
+        }
 
         if (weaponSwitcher != null)
             weaponSwitcher.SetWeaponInputEnabled(!isPaused);
@@ -94,7 +103,7 @@ public class PauseMenuUI : MonoBehaviour
         switch (index)
         {
             case 0: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Bow); break; // MasterArcher
-            case 1: NotImplementedYet("BladeMaster"); break;
+            case 1: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.BladeMaster); break; // BladeMaster
             case 2: NotImplementedYet("Demon"); break;
             case 3: NotImplementedYet("Jester"); break;
         }

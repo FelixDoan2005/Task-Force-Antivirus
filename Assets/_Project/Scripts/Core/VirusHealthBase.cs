@@ -5,6 +5,8 @@ public abstract class VirusHealthBase : MonoBehaviour
     public float maxHealth = 10f;
     protected float currentHealth;
 
+    public float CurrentHealth => currentHealth;
+
     protected virtual void Awake()
     {
         currentHealth = maxHealth;

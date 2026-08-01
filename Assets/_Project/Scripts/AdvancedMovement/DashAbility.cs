@@ -14,7 +14,7 @@ public class DashAbility : MonoBehaviour
 
     [Header("Weapon Restriction")]
     public WeaponSwitcher weaponSwitcher;
-    public int[] allowedWeaponIndices = { 0 }; // 0 = bow, for now
+    public int[] allowedWeaponIndices = { 0, 3 }; // 0 = bow, 3 = blademaster
 
     CharacterController controller;
     Vector3 dashDirection;
