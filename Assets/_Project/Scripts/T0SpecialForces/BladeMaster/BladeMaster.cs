@@ -411,31 +411,22 @@ public class BladeMaster : MonoBehaviour
 
         Vector3 startPosition = playerController.transform.position;
 
-        // mark every enemy within ultimateRadius right away, so we can show the scan lines for the whole windup
-        List<VirusHealthBase> targets = new List<VirusHealthBase>();
-        Collider[] hits = Physics.OverlapSphere(startPosition, ultimateRadius);
-        foreach (Collider c in hits)
-        {
-            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
-            if (vh != null && !targets.Contains(vh))
-                targets.Add(vh);
-        }
-
-        // safety exit - nothing to blink to, so don't waste the player's time standing idle. Cooldown's already
-        // ticking from the moment X was pressed, so nothing extra needed there.
-        if (targets.Count == 0)
-        {
-            isUltimateActive = false;
-            if (playerMovement != null) playerMovement.suspendGravity = false;
-            yield break;
-        }
-
-        // idle windup - draw a scan line to every marked target each frame, showing who's about to get hit
+        // idle windup - continuously rescan every frame so enemies that walk into range mid-windup get marked
+        // too (HashSet.Add ignores anything already marked), drawing a scan line to everyone currently marked
         // TODO: play an idle/channel animation here once you have one
+        HashSet<VirusHealthBase> targets = new HashSet<VirusHealthBase>();
         float windupTimer = 0f;
         while (windupTimer < ultimateWindup)
         {
             windupTimer += Time.deltaTime;
+
+            Collider[] hits = Physics.OverlapSphere(startPosition, ultimateRadius);
+            foreach (Collider c in hits)
+            {
+                VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+                if (vh != null)
+                    targets.Add(vh);
+            }
 
             foreach (VirusHealthBase target in targets)
             {
@@ -446,19 +437,29 @@ public class BladeMaster : MonoBehaviour
             yield return null;
         }
 
+        // safety exit - nothing was ever marked during the whole windup, so skip the blink phase entirely.
+        // Cooldown's already ticking from the moment X was pressed, so nothing extra needed there.
+        if (targets.Count == 0)
+        {
+            isUltimateActive = false;
+            if (playerMovement != null) playerMovement.suspendGravity = false;
+            yield break;
+        }
+
         // build the 50-slash sequence: every target gets a slash first, then remaining slashes stack onto
         // whichever target currently has the most (virtual) health left - so one big enemy gets all 50,
         // and a room of equal-health enemies split them roughly evenly.
+        List<VirusHealthBase> targetList = new List<VirusHealthBase>(targets);
         List<VirusHealthBase> hitSequence = new List<VirusHealthBase>();
         Dictionary<VirusHealthBase, float> remainingHealth = new Dictionary<VirusHealthBase, float>();
-        foreach (VirusHealthBase t in targets)
+        foreach (VirusHealthBase t in targetList)
             remainingHealth[t] = t.CurrentHealth;
 
         for (int i = 0; i < totalSlashes; i++)
         {
             VirusHealthBase best = null;
             float bestHealth = float.NegativeInfinity;
-            foreach (VirusHealthBase t in targets)
+            foreach (VirusHealthBase t in targetList)
             {
                 if (t == null) continue;
                 if (remainingHealth[t] > bestHealth)
