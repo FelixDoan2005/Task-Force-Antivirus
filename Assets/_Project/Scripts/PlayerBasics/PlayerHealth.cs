@@ -5,6 +5,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 {
     public float maxHealth = 100.0f;
     public float currentHealth;
+    public float damageTakenMultiplier = 1f; // e.g. 0.25f while blocking = takes 25% of incoming damage
 
     public bool isDead { get; private set; }
     public bool IsTargetable => !isDead;
@@ -22,6 +23,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         if (isDead) return;
 
+        amount *= damageTakenMultiplier;
         currentHealth -= amount;
         currentHealth = Mathf.Clamp(currentHealth, 0.0f, maxHealth);
 

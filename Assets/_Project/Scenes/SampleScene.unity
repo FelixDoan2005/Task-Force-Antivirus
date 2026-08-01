@@ -804,8 +804,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BladeMaster
   playerCamera: {fileID: 330585545}
   attackPoint: {fileID: 1169286949}
-  playerController: {fileID: 0}
-  weaponSwitcher: {fileID: 0}
+  playerController: {fileID: 689043506}
+  playerMovement: {fileID: 689043505}
+  weaponSwitcher: {fileID: 689043512}
   damage: 30
   range: 3
   cooldown: 0.6
@@ -817,19 +818,24 @@ MonoBehaviour:
   qCooldown: 8
   dashSpeed: 25
   dashDuration: 0.25
-  dashDistance: 5
+  dashDistance: 30
   dashHitRadius: 1
   dashDamage: 100
   eCooldown: 12
   leftSlashPoint: {fileID: 2026819899}
   rightSlashPoint: {fileID: 1663526401}
   enhancedCrosshair: {fileID: 510844386}
-  slashSpeed: 20
-  slashRange: 15
+  slashSpeed: 80
+  slashRange: 100
   slashThickness: 0.5
   slashDamage: 70
   enhancedDuration: 5
   ultimateCooldown: 60
+  ultimateWindup: 5
+  ultimateRadius: 15
+  ultimateDamagePerHit: 200
+  totalSlashes: 50
+  blinkInterval: 0.05
 --- !u!1 &127885314
 GameObject:
   m_ObjectHideFlags: 0
@@ -3450,6 +3456,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 579385285}
   m_CullTransparentMesh: 1
+--- !u!1 &583606126
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 583606127}
+  - component: {fileID: 583606128}
+  m_Layer: 0
+  m_Name: TankVirusSpawn (10)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &583606127
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 583606126}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -10.95, y: 2, z: 2.36}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &583606128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 583606126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
+  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 6
+  maxAlive: 1
 --- !u!1 &615416470
 GameObject:
   m_ObjectHideFlags: 0
@@ -4099,7 +4153,6 @@ GameObject:
   - component: {fileID: 689043513}
   - component: {fileID: 689043514}
   - component: {fileID: 689043515}
-  - component: {fileID: 689043516}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -4346,46 +4399,6 @@ MonoBehaviour:
   allowedWeaponIndices: 00000000
   playerController: {fileID: 689043505}
   playerCamera: {fileID: 330585545}
---- !u!114 &689043516
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 689043503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f8c06f1f215339498068644fd457936, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BladeMaster
-  playerCamera: {fileID: 330585545}
-  attackPoint: {fileID: 1169286949}
-  playerController: {fileID: 689043506}
-  weaponSwitcher: {fileID: 689043512}
-  damage: 50
-  range: 2
-  cooldown: 0.6
-  swingDuration: 0.2
-  meleeArc: 100
-  forwardReach: 0.8
-  maxComboHits: 5
-  comboWindow: 1
-  qCooldown: 8
-  dashSpeed: 50
-  dashDuration: 0.25
-  dashDistance: 15
-  dashHitRadius: 3
-  dashDamage: 100
-  eCooldown: 12
-  leftSlashPoint: {fileID: 2026819899}
-  rightSlashPoint: {fileID: 1663526401}
-  enhancedCrosshair: {fileID: 510844386}
-  slashSpeed: 20
-  slashRange: 15
-  slashThickness: 0.5
-  slashDamage: 70
-  enhancedDuration: 5
-  ultimateCooldown: 60
 --- !u!1 &691659584
 GameObject:
   m_ObjectHideFlags: 0
@@ -9182,6 +9195,8 @@ Transform:
   m_Children:
   - {fileID: 2050896635}
   - {fileID: 1486071845}
+  - {fileID: 583606127}
+  - {fileID: 2019509469}
   - {fileID: 910520278}
   - {fileID: 1331622920}
   - {fileID: 1203543134}
@@ -12740,6 +12755,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1997794961}
   m_CullTransparentMesh: 1
+--- !u!1 &2019509468
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2019509469}
+  - component: {fileID: 2019509470}
+  m_Layer: 0
+  m_Name: TankVirusSpawn (9)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2019509469
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019509468}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.28, y: -10.4, z: -5.74}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2019509470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019509468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
+  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 6
+  maxAlive: 1
 --- !u!1 &2026819898
 GameObject:
   m_ObjectHideFlags: 0

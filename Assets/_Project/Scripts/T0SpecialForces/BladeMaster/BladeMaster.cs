@@ -9,8 +9,14 @@ public class BladeMaster : MonoBehaviour
     public Camera playerCamera;
     public Transform attackPoint;
     public CharacterController playerController; // BladeMaster lives on the weapon object, not the player root, so this needs to be wired up in the Inspector
-    public PlayerController playerMovement; // used to freeze movement (suspendGravity) during the ultimate's windup + blink sequence
+    public PlayerController playerMovement; // used to freeze movement (suspendGravity) during the ultimate's windup + blink sequence, and to slow movement while blocking
+    public PlayerHealth playerHealth; // used to reduce incoming damage while blocking
     public WeaponSwitcher weaponSwitcher; // used to check the player is actually in the BladeMaster class before letting abilities fire
+
+    [Header("Block")]
+    public float blockMoveSpeedMultiplier = 0.2f; // 20% of normal move speed while blocking
+    public float blockDamageTakenMultiplier = 0.25f; // takes 25% of incoming damage (i.e. 75% reduction) while blocking
+    bool isBlocking;
 
     [Header("Weapon")]
     public float damage = 5f;
@@ -88,6 +94,16 @@ public class BladeMaster : MonoBehaviour
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
+        //block - holding right click, only while actually in the BladeMaster class and not frozen mid-ultimate
+        bool isBladeMasterClass = weaponSwitcher != null && weaponSwitcher.CurrentClass == WeaponSwitcher.PlayerClass.BladeMaster;
+        isBlocking = isBladeMasterClass && !isUltimateActive && Mouse.current != null && Mouse.current.rightButton.isPressed;
+
+        if (playerMovement != null)
+            playerMovement.speedMultiplier = isBlocking ? blockMoveSpeedMultiplier : 1f;
+
+        if (playerHealth != null)
+            playerHealth.damageTakenMultiplier = isBlocking ? blockDamageTakenMultiplier : 1f;
+
         //q ability
         if (isDashing)
         {
@@ -140,6 +156,7 @@ public class BladeMaster : MonoBehaviour
     public void Attack()
     {
         if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
+        if (isBlocking) return; // can't attack while holding block
 
         if (isEnhanced)
         {
@@ -304,6 +321,7 @@ public class BladeMaster : MonoBehaviour
     {
         if (Time.time < qReadyTime) return;
         if (isUltimateActive) return;
+        if (isBlocking) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
@@ -320,6 +338,7 @@ public class BladeMaster : MonoBehaviour
     {
         if (Time.time < eReadyTime) return;
         if (isUltimateActive) return;
+        if (isBlocking) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
@@ -378,6 +397,7 @@ public class BladeMaster : MonoBehaviour
     {
         if (Time.time < ultimateReadyTime) return;
         if (isUltimateActive) return;
+        if (isBlocking) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         ultimateReadyTime = Time.time + ultimateCooldown;
 
