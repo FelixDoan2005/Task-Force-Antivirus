@@ -18,6 +18,8 @@ public class BladeMaster : MonoBehaviour
     public float blockDamageTakenMultiplier = 0.25f; // takes 25% of incoming damage (i.e. 75% reduction) while blocking
     bool isBlocking;
 
+    public bool IsBlocking => isBlocking; // read by CharacterAnimatorDriver
+
     [Header("Weapon")]
     public float damage = 5f;
     public float range = 2f;

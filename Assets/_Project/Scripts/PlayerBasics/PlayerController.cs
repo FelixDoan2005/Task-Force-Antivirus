@@ -51,6 +51,12 @@ public class PlayerController : MonoBehaviour
 
     public bool suspendGravity;
 
+    //raw WASD input this frame, -1..1 on each axis. read by the active class's animator driver
+    public Vector2 MoveInput { get; private set; }
+
+    //true only while sprinting AND actually moving
+    public bool IsSprinting { get; private set; }
+
 
     void Awake()
     {
@@ -149,13 +155,18 @@ public class PlayerController : MonoBehaviour
             if (Keyboard.current.aKey.isPressed) input.x -= 1.0f;
         }
 
+        MoveInput = input; // exposed so each class's model can drive its own locomotion blend tree
+
         Vector3 move = transform.right * input.x + transform.forward * input.y;
         if (move.sqrMagnitude > 1f) move.Normalize();
 
         // Sprint
-        float speed = moveSpeed;
-        if (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
-            speed = sprintSpeed;
+        bool sprintHeld = Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        float speed = sprintHeld ? sprintSpeed : moveSpeed;
+
+        //only counts as sprinting if we're actually moving, otherwise holding shift while
+        //standing still would push the blend tree into the sprint clip
+        IsSprinting = sprintHeld && input.sqrMagnitude > 0.01f;
 
         controller.Move(speed * speedMultiplier * Time.deltaTime * move);
 
