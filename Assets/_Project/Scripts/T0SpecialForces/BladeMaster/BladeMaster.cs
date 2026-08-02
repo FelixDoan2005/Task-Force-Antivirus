@@ -25,6 +25,11 @@ public class BladeMaster : MonoBehaviour
     //kept as an event so this class doesn't need to know an Animator exists.
     public event System.Action OnDash;
 
+    //ultimate: windup begins, one per blink-strike, and the whole thing finishing
+    public event System.Action OnUltimateStarted;
+    public event System.Action OnUltimateBlink;
+    public event System.Action OnUltimateEnded;
+
     [Header("Weapon")]
     public float damage = 5f;
     public float range = 2f;
@@ -93,6 +98,14 @@ public class BladeMaster : MonoBehaviour
             playerCamera = Camera.main;
     }
 
+    //if this gets disabled mid-ultimate (class switch, pause) Update stops running, so the
+    //multipliers would stay stuck at their ultimate values - reset them on the way out
+    void OnDisable()
+    {
+        if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
+        if (playerMovement != null) playerMovement.speedMultiplier = 1f;
+    }
+
     void Update()
     {
         if (Keyboard.current != null)
@@ -109,8 +122,15 @@ public class BladeMaster : MonoBehaviour
         if (playerMovement != null)
             playerMovement.speedMultiplier = isBlocking ? blockMoveSpeedMultiplier : 1f;
 
+        //fully invulnerable for the whole ultimate - the windup roots you in place and the blink
+        //phase teleports you into the middle of everything, so taking damage through either is unfair
         if (playerHealth != null)
-            playerHealth.damageTakenMultiplier = isBlocking ? blockDamageTakenMultiplier : 1f;
+        {
+            if (isUltimateActive)
+                playerHealth.damageTakenMultiplier = 0f;
+            else
+                playerHealth.damageTakenMultiplier = isBlocking ? blockDamageTakenMultiplier : 1f;
+        }
 
         //q ability
         if (isDashing)
@@ -437,11 +457,12 @@ public class BladeMaster : MonoBehaviour
         isUltimateActive = true;
         if (playerMovement != null) playerMovement.suspendGravity = true;
 
+        OnUltimateStarted?.Invoke();
+
         Vector3 startPosition = playerController.transform.position;
 
         // idle windup - continuously rescan every frame so enemies that walk into range mid-windup get marked
         // too (HashSet.Add ignores anything already marked), drawing a scan line to everyone currently marked
-        // TODO: play an idle/channel animation here once you have one
         HashSet<VirusHealthBase> targets = new HashSet<VirusHealthBase>();
         float windupTimer = 0f;
         while (windupTimer < ultimateWindup)
@@ -471,6 +492,7 @@ public class BladeMaster : MonoBehaviour
         {
             isUltimateActive = false;
             if (playerMovement != null) playerMovement.suspendGravity = false;
+            OnUltimateEnded?.Invoke();
             yield break;
         }
 
@@ -523,7 +545,9 @@ public class BladeMaster : MonoBehaviour
             blinkPoint.y = target.transform.position.y; // keep it at the target's height instead of floating/embedding
 
             TeleportTo(blinkPoint);
+            FaceTarget(target.transform.position);
             target.TakeDamage(ultimateDamagePerHit);
+            OnUltimateBlink?.Invoke();
             Debug.DrawLine(blinkPoint, target.transform.position, Color.magenta, blinkInterval);
 
             yield return new WaitForSeconds(blinkInterval);
@@ -533,6 +557,16 @@ public class BladeMaster : MonoBehaviour
 
         if (playerMovement != null) playerMovement.suspendGravity = false;
         isUltimateActive = false;
+        OnUltimateEnded?.Invoke();
+    }
+
+    //turn to face whoever we just blinked to, otherwise the swing animation plays side-on
+    void FaceTarget(Vector3 targetPosition)
+    {
+        Vector3 dir = targetPosition - playerController.transform.position;
+        dir.y = 0f;
+        if (dir.sqrMagnitude > 0.001f)
+            playerController.transform.rotation = Quaternion.LookRotation(dir);
     }
 
     // CharacterController fights direct position changes unless briefly disabled first
