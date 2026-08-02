@@ -836,10 +836,11 @@ MonoBehaviour:
   enhancedDuration: 5
   ultimateCooldown: 60
   ultimateWindup: 5
-  ultimateRadius: 15
+  ultimateRadius: 30
   ultimateDamagePerHit: 200
-  totalSlashes: 10
-  blinkInterval: 1
+  totalSlashes: 25
+  blinkInterval: 0.18
+  ultimateCameraPullback: 4
 --- !u!1 &127885314
 GameObject:
   m_ObjectHideFlags: 0
@@ -4165,6 +4166,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   cameraCollisionBuffer: 0.2
+  extraCameraDistance: 0
+  cameraDistanceLerpSpeed: 2
   mouseSensitivity: 0.1
   lockVerticalLook: 1
   minCamDistance: 1.6
