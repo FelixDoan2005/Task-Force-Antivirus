@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: adf319658a221204ea6ab3d4b1bce2b5
+timeCreated: 1467382656
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_KatanaWeathered_LOD.prefab
+  uploadId: 337636

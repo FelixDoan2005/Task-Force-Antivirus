@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3806e98d75be35a47b904753584c4796
+timeCreated: 1468936679
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Katana_Generic02_LOD.prefab
+  uploadId: 337636

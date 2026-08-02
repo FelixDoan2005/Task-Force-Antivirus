@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3f4ec742963d3f740a57eaf9a1e61f25
+timeCreated: 1572890188
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/_SRP/_SRP_ReadMe.txt
+  uploadId: 337636

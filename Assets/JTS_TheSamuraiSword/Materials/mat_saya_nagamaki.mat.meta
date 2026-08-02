@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3360f49f12863a240a42eb346a9b4290
+timeCreated: 1470247702
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_nagamaki.mat
+  uploadId: 337636

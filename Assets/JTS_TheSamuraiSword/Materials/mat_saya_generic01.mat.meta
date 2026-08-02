@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 40cc5689b80bc76468936622768a41c1
+timeCreated: 1464633047
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_generic01.mat
+  uploadId: 337636

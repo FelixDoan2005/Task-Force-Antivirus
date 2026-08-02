@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a25cff8308e087841a7777d19d965a4c
+timeCreated: 1470017433
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_sword_wakizashi.mat
+  uploadId: 337636

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0e34d9d43d90aac45baaf82877ec1d36
+timeCreated: 1467382617
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_KatanaMusashi_LOD.prefab
+  uploadId: 337636

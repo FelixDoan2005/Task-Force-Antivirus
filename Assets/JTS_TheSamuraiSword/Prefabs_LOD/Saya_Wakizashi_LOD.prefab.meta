@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d61c055866e5948478613c9101f56fc6
+timeCreated: 1468944489
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_Wakizashi_LOD.prefab
+  uploadId: 337636

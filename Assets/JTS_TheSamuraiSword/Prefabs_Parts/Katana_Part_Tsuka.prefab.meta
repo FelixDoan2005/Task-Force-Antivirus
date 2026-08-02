@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1d6c19b7580d70843b04fa354c225316
+timeCreated: 1489367640
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_Parts/Katana_Part_Tsuka.prefab
+  uploadId: 337636

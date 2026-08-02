@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cc6ab4fa2bcee394588be6215f086695
+timeCreated: 1470181318
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_sword_tantoko.mat
+  uploadId: 337636

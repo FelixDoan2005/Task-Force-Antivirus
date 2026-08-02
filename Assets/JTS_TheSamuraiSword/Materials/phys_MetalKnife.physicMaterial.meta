@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c82138d5509722640a494f5921a7eb90
+timeCreated: 1469304236
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/phys_MetalKnife.physicMaterial
+  uploadId: 337636

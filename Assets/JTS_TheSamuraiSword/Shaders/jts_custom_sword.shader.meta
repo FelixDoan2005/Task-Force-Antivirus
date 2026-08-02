@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 0c18efa7c683a2248a5c95a69bf991d2
+timeCreated: 1469962124
+licenseType: Store
+ShaderImporter:
+  defaultTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Shaders/jts_custom_sword.shader
+  uploadId: 337636
