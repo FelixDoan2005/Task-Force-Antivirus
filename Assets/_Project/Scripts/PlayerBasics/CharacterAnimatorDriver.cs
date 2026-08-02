@@ -16,6 +16,14 @@ public class CharacterAnimatorDriver : MonoBehaviour
     [Tooltip("How far out the blend tree is pushed when sprinting. Must match the sprint clip's Pos Y in the blend tree.")]
     public float sprintBlendDistance = 2f;
 
+    [Header("Ultimate")]
+    [Tooltip("How many swing clips are in the UltSwing blend tree. Each blink picks one at random. " +
+             "Leave at 1 if you only have a single swing.")]
+    public int ultimateSwingVariants = 1;
+
+    [Tooltip("Prints which swing variant each blink picked, to check they're actually varying.")]
+    public bool logUltSwings;
+
     Animator animator;
 
     void Awake()
@@ -25,19 +33,57 @@ public class CharacterAnimatorDriver : MonoBehaviour
 
     void OnEnable()
     {
-        if (bladeMaster != null)
-            bladeMaster.OnDash += HandleDash;
+        if (bladeMaster == null) return;
+        bladeMaster.OnDash += HandleDash;
+        bladeMaster.OnUltimateStarted += HandleUltimateStarted;
+        bladeMaster.OnUltimateBlink += HandleUltimateBlink;
+        bladeMaster.OnUltimateEnded += HandleUltimateEnded;
     }
 
     void OnDisable()
     {
-        if (bladeMaster != null)
-            bladeMaster.OnDash -= HandleDash;
+        if (bladeMaster == null) return;
+        bladeMaster.OnDash -= HandleDash;
+        bladeMaster.OnUltimateStarted -= HandleUltimateStarted;
+        bladeMaster.OnUltimateBlink -= HandleUltimateBlink;
+        bladeMaster.OnUltimateEnded -= HandleUltimateEnded;
     }
 
     void HandleDash()
     {
         animator.SetTrigger("Dash");
+    }
+
+    void HandleUltimateStarted()
+    {
+        animator.SetBool("IsUltimate", true);   // holds the channel/windup pose
+    }
+
+    void HandleUltimateBlink()
+    {
+        //pick a random swing variant. the blend tree's thresholds are whole numbers and this
+        //value lands exactly on one, so it plays that clip outright rather than blending two
+        int variant = 0;
+        if (ultimateSwingVariants > 1)
+        {
+            variant = Random.Range(0, ultimateSwingVariants);
+            animator.SetFloat("UltSwingIndex", variant);
+        }
+
+        if (logUltSwings)
+            Debug.Log($"ult swing variant {variant}");
+
+        animator.SetTrigger("UltSwing");
+    }
+
+    void HandleUltimateEnded()
+    {
+        animator.SetBool("IsUltimate", false);
+
+        //triggers stay queued until a transition consumes them. if the last blink's trigger
+        //hasn't been used by the time the sequence ends, it would fire one stray swing
+        //after we're already back in locomotion.
+        animator.ResetTrigger("UltSwing");
     }
 
     void Update()

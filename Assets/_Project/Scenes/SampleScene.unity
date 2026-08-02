@@ -807,7 +807,7 @@ MonoBehaviour:
   attackPoint: {fileID: 1169286949}
   playerController: {fileID: 689043506}
   playerMovement: {fileID: 689043505}
-  playerHealth: {fileID: 0}
+  playerHealth: {fileID: 689043510}
   weaponSwitcher: {fileID: 689043512}
   blockMoveSpeedMultiplier: 0.2
   blockDamageTakenMultiplier: 0.25
@@ -819,7 +819,7 @@ MonoBehaviour:
   forwardReach: 0.8
   maxComboHits: 5
   comboWindow: 1
-  qCooldown: 8
+  qCooldown: 3
   dashSpeed: 25
   dashDuration: 0.25
   dashDistance: 30
@@ -838,8 +838,8 @@ MonoBehaviour:
   ultimateWindup: 5
   ultimateRadius: 15
   ultimateDamagePerHit: 200
-  totalSlashes: 50
-  blinkInterval: 0.05
+  totalSlashes: 10
+  blinkInterval: 1
 --- !u!1 &127885314
 GameObject:
   m_ObjectHideFlags: 0
@@ -12699,6 +12699,8 @@ MonoBehaviour:
   restPosition: {x: 0, y: 0, z: 0}
   restEuler: {x: 0, y: 0, z: 0}
   restCaptured: 0
+  dashRotationOffset: {x: 70, y: 60, z: 0}
+  dashPositionOffset: {x: 0, y: 0.4, z: 0.2}
   blockRotationOffset: {x: 0, y: 0, z: 0}
   blockPositionOffset: {x: 0, y: 0, z: 0}
   runRotationOffset: {x: 20, y: -50, z: 0}
@@ -12707,7 +12709,7 @@ MonoBehaviour:
   backPositionOffset: {x: -0.1, y: -0.1, z: -0.2}
   sprintRotationOffset: {x: 0, y: 0, z: 0}
   sprintPositionOffset: {x: 0, y: 0, z: 0}
-  blendSpeed: 8
+  blendSpeed: 25
   moveThreshold: 0.1
   logActivePose: 1
 --- !u!1 &1980833932
@@ -12794,6 +12796,8 @@ MonoBehaviour:
   bladeMaster: {fileID: 99479712}
   blendDampTime: 0.12
   sprintBlendDistance: 2
+  ultimateSwingVariants: 11
+  logUltSwings: 1
 --- !u!1 &1997794961
 GameObject:
   m_ObjectHideFlags: 0
