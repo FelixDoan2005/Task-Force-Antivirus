@@ -5931,48 +5931,56 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.357
+      value: -0.255
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.162
+      value: 0.281
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.288
+      value: 0.084
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.15762228
+      value: -0.18158561
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.3309084
+      value: -0.49656704
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.8961644
+      value: 0.34661418
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.25008836
+      value: 0.77479446
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: -200.116
+      value: -159.098
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 28.498001
+      value: 106.579
       objectReference: {fileID: 0}
     - target: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -134.30899
+      value: 42.043
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2365500, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5427812, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 120164, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1978384988}
   m_SourcePrefab: {fileID: 100100000, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
 --- !u!1 &997488140
 GameObject:
@@ -12664,11 +12672,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1974205555}
   m_CullTransparentMesh: 1
+--- !u!1 &1978384983 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 120164, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
+  m_PrefabInstance: {fileID: 985639597}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1978384984 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 405066, guid: 1ac258bebac56774ab51d86547617ba5, type: 3}
   m_PrefabInstance: {fileID: 985639597}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1978384988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1978384983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dced5c97b18b74749b8f106c8adb7e47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponPoseOffset
+  playerMovement: {fileID: 689043505}
+  restPosition: {x: 0, y: 0, z: 0}
+  restEuler: {x: 0, y: 0, z: 0}
+  restCaptured: 0
+  runRotationOffset: {x: 20, y: -50, z: 0}
+  runPositionOffset: {x: 0.3, y: 0.2, z: 0}
+  backRotationOffset: {x: 0, y: 30, z: 0}
+  backPositionOffset: {x: -0.1, y: -0.1, z: -0.2}
+  sprintRotationOffset: {x: 0, y: 0, z: 0}
+  sprintPositionOffset: {x: 0, y: 0, z: 0}
+  blendSpeed: 8
+  moveThreshold: 0.1
+  logActivePose: 1
 --- !u!1 &1980833932
 GameObject:
   m_ObjectHideFlags: 0
@@ -12750,7 +12788,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimatorDriver
   playerMovement: {fileID: 689043505}
-  bladeMaster: {fileID: 0}
+  bladeMaster: {fileID: 99479712}
   blendDampTime: 0.12
   sprintBlendDistance: 2
 --- !u!1 &1997794961

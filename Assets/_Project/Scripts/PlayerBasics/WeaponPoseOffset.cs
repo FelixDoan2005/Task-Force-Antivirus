@@ -16,11 +16,17 @@ public class WeaponPoseOffset : MonoBehaviour
 {
     [Header("Setup")]
     public PlayerController playerMovement;
+    public BladeMaster bladeMaster; // needed for the block pose
 
     [Header("Rest Pose (use Capture Rest Pose)")]
     public Vector3 restPosition;
     public Vector3 restEuler;
     public bool restCaptured;
+
+    [Header("Block Offset")]
+    [Tooltip("Takes priority over every other pose while right-click is held.")]
+    public Vector3 blockRotationOffset;
+    public Vector3 blockPositionOffset;
 
     [Header("Run Offset")]
     public Vector3 runRotationOffset;
@@ -67,7 +73,14 @@ public class WeaponPoseOffset : MonoBehaviour
         Vector3 targetRot = Vector3.zero;
         string pose = "Rest";
 
-        if (playerMovement != null)
+        //blocking overrides everything else - the pose is what matters, not what your feet are doing
+        if (bladeMaster != null && bladeMaster.IsBlocking)
+        {
+            targetPos = blockPositionOffset;
+            targetRot = blockRotationOffset;
+            pose = "Block";
+        }
+        else if (playerMovement != null)
         {
             bool moving = playerMovement.MoveInput.sqrMagnitude > moveThreshold * moveThreshold;
             bool backing = playerMovement.MoveInput.y < -moveThreshold;
@@ -118,6 +131,9 @@ public class WeaponPoseOffset : MonoBehaviour
         Debug.Log($"Rest pose captured: pos {restPosition}, euler {restEuler}", this);
     }
 
+    [ContextMenu("Capture Block Offset")]
+    void CaptureBlock() => Capture(ref blockPositionOffset, ref blockRotationOffset, "Block");
+
     [ContextMenu("Capture Run Offset")]
     void CaptureRun() => Capture(ref runPositionOffset, ref runRotationOffset, "Run");
 
@@ -144,6 +160,9 @@ public class WeaponPoseOffset : MonoBehaviour
 
     [ContextMenu("Preview Rest")]
     void PreviewRest() => Apply(Vector3.zero, Vector3.zero);
+
+    [ContextMenu("Preview Block")]
+    void PreviewBlock() => Apply(blockPositionOffset, blockRotationOffset);
 
     [ContextMenu("Preview Run")]
     void PreviewRun() => Apply(runPositionOffset, runRotationOffset);
