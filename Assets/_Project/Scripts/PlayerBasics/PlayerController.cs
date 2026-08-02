@@ -41,6 +41,17 @@ public class PlayerController : MonoBehaviour
 
     float currentExtraCamDistance;
 
+    [Tooltip("Abilities can set this to freeze mouse look. The camera keeps updating distance/collision, it just stops turning.")]
+    public bool suspendLook;
+
+    [Tooltip("Abilities can set this to ease the camera to a level pitch, so locking doesn't leave you staring at the floor.")]
+    public bool easePitchToTarget;
+
+    [Tooltip("Pitch to ease toward. 0 is dead level, positive looks down.")]
+    public float targetPitch = 5f;
+
+    public float pitchEaseSpeed = 3f;
+
     [Header("Look")]
     public float mouseSensitivity = 0.02f; // start around 0.015 - 0.03
     public bool lockVerticalLook = false;
@@ -102,13 +113,22 @@ public class PlayerController : MonoBehaviour
     {
         if (Mouse.current == null) return;
 
-        Vector2 mouseDelta = 60f * mouseSensitivity * Time.deltaTime * Mouse.current.delta.ReadValue();
+        //zeroing the delta rather than returning early keeps the camera distance and wall
+        //collision below still updating, so an ability's pullback still animates while locked
+        Vector2 mouseDelta = suspendLook
+            ? Vector2.zero
+            : 60f * mouseSensitivity * Time.deltaTime * Mouse.current.delta.ReadValue();
 
         // yaw (left/right) rotates the hero
         transform.Rotate(Vector3.up * mouseDelta.x);
 
         // pitch (up/down) rotates the camera pivot
         pitch -= mouseDelta.y;
+
+        //an ability can ask for a level view - eases there rather than snapping, so locking
+        //the camera while you're staring at the floor still ends up looking forward
+        if (easePitchToTarget)
+            pitch = Mathf.Lerp(pitch, targetPitch, pitchEaseSpeed * Time.deltaTime);
 
         // clamp so you can't flip the camera
         pitch = Mathf.Clamp(pitch, -80f, 60f);
