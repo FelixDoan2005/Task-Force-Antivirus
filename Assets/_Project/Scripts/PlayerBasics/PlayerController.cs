@@ -32,6 +32,15 @@ public class PlayerController : MonoBehaviour
     public float cameraCollisionBuffer = 0.2f;
     int cameraCollisionMask;
 
+    [Header("Camera Pullback")]
+    [Tooltip("Extra distance abilities can request. Set it and the camera eases out; set it back to 0 and it eases in.")]
+    public float extraCameraDistance;
+
+    [Tooltip("How fast the camera eases toward the requested extra distance. Lower = more cinematic.")]
+    public float cameraDistanceLerpSpeed = 2f;
+
+    float currentExtraCamDistance;
+
     [Header("Look")]
     public float mouseSensitivity = 0.02f; // start around 0.015 - 0.03
     public bool lockVerticalLook = false;
@@ -122,6 +131,12 @@ public class PlayerController : MonoBehaviour
             float dist = Mathf.Lerp(minCamDistance, maxCamDistance, camT);
             float neutralBoost = 0.8f * (1f - Mathf.Abs(camT - 0.5f) * 2f); // 0 at extremes, max at center
             dist += neutralBoost;
+
+            //ease toward whatever pullback an ability has asked for, so it glides out and back
+            //instead of snapping. applied before the collision check so walls still clamp it.
+            currentExtraCamDistance = Mathf.Lerp(currentExtraCamDistance, extraCameraDistance,
+                                                 cameraDistanceLerpSpeed * Time.deltaTime);
+            dist += currentExtraCamDistance;
 
             // camera collision: don't let the desired position clip through walls
             Vector3 desiredLocalOffset = new(baseCameraLocalPos.x, baseCameraLocalPos.y, -dist);

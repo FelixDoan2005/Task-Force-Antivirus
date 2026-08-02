@@ -88,6 +88,7 @@ public class BladeMaster : MonoBehaviour
     public float ultimateDamagePerHit = 20f;
     public int totalSlashes = 50; // if fewer targets than this exist, extras stack onto whoever has the most health left
     public float blinkInterval = 0.15f; // time between each blink/hit
+    public float ultimateCameraPullback = 4f; // how far the camera eases out for the duration
 
     float ultimateReadyTime;
     bool isUltimateActive; // true for the whole windup + blink sequence - blocks Attack()/Q/E while it runs
@@ -103,7 +104,11 @@ public class BladeMaster : MonoBehaviour
     void OnDisable()
     {
         if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
-        if (playerMovement != null) playerMovement.speedMultiplier = 1f;
+        if (playerMovement != null)
+        {
+            playerMovement.speedMultiplier = 1f;
+            playerMovement.extraCameraDistance = 0f;
+        }
     }
 
     void Update()
@@ -455,7 +460,11 @@ public class BladeMaster : MonoBehaviour
     IEnumerator UltimateSequence()
     {
         isUltimateActive = true;
-        if (playerMovement != null) playerMovement.suspendGravity = true;
+        if (playerMovement != null)
+        {
+            playerMovement.suspendGravity = true;
+            playerMovement.extraCameraDistance = ultimateCameraPullback; // eases out from here
+        }
 
         OnUltimateStarted?.Invoke();
 
@@ -491,7 +500,11 @@ public class BladeMaster : MonoBehaviour
         if (targets.Count == 0)
         {
             isUltimateActive = false;
-            if (playerMovement != null) playerMovement.suspendGravity = false;
+            if (playerMovement != null)
+            {
+                playerMovement.suspendGravity = false;
+                playerMovement.extraCameraDistance = 0f;
+            }
             OnUltimateEnded?.Invoke();
             yield break;
         }
@@ -555,7 +568,11 @@ public class BladeMaster : MonoBehaviour
 
         TeleportTo(startPosition);
 
-        if (playerMovement != null) playerMovement.suspendGravity = false;
+        if (playerMovement != null)
+        {
+            playerMovement.suspendGravity = false;
+            playerMovement.extraCameraDistance = 0f; // eases back in
+        }
         isUltimateActive = false;
         OnUltimateEnded?.Invoke();
     }
