@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 81a912c7c9f49d6409adcca07fb7cf07
+timeCreated: 1465598639
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_bokuto.mat
+  uploadId: 337636

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 42378cab66bea3b4bacb4d11fb243b43
+timeCreated: 1470154608
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_nodachi.mat
+  uploadId: 337636

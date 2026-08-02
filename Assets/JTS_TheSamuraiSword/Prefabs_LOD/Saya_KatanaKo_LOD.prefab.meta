@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 773748a710a5afa4b98df78a0cccbd23
+timeCreated: 1469886141
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_KatanaKo_LOD.prefab
+  uploadId: 337636

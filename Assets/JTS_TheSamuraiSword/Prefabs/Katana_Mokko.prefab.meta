@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b92002cd29f5282489e451d0f40af0c7
+timeCreated: 1469791771
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Katana_Mokko.prefab
+  uploadId: 337636

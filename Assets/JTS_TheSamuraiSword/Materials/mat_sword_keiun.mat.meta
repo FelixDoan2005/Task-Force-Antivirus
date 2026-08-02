@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8046564dc692dfc4bb184cacfbcd7636
+timeCreated: 1464623194
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_sword_keiun.mat
+  uploadId: 337636

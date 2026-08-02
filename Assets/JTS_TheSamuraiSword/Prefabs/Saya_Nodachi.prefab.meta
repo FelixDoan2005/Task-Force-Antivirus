@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fcee2404bbe8edf498735bd199cdf7ee
+timeCreated: 1469793257
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Saya_Nodachi.prefab
+  uploadId: 337636

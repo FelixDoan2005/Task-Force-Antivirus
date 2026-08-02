@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1668cc9817e5f594a910d9ba7ab6e2d7
+timeCreated: 1468943343
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_Shirasaya_LOD.prefab
+  uploadId: 337636

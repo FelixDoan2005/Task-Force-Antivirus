@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 41015bc40a4b2a14c8633e0b8b4ad739
+timeCreated: 1509728302
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_tachi.mat
+  uploadId: 337636

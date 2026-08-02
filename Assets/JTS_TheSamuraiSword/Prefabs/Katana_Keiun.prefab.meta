@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e6bf69b7f9c15174bb7917af7bff4cff
+timeCreated: 1469791632
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Katana_Keiun.prefab
+  uploadId: 337636
