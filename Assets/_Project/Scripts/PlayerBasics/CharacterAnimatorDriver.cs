@@ -23,6 +23,23 @@ public class CharacterAnimatorDriver : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
+    void OnEnable()
+    {
+        if (bladeMaster != null)
+            bladeMaster.OnDash += HandleDash;
+    }
+
+    void OnDisable()
+    {
+        if (bladeMaster != null)
+            bladeMaster.OnDash -= HandleDash;
+    }
+
+    void HandleDash()
+    {
+        animator.SetTrigger("Dash");
+    }
+
     void Update()
     {
         if (playerMovement == null) return;

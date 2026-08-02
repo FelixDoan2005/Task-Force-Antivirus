@@ -12695,9 +12695,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoseOffset
   playerMovement: {fileID: 689043505}
+  bladeMaster: {fileID: 99479712}
   restPosition: {x: 0, y: 0, z: 0}
   restEuler: {x: 0, y: 0, z: 0}
   restCaptured: 0
+  blockRotationOffset: {x: 0, y: 0, z: 0}
+  blockPositionOffset: {x: 0, y: 0, z: 0}
   runRotationOffset: {x: 20, y: -50, z: 0}
   runPositionOffset: {x: 0.3, y: 0.2, z: 0}
   backRotationOffset: {x: 0, y: 30, z: 0}

@@ -19,6 +19,11 @@ public class BladeMaster : MonoBehaviour
     bool isBlocking;
 
     public bool IsBlocking => isBlocking; // read by CharacterAnimatorDriver
+    public bool IsDashing => isDashing;   // read by WeaponPoseOffset so the sword pose stays consistent mid-dash
+
+    //fired the moment a dash starts, so the animator driver can trigger the Q clip.
+    //kept as an event so this class doesn't need to know an Animator exists.
+    public event System.Action OnDash;
 
     [Header("Weapon")]
     public float damage = 5f;
@@ -353,6 +358,8 @@ public class BladeMaster : MonoBehaviour
         isDashing = true;
         dashEndTime = Time.time + dashDuration;
         hitDuringDash.Clear();
+
+        OnDash?.Invoke();
     }
 
     void TryActivateE()

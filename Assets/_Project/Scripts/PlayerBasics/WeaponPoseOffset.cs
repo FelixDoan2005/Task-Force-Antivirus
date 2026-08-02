@@ -23,6 +23,12 @@ public class WeaponPoseOffset : MonoBehaviour
     public Vector3 restEuler;
     public bool restCaptured;
 
+    [Header("Dash Offset")]
+    [Tooltip("Highest priority. The dash clip poses the arms its own way, so this needs tuning " +
+             "independently of the run offset - the same numbers won't look the same.")]
+    public Vector3 dashRotationOffset;
+    public Vector3 dashPositionOffset;
+
     [Header("Block Offset")]
     [Tooltip("Takes priority over every other pose while right-click is held.")]
     public Vector3 blockRotationOffset;
@@ -73,8 +79,15 @@ public class WeaponPoseOffset : MonoBehaviour
         Vector3 targetRot = Vector3.zero;
         string pose = "Rest";
 
-        //blocking overrides everything else - the pose is what matters, not what your feet are doing
-        if (bladeMaster != null && bladeMaster.IsBlocking)
+        //dashing wins outright so the sword is consistent whether you dashed from standing or running
+        if (bladeMaster != null && bladeMaster.IsDashing)
+        {
+            targetPos = dashPositionOffset;
+            targetRot = dashRotationOffset;
+            pose = "Dash";
+        }
+        //blocking overrides the rest - the pose is what matters, not what your feet are doing
+        else if (bladeMaster != null && bladeMaster.IsBlocking)
         {
             targetPos = blockPositionOffset;
             targetRot = blockRotationOffset;
@@ -131,6 +144,9 @@ public class WeaponPoseOffset : MonoBehaviour
         Debug.Log($"Rest pose captured: pos {restPosition}, euler {restEuler}", this);
     }
 
+    [ContextMenu("Capture Dash Offset")]
+    void CaptureDash() => Capture(ref dashPositionOffset, ref dashRotationOffset, "Dash");
+
     [ContextMenu("Capture Block Offset")]
     void CaptureBlock() => Capture(ref blockPositionOffset, ref blockRotationOffset, "Block");
 
@@ -160,6 +176,9 @@ public class WeaponPoseOffset : MonoBehaviour
 
     [ContextMenu("Preview Rest")]
     void PreviewRest() => Apply(Vector3.zero, Vector3.zero);
+
+    [ContextMenu("Preview Dash")]
+    void PreviewDash() => Apply(dashPositionOffset, dashRotationOffset);
 
     [ContextMenu("Preview Block")]
     void PreviewBlock() => Apply(blockPositionOffset, blockRotationOffset);
