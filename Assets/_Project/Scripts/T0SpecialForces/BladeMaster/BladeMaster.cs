@@ -108,6 +108,8 @@ public class BladeMaster : MonoBehaviour
         {
             playerMovement.speedMultiplier = 1f;
             playerMovement.extraCameraDistance = 0f;
+            playerMovement.suspendLook = false;
+            playerMovement.easePitchToTarget = false;
         }
     }
 
@@ -464,11 +466,17 @@ public class BladeMaster : MonoBehaviour
         {
             playerMovement.suspendGravity = true;
             playerMovement.extraCameraDistance = ultimateCameraPullback; // eases out from here
+            playerMovement.suspendLook = true;       // stop mouse look
+            playerMovement.easePitchToTarget = true; // but pan up to level first, don't lock facing the floor
         }
 
         OnUltimateStarted?.Invoke();
 
         Vector3 startPosition = playerController.transform.position;
+        //FaceTarget spins the player toward each victim, so remember which way they were
+        //looking and put them back - the camera's yaw follows this transform, so restoring
+        //it restores the view direction too
+        Quaternion startRotation = playerController.transform.rotation;
 
         // idle windup - continuously rescan every frame so enemies that walk into range mid-windup get marked
         // too (HashSet.Add ignores anything already marked), drawing a scan line to everyone currently marked
@@ -504,6 +512,8 @@ public class BladeMaster : MonoBehaviour
             {
                 playerMovement.suspendGravity = false;
                 playerMovement.extraCameraDistance = 0f;
+                playerMovement.suspendLook = false;
+                playerMovement.easePitchToTarget = false;
             }
             OnUltimateEnded?.Invoke();
             yield break;
@@ -567,11 +577,14 @@ public class BladeMaster : MonoBehaviour
         }
 
         TeleportTo(startPosition);
+        playerController.transform.rotation = startRotation; // face the way we did before the ult
 
         if (playerMovement != null)
         {
             playerMovement.suspendGravity = false;
             playerMovement.extraCameraDistance = 0f; // eases back in
+            playerMovement.suspendLook = false;
+            playerMovement.easePitchToTarget = false;
         }
         isUltimateActive = false;
         OnUltimateEnded?.Invoke();
