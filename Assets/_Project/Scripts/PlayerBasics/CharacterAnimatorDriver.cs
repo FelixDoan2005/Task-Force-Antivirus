@@ -24,6 +24,9 @@ public class CharacterAnimatorDriver : MonoBehaviour
     [Tooltip("Prints which swing variant each blink picked, to check they're actually varying.")]
     public bool logUltSwings;
 
+    [Tooltip("Testing only. -1 picks at random; set 0+ to force that swing every blink so you can tune its offset.")]
+    public int forceUltSwingIndex = -1;
+
     Animator animator;
 
     void Awake()
@@ -69,16 +72,22 @@ public class CharacterAnimatorDriver : MonoBehaviour
         animator.SetBool("IsUltimate", true);   // holds the channel/windup pose
     }
 
+    //which swing the current blink picked - read by WeaponPoseOffset so each one can have
+    //its own sword placement, same as the combo attacks
+    public int CurrentUltSwing { get; private set; }
+
     void HandleUltimateBlink()
     {
         //pick a random swing variant. the blend tree's thresholds are whole numbers and this
         //value lands exactly on one, so it plays that clip outright rather than blending two
         int variant = 0;
-        if (ultimateSwingVariants > 1)
-        {
+        if (forceUltSwingIndex >= 0)
+            variant = Mathf.Min(forceUltSwingIndex, Mathf.Max(0, ultimateSwingVariants - 1));
+        else if (ultimateSwingVariants > 1)
             variant = Random.Range(0, ultimateSwingVariants);
-            animator.SetFloat("UltSwingIndex", variant);
-        }
+
+        animator.SetFloat("UltSwingIndex", variant);
+        CurrentUltSwing = variant;
 
         if (logUltSwings)
             Debug.Log($"ult swing variant {variant}");

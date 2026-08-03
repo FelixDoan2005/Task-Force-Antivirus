@@ -17,6 +17,7 @@ public class WeaponPoseOffset : MonoBehaviour
     [Header("Setup")]
     public PlayerController playerMovement;
     public BladeMaster bladeMaster; // needed for the block pose
+    public CharacterAnimatorDriver animatorDriver; // tells us which ult swing variant is playing
 
     [Header("Rest Pose (use Capture Rest Pose)")]
     public Vector3 restPosition;
@@ -28,6 +29,14 @@ public class WeaponPoseOffset : MonoBehaviour
              "independently of the run offset - the same numbers won't look the same.")]
     public Vector3 dashRotationOffset;
     public Vector3 dashPositionOffset;
+
+    [Header("Ult Swing Offsets")]
+    [Tooltip("One entry per ult swing clip. Set the array size to match Ultimate Swing Variants on the driver.")]
+    public Vector3[] ultSwingRotationOffsets = new Vector3[11];
+    public Vector3[] ultSwingPositionOffsets = new Vector3[11];
+
+    [Tooltip("Which ult swing index 'Capture Ult Swing Offset' writes to.")]
+    public int captureUltSwing;
 
     [Header("Combo Attack Offsets")]
     [Tooltip("One entry per combo step (0 = first swing). Stops the blade swinging into the camera on particular attacks.")]
@@ -93,6 +102,16 @@ public class WeaponPoseOffset : MonoBehaviour
             targetPos = dashPositionOffset;
             targetRot = dashRotationOffset;
             pose = "Dash";
+        }
+        //each ult swing clip gets its own placement too - same problem, 11 more clips
+        else if (bladeMaster != null && bladeMaster.IsUltimateActive && animatorDriver != null
+                 && animatorDriver.CurrentUltSwing >= 0
+                 && animatorDriver.CurrentUltSwing < ultSwingRotationOffsets.Length)
+        {
+            int swing = animatorDriver.CurrentUltSwing;
+            targetPos = ultSwingPositionOffsets[swing];
+            targetRot = ultSwingRotationOffsets[swing];
+            pose = $"UltSwing{swing}";
         }
         //mid-swing each attack gets its own placement, since some of the clips throw the blade
         //toward the camera at the arc they're posed at
@@ -165,6 +184,26 @@ public class WeaponPoseOffset : MonoBehaviour
 
     [ContextMenu("Capture Dash Offset")]
     void CaptureDash() => Capture(ref dashPositionOffset, ref dashRotationOffset, "Dash");
+
+    [ContextMenu("Capture Ult Swing Offset")]
+    void CaptureUltSwing()
+    {
+        if (captureUltSwing < 0 || captureUltSwing >= ultSwingRotationOffsets.Length)
+        {
+            Debug.LogWarning($"captureUltSwing {captureUltSwing} is outside the array.", this);
+            return;
+        }
+        Capture(ref ultSwingPositionOffsets[captureUltSwing],
+                ref ultSwingRotationOffsets[captureUltSwing],
+                $"Ult swing {captureUltSwing}");
+    }
+
+    [ContextMenu("Preview Ult Swing Offset")]
+    void PreviewUltSwing()
+    {
+        if (captureUltSwing < 0 || captureUltSwing >= ultSwingRotationOffsets.Length) return;
+        Apply(ultSwingPositionOffsets[captureUltSwing], ultSwingRotationOffsets[captureUltSwing]);
+    }
 
     [ContextMenu("Capture Combo Offset")]
     void CaptureCombo()
