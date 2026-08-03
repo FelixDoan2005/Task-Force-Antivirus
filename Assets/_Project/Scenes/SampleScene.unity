@@ -819,6 +819,7 @@ MonoBehaviour:
   forwardReach: 0.8
   maxComboHits: 5
   comboWindow: 1
+  comboStagger: 0.5
   qCooldown: 3
   dashSpeed: 25
   dashDuration: 0.25
@@ -838,8 +839,8 @@ MonoBehaviour:
   ultimateWindup: 5
   ultimateRadius: 30
   ultimateDamagePerHit: 200
-  totalSlashes: 25
-  blinkInterval: 0.18
+  totalSlashes: 10
+  blinkInterval: 1
   ultimateCameraPullback: 4
 --- !u!1 &127885314
 GameObject:
@@ -4201,8 +4202,8 @@ MonoBehaviour:
   pitchEaseSpeed: 3
   mouseSensitivity: 0.1
   lockVerticalLook: 1
-  minCamDistance: 1.6
-  maxCamDistance: 3.2
+  minCamDistance: 2.1
+  maxCamDistance: 3.7
   camHeightOffset: 0
   suspendGravity: 0
 --- !u!143 &689043506
@@ -12757,11 +12758,50 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoseOffset
   playerMovement: {fileID: 689043505}
   bladeMaster: {fileID: 99479712}
+  animatorDriver: {fileID: 0}
   restPosition: {x: 0, y: 0, z: 0}
   restEuler: {x: 0, y: 0, z: 0}
   restCaptured: 0
   dashRotationOffset: {x: 70, y: 60, z: 0}
   dashPositionOffset: {x: 0, y: 0.4, z: 0.2}
+  ultSwingRotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 130, y: 40, z: 180}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  ultSwingPositionOffsets:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.49, y: 0.465, z: 0.37}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  captureUltSwing: 0
+  comboRotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  - {x: 130, y: 40, z: 180}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 70}
+  - {x: 0, y: 0, z: 0}
+  comboPositionOffsets:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  captureComboStep: 0
   blockRotationOffset: {x: 0, y: 0, z: 0}
   blockPositionOffset: {x: 0, y: 0, z: 0}
   runRotationOffset: {x: 20, y: -50, z: 0}
@@ -12859,6 +12899,7 @@ MonoBehaviour:
   sprintBlendDistance: 2
   ultimateSwingVariants: 11
   logUltSwings: 1
+  forceUltSwingIndex: 8
 --- !u!1 &1997794961
 GameObject:
   m_ObjectHideFlags: 0

@@ -26,6 +26,8 @@ public class BladeMaster : MonoBehaviour
     public bool IsAttacking => Time.time < attackReadyTime;
     public int CurrentComboStep => comboStep;
 
+    public bool IsUltimateActive => isUltimateActive;
+
     //fired the moment a dash starts, so the animator driver can trigger the Q clip.
     //kept as an event so this class doesn't need to know an Animator exists.
     public event System.Action OnDash;
@@ -144,7 +146,16 @@ public class BladeMaster : MonoBehaviour
         isBlocking = isBladeMasterClass && !isUltimateActive && Mouse.current != null && Mouse.current.rightButton.isPressed;
 
         if (playerMovement != null)
+        {
             playerMovement.speedMultiplier = isBlocking ? blockMoveSpeedMultiplier : 1f;
+
+            //driven from state every frame rather than set once when the ult starts. pausing
+            //disables this component and OnDisable clears them, so they have to be re-asserted
+            //here or unpausing mid-ult would hand camera control back to the player.
+            playerMovement.suspendLook = isUltimateActive;
+            playerMovement.easePitchToTarget = isUltimateActive;
+            playerMovement.extraCameraDistance = isUltimateActive ? ultimateCameraPullback : 0f;
+        }
 
         //fully invulnerable for the whole ultimate - the windup roots you in place and the blink
         //phase teleports you into the middle of everything, so taking damage through either is unfair
