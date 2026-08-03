@@ -21,6 +21,11 @@ public class BladeMaster : MonoBehaviour
     public bool IsBlocking => isBlocking; // read by CharacterAnimatorDriver
     public bool IsDashing => isDashing;   // read by WeaponPoseOffset so the sword pose stays consistent mid-dash
 
+    //true for the length of a swing (the stagger window), and which swing it is - lets the
+    //weapon pose script give each of the 5 attacks its own sword placement
+    public bool IsAttacking => Time.time < attackReadyTime;
+    public int CurrentComboStep => comboStep;
+
     //fired the moment a dash starts, so the animator driver can trigger the Q clip.
     //kept as an event so this class doesn't need to know an Animator exists.
     public event System.Action OnDash;
@@ -29,6 +34,9 @@ public class BladeMaster : MonoBehaviour
     public event System.Action OnUltimateStarted;
     public event System.Action OnUltimateBlink;
     public event System.Action OnUltimateEnded;
+
+    //fired on every basic attack, carrying which step of the combo it is (0-4)
+    public event System.Action<int> OnComboAttack;
 
     [Header("Weapon")]
     public float damage = 5f;
@@ -42,8 +50,12 @@ public class BladeMaster : MonoBehaviour
     public int maxComboHits = 5;
     public float comboWindow = 1f; // how long you have after a hit to click again and continue the combo
 
+    [Tooltip("Minimum gap between swings - clicks faster than this are ignored, so the combo can't be spammed. Keep it below Combo Window or the combo can never continue.")]
+    public float comboStagger = 0.3f;
+
     int comboStep; // 0 = first hit in the sequence
     float lastAttackTime = -999f;
+    float attackReadyTime; // enforces comboStagger
 
     Vector3 Origin => attackPoint != null ? attackPoint.position : transform.position;
     Vector3 Right => playerCamera.transform.right;
@@ -214,6 +226,9 @@ public class BladeMaster : MonoBehaviour
     {
         if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
         if (isBlocking) return; // can't attack while holding block
+        if (Time.time < attackReadyTime) return; // still mid-swing, ignore the click
+
+        attackReadyTime = Time.time + comboStagger;
 
         if (isEnhanced)
         {
@@ -227,6 +242,8 @@ public class BladeMaster : MonoBehaviour
             comboStep = (comboStep + 1) % maxComboHits; // clicked in time, advance (loops after hit 5)
 
         lastAttackTime = Time.time;
+
+        OnComboAttack?.Invoke(comboStep); // let the animator play the matching swing clip
 
         switch (comboStep)
         {
