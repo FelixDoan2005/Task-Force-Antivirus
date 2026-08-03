@@ -28,13 +28,13 @@ public class CrosshairTarget : MonoBehaviour
         }
     }
 
+    int currentWeaponMode;
+    bool hiddenByMenu;
+
     public void SetWeaponMode(int weaponIndex)
     {
-        bool hideAll = weaponIndex == 1; // sword
+        currentWeaponMode = weaponIndex;
         bool isRifle = weaponIndex == 2;
-
-        if (crosshairRoot != null)
-            crosshairRoot.SetActive(!hideAll);
 
         foreach (var p in parts)
             if (p != null) p.gameObject.SetActive(true);
@@ -44,6 +44,25 @@ public class CrosshairTarget : MonoBehaviour
 
         if (isRifle && crosshairRect != null)
             crosshairRect.localScale = Vector3.one * rifleCrosshairScale;
+
+        ApplyVisibility();
+    }
+
+    //called when the pause/class menu opens or closes - hides the crosshair for every class,
+    //not just the melee ones
+    public void SetMenuOpen(bool open)
+    {
+        hiddenByMenu = open;
+        ApplyVisibility();
+    }
+
+    //two independent reasons to hide it, so they're resolved in one place rather than
+    //each caller stomping the other's SetActive
+    void ApplyVisibility()
+    {
+        bool hideForWeapon = currentWeaponMode == 1; // melee classes
+        if (crosshairRoot != null)
+            crosshairRoot.SetActive(!hideForWeapon && !hiddenByMenu);
     }
 
     void SetColor(Color c)

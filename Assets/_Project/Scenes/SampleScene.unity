@@ -834,7 +834,7 @@ MonoBehaviour:
   slashThickness: 0.5
   slashDamage: 70
   enhancedDuration: 5
-  ultimateCooldown: 60
+  ultimateCooldown: 5
   ultimateWindup: 5
   ultimateRadius: 30
   ultimateDamagePerHit: 200
@@ -4168,6 +4168,10 @@ MonoBehaviour:
   cameraCollisionBuffer: 0.2
   extraCameraDistance: 0
   cameraDistanceLerpSpeed: 2
+  suspendLook: 0
+  easePitchToTarget: 0
+  targetPitch: 5
+  pitchEaseSpeed: 3
   mouseSensitivity: 0.1
   lockVerticalLook: 1
   minCamDistance: 1.6
