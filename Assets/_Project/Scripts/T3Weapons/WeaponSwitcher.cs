@@ -159,6 +159,13 @@ public class WeaponSwitcher : MonoBehaviour
         UpdateActiveObjects();
     }
 
+    //forwarded so PauseMenuUI doesn't need its own Inspector reference to the crosshair
+    public void SetCrosshairMenuOpen(bool open)
+    {
+        if (crosshairTarget != null)
+            crosshairTarget.SetMenuOpen(open);
+    }
+
     public void SetWeaponInputEnabled(bool value)
     {
         enabled = value; // stops this script's own Update() (sword/rifle/pistol/grenade/bow-draw calls)
@@ -184,8 +191,10 @@ public class WeaponSwitcher : MonoBehaviour
         if (grenadeObject != null) grenadeObject.SetActive(grenadeActive);
         if (bladeMasterObject != null) bladeMasterObject.SetActive(isBladeMaster);
 
+        //blademaster is melee too, so it hides the crosshair like the sword does - its E ability
+        //shows its own separate enhanced crosshair when that's active
         if (crosshairTarget != null)
-            crosshairTarget.SetWeaponMode(isSword ? 1 : (rifleActive ? 2 : 0));
+            crosshairTarget.SetWeaponMode((isSword || isBladeMaster) ? 1 : (rifleActive ? 2 : 0));
 
         if (CombatDebugHUD.Instance != null)
         {
