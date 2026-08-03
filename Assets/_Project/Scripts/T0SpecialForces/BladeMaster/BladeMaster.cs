@@ -103,6 +103,11 @@ public class BladeMaster : MonoBehaviour
     //multipliers would stay stuck at their ultimate values - reset them on the way out
     void OnDisable()
     {
+        //pausing disables this component, so Update stops driving the crosshair and it would
+        //stay on top of the menu. Update puts it back when we're re-enabled if isEnhanced is
+        //still true, and the ability's timer is frozen meanwhile because Time.time is paused.
+        if (enhancedCrosshair != null) enhancedCrosshair.SetActive(false);
+
         if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
         if (playerMovement != null)
         {
@@ -191,16 +196,15 @@ public class BladeMaster : MonoBehaviour
         }
 
         //e ability
-        if(isEnhanced)
-        {
-            if (Time.time >= enhancedEndTime)
-            {
-                isEnhanced = false;
+        if (isEnhanced && Time.time >= enhancedEndTime)
+            isEnhanced = false;
 
-                if (enhancedCrosshair != null)
-                    enhancedCrosshair.SetActive(false);
-            }
-        }
+        //drive the crosshair from the ability's state every frame rather than toggling it once
+        //on activation. anything else that hides it (pausing, class switching) then gets undone
+        //automatically as soon as this runs again, instead of leaving it hidden for the rest of
+        //the ability. Time.time doesn't advance while paused, so the duration pauses with it.
+        if (enhancedCrosshair != null)
+            enhancedCrosshair.SetActive(isEnhanced);
 
 
 
@@ -400,9 +404,7 @@ public class BladeMaster : MonoBehaviour
         isEnhanced = true;
         enhancedEndTime = Time.time + enhancedDuration;
         nextSlashIsLeft = true; // always start each enhanced window with the "/" slash
-
-        if (enhancedCrosshair != null)
-            enhancedCrosshair.SetActive(true);
+        //no SetActive here - Update drives the crosshair from isEnhanced every frame
     }
 
     // where the reticle is currently pointing - same raycast CrosshairTarget.cs uses (screen centre),
