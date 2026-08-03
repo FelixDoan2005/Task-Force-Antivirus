@@ -38,6 +38,7 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateStarted += HandleUltimateStarted;
         bladeMaster.OnUltimateBlink += HandleUltimateBlink;
         bladeMaster.OnUltimateEnded += HandleUltimateEnded;
+        bladeMaster.OnComboAttack += HandleComboAttack;
     }
 
     void OnDisable()
@@ -47,6 +48,15 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateStarted -= HandleUltimateStarted;
         bladeMaster.OnUltimateBlink -= HandleUltimateBlink;
         bladeMaster.OnUltimateEnded -= HandleUltimateEnded;
+        bladeMaster.OnComboAttack -= HandleComboAttack;
+    }
+
+    void HandleComboAttack(int step)
+    {
+        //same trick as the ult swings - the blend tree's thresholds are whole numbers, so this
+        //lands exactly on one clip rather than blending two together
+        animator.SetFloat("ComboStep", step);
+        animator.SetTrigger("Attack");
     }
 
     void HandleDash()

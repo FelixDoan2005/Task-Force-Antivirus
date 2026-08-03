@@ -29,6 +29,14 @@ public class WeaponPoseOffset : MonoBehaviour
     public Vector3 dashRotationOffset;
     public Vector3 dashPositionOffset;
 
+    [Header("Combo Attack Offsets")]
+    [Tooltip("One entry per combo step (0 = first swing). Stops the blade swinging into the camera on particular attacks.")]
+    public Vector3[] comboRotationOffsets = new Vector3[5];
+    public Vector3[] comboPositionOffsets = new Vector3[5];
+
+    [Tooltip("Which combo step 'Capture Combo Offset' writes to.")]
+    public int captureComboStep;
+
     [Header("Block Offset")]
     [Tooltip("Takes priority over every other pose while right-click is held.")]
     public Vector3 blockRotationOffset;
@@ -85,6 +93,17 @@ public class WeaponPoseOffset : MonoBehaviour
             targetPos = dashPositionOffset;
             targetRot = dashRotationOffset;
             pose = "Dash";
+        }
+        //mid-swing each attack gets its own placement, since some of the clips throw the blade
+        //toward the camera at the arc they're posed at
+        else if (bladeMaster != null && bladeMaster.IsAttacking
+                 && bladeMaster.CurrentComboStep >= 0
+                 && bladeMaster.CurrentComboStep < comboRotationOffsets.Length)
+        {
+            int step = bladeMaster.CurrentComboStep;
+            targetPos = comboPositionOffsets[step];
+            targetRot = comboRotationOffsets[step];
+            pose = $"Attack{step}";
         }
         //blocking overrides the rest - the pose is what matters, not what your feet are doing
         else if (bladeMaster != null && bladeMaster.IsBlocking)
@@ -146,6 +165,26 @@ public class WeaponPoseOffset : MonoBehaviour
 
     [ContextMenu("Capture Dash Offset")]
     void CaptureDash() => Capture(ref dashPositionOffset, ref dashRotationOffset, "Dash");
+
+    [ContextMenu("Capture Combo Offset")]
+    void CaptureCombo()
+    {
+        if (captureComboStep < 0 || captureComboStep >= comboRotationOffsets.Length)
+        {
+            Debug.LogWarning($"captureComboStep {captureComboStep} is outside the array.", this);
+            return;
+        }
+        Capture(ref comboPositionOffsets[captureComboStep],
+                ref comboRotationOffsets[captureComboStep],
+                $"Combo step {captureComboStep}");
+    }
+
+    [ContextMenu("Preview Combo Offset")]
+    void PreviewCombo()
+    {
+        if (captureComboStep < 0 || captureComboStep >= comboRotationOffsets.Length) return;
+        Apply(comboPositionOffsets[captureComboStep], comboRotationOffsets[captureComboStep]);
+    }
 
     [ContextMenu("Capture Block Offset")]
     void CaptureBlock() => Capture(ref blockPositionOffset, ref blockRotationOffset, "Block");
