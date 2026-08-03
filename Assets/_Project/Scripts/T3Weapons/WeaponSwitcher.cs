@@ -170,8 +170,13 @@ public class WeaponSwitcher : MonoBehaviour
     {
         enabled = value; // stops this script's own Update() (sword/rifle/pistol/grenade/bow-draw calls)
 
+        //classes that poll input in their own Update() have to be disabled directly, otherwise
+        //they keep running through a pause - including re-showing their ability UI every frame
         if (archer != null)
-            archer.enabled = value; // MasterArcher self-polls mouse input independently, so disable it directly too
+            archer.enabled = value;
+
+        if (bladeMaster != null)
+            bladeMaster.enabled = value;
     }
 
     void UpdateActiveObjects()
