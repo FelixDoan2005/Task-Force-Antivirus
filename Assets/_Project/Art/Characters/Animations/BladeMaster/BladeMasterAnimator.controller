@@ -380,7 +380,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: UltSwing
-  m_Speed: 1
+  m_Speed: 4
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 1636635094322822845}
@@ -548,7 +548,7 @@ BlendTree:
     m_DirectBlendParameter: Blend
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: -203655887218126122, guid: ebd8063d4dbc55249aa705fc5874e8b9, type: 3}
+    m_Motion: {fileID: -203655887218126122, guid: 3096fb946c3d6804eba4ea40ff641c9a, type: 3}
     m_Threshold: 3
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
@@ -572,7 +572,7 @@ BlendTree:
     m_DirectBlendParameter: Blend
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: -203655887218126122, guid: 1c7b6668a23f32c448a67d3528ab0694, type: 3}
+    m_Motion: {fileID: -203655887218126122, guid: 45dd1f7e81c9c404eb54c6b662c7a3ec, type: 3}
     m_Threshold: 6
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1

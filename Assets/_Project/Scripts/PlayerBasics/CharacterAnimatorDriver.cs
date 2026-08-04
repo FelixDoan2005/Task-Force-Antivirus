@@ -8,6 +8,7 @@ public class CharacterAnimatorDriver : MonoBehaviour
     [Header("Setup")]
     public PlayerController playerMovement;
     public BladeMaster bladeMaster; // optional - only assign on the BladeMaster model
+    public PlayerHealth playerHealth; // drives the death state
 
     [Header("Blend")]
     [Tooltip("Seconds to ease between locomotion directions. Stops the blend tree snapping on key press/release.")]
@@ -107,6 +108,11 @@ public class CharacterAnimatorDriver : MonoBehaviour
 
     void Update()
     {
+        //driven from state rather than the OnDied event, so respawning clears it automatically
+        //and it survives anything that disables this component
+        if (playerHealth != null)
+            animator.SetBool("IsDead", playerHealth.isDead);
+
         if (playerMovement == null) return;
 
         //sprinting pushes the same direction further from the origin, so the blend tree
