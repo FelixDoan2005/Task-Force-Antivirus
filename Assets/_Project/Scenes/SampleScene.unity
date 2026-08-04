@@ -839,8 +839,8 @@ MonoBehaviour:
   ultimateWindup: 5
   ultimateRadius: 30
   ultimateDamagePerHit: 200
-  totalSlashes: 10
-  blinkInterval: 1
+  totalSlashes: 25
+  blinkInterval: 0.18
   ultimateCameraPullback: 4
 --- !u!1 &127885314
 GameObject:
@@ -4202,8 +4202,8 @@ MonoBehaviour:
   pitchEaseSpeed: 3
   mouseSensitivity: 0.1
   lockVerticalLook: 1
-  minCamDistance: 2.1
-  maxCamDistance: 3.7
+  minCamDistance: 2.3
+  maxCamDistance: 3.9
   camHeightOffset: 0
   suspendGravity: 0
 --- !u!143 &689043506
@@ -12758,7 +12758,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponPoseOffset
   playerMovement: {fileID: 689043505}
   bladeMaster: {fileID: 99479712}
-  animatorDriver: {fileID: 0}
+  animatorDriver: {fileID: 1994846920}
   restPosition: {x: 0, y: 0, z: 0}
   restEuler: {x: 0, y: 0, z: 0}
   restCaptured: 0
@@ -12767,10 +12767,10 @@ MonoBehaviour:
   ultSwingRotationOffsets:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 90, z: 0}
+  - {x: 0, y: 0, z: -203}
   - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
+  - {x: 90, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 130, y: 40, z: 180}
@@ -12779,10 +12779,10 @@ MonoBehaviour:
   ultSwingPositionOffsets:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  - {x: -0.3, y: -0.3, z: -0.3}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
-  - {x: 0.49, y: 0.465, z: 0.37}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
@@ -12793,7 +12793,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 130, y: 40, z: 180}
   - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 70}
+  - {x: 0, y: 0, z: -203}
   - {x: 0, y: 0, z: 0}
   comboPositionOffsets:
   - {x: 0, y: 0, z: 0}
@@ -12898,8 +12898,8 @@ MonoBehaviour:
   blendDampTime: 0.12
   sprintBlendDistance: 2
   ultimateSwingVariants: 11
-  logUltSwings: 1
-  forceUltSwingIndex: 8
+  logUltSwings: 0
+  forceUltSwingIndex: -1
 --- !u!1 &1997794961
 GameObject:
   m_ObjectHideFlags: 0
