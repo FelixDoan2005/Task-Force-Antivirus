@@ -39,6 +39,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("How fast the camera eases toward the requested extra distance. Lower = more cinematic.")]
     public float cameraDistanceLerpSpeed = 2f;
 
+    [Tooltip("Extra distance while sprinting. Added on top of any ability pullback rather than replacing it.")]
+    public float sprintCameraPullback = 1.5f;
+
     float currentExtraCamDistance;
 
     [Tooltip("Abilities can set this to freeze mouse look. The camera keeps updating distance/collision, it just stops turning.")]
@@ -152,9 +155,11 @@ public class PlayerController : MonoBehaviour
             float neutralBoost = 0.8f * (1f - Mathf.Abs(camT - 0.5f) * 2f); // 0 at extremes, max at center
             dist += neutralBoost;
 
-            //ease toward whatever pullback an ability has asked for, so it glides out and back
+            //ease toward whatever pullback is being asked for, so it glides out and back
             //instead of snapping. applied before the collision check so walls still clamp it.
-            currentExtraCamDistance = Mathf.Lerp(currentExtraCamDistance, extraCameraDistance,
+            //ability pullback and sprint pullback add together rather than overriding each other.
+            float targetExtra = extraCameraDistance + (IsSprinting ? sprintCameraPullback : 0f);
+            currentExtraCamDistance = Mathf.Lerp(currentExtraCamDistance, targetExtra,
                                                  cameraDistanceLerpSpeed * Time.deltaTime);
             dist += currentExtraCamDistance;
 
