@@ -72,6 +72,15 @@ public class WeaponPoseOffset : MonoBehaviour
     public Vector3 sprintRotationOffset;
     public Vector3 sprintPositionOffset;
 
+    [Header("Snap")]
+    [Tooltip("Jump straight to the dash pose instead of easing into it. The dash is too short for a " +
+             "blend to finish, so easing leaves it looking different depending on what you were doing before.")]
+    public bool snapToDashPose = true;
+
+    [Tooltip("Keep holding the dash pose for this long after the dash movement ends - the dash " +
+             "animation runs longer than the movement does, so without this the sword snaps back early.")]
+    public float dashPoseHold = 0.35f;
+
     [Header("Blend")]
     public float blendSpeed = 8f;
     public float moveThreshold = 0.1f;
@@ -84,6 +93,7 @@ public class WeaponPoseOffset : MonoBehaviour
     //separately, which sends the blade the long way round (through the character) whenever two
     //poses differ a lot - e.g. run to sprint. Slerp always takes the shortest arc.
     Quaternion currentRotOffset = Quaternion.identity;
+    float dashPoseUntil;
     string lastPose = "";
 
     Quaternion RestRotation => Quaternion.Euler(restEuler);
@@ -108,8 +118,15 @@ public class WeaponPoseOffset : MonoBehaviour
         Vector3 targetRot = Vector3.zero;
         string pose = "Rest";
 
-        //dashing wins outright so the sword is consistent whether you dashed from standing or running
+        //the dash animation outlasts the dash movement, so keep the pose alive a little longer
+        //than IsDashing or the sword snaps back while the character is still swinging
         if (bladeMaster != null && bladeMaster.IsDashing)
+            dashPoseUntil = Time.time + dashPoseHold;
+
+        bool inDashPose = Time.time < dashPoseUntil;
+
+        //dashing wins outright so the sword is consistent whether you dashed from standing or running
+        if (inDashPose)
         {
             targetPos = dashPositionOffset;
             targetRot = dashRotationOffset;
@@ -184,7 +201,12 @@ public class WeaponPoseOffset : MonoBehaviour
             lastPose = pose;
         }
 
-        float t = blendSpeed * Time.deltaTime;
+        //a dash is over before any blend could finish, so easing into it would leave the sword
+        //carrying whatever pose it came from - snap so it looks identical from standing, running
+        //or sprinting
+        bool snap = snapToDashPose && inDashPose;
+
+        float t = snap ? 1f : blendSpeed * Time.deltaTime;
         currentPosOffset = Vector3.Lerp(currentPosOffset, targetPos, t);
         currentRotOffset = Quaternion.Slerp(currentRotOffset, Quaternion.Euler(targetRot), t);
 
