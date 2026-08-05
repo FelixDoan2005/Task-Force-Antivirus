@@ -80,7 +80,10 @@ public class WeaponPoseOffset : MonoBehaviour
     public bool logActivePose;
 
     Vector3 currentPosOffset;
-    Vector3 currentRotOffset;
+    //held as a quaternion, not euler angles. lerping euler components interpolates each axis
+    //separately, which sends the blade the long way round (through the character) whenever two
+    //poses differ a lot - e.g. run to sprint. Slerp always takes the shortest arc.
+    Quaternion currentRotOffset = Quaternion.identity;
     string lastPose = "";
 
     Quaternion RestRotation => Quaternion.Euler(restEuler);
@@ -183,10 +186,10 @@ public class WeaponPoseOffset : MonoBehaviour
 
         float t = blendSpeed * Time.deltaTime;
         currentPosOffset = Vector3.Lerp(currentPosOffset, targetPos, t);
-        currentRotOffset = Vector3.Lerp(currentRotOffset, targetRot, t);
+        currentRotOffset = Quaternion.Slerp(currentRotOffset, Quaternion.Euler(targetRot), t);
 
         transform.localPosition = restPosition + currentPosOffset;
-        transform.localRotation = RestRotation * Quaternion.Euler(currentRotOffset);
+        transform.localRotation = RestRotation * currentRotOffset;
     }
 
     // ---- tuning helpers, all usable from the component's right-click menu in edit mode ----
