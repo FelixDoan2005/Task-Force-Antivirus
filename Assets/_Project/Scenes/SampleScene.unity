@@ -12895,6 +12895,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimatorDriver
   playerMovement: {fileID: 689043505}
   bladeMaster: {fileID: 99479712}
+  playerHealth: {fileID: 689043510}
   blendDampTime: 0.12
   sprintBlendDistance: 2
   ultimateSwingVariants: 11

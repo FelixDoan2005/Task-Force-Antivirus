@@ -40,6 +40,9 @@ public class BladeMaster : MonoBehaviour
     //fired on every basic attack, carrying which step of the combo it is (0-4)
     public event System.Action<int> OnComboAttack;
 
+    //fired when E is activated
+    public event System.Action OnEnhancedActivated;
+
     [Header("Weapon")]
     public float damage = 5f;
     public float range = 2f;
@@ -433,6 +436,8 @@ public class BladeMaster : MonoBehaviour
         enhancedEndTime = Time.time + enhancedDuration;
         nextSlashIsLeft = true; // always start each enhanced window with the "/" slash
         //no SetActive here - Update drives the crosshair from isEnhanced every frame
+
+        OnEnhancedActivated?.Invoke();
     }
 
     // where the reticle is currently pointing - same raycast CrosshairTarget.cs uses (screen centre),

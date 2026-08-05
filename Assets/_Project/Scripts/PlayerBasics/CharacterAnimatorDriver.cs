@@ -43,6 +43,7 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateBlink += HandleUltimateBlink;
         bladeMaster.OnUltimateEnded += HandleUltimateEnded;
         bladeMaster.OnComboAttack += HandleComboAttack;
+        bladeMaster.OnEnhancedActivated += HandleEnhancedActivated;
     }
 
     void OnDisable()
@@ -53,6 +54,12 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateBlink -= HandleUltimateBlink;
         bladeMaster.OnUltimateEnded -= HandleUltimateEnded;
         bladeMaster.OnComboAttack -= HandleComboAttack;
+        bladeMaster.OnEnhancedActivated -= HandleEnhancedActivated;
+    }
+
+    void HandleEnhancedActivated()
+    {
+        animator.SetTrigger("EAbility");
     }
 
     void HandleComboAttack(int step)
