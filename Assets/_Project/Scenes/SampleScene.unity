@@ -826,15 +826,19 @@ MonoBehaviour:
   dashDistance: 30
   dashHitRadius: 1
   dashDamage: 100
-  eCooldown: 12
-  leftSlashPoint: {fileID: 2026819899}
-  rightSlashPoint: {fileID: 1663526401}
-  enhancedCrosshair: {fileID: 510844386}
-  slashSpeed: 80
+  eCooldown: 1
+  castLockDuration: 1.2
+  thrustDelay: 0.25
+  thrustDamage: 100
+  thrustRange: 100
+  thrustWidth: 1.5
+  thrustSpeed: 80
+  slashDelay: 1
+  slashDamage: 50
   slashRange: 100
-  slashThickness: 0.5
-  slashDamage: 70
-  enhancedDuration: 5
+  slashWidth: 10
+  slashSpeed: 80
+  waveHeight: 3
   ultimateCooldown: 5
   ultimateWindup: 5
   ultimateRadius: 30
@@ -12759,11 +12763,15 @@ MonoBehaviour:
   playerMovement: {fileID: 689043505}
   bladeMaster: {fileID: 99479712}
   animatorDriver: {fileID: 1994846920}
-  restPosition: {x: 0, y: 0, z: 0}
-  restEuler: {x: 0, y: 0, z: 0}
-  restCaptured: 0
+  restPosition: {x: -0.255, y: 0.281, z: 0.084}
+  restEuler: {x: 339.098, y: 286.57898, z: 222.043}
+  restCaptured: 1
   dashRotationOffset: {x: 70, y: 60, z: 0}
   dashPositionOffset: {x: 0, y: 0.4, z: 0.2}
+  castThrustRotationOffset: {x: 45.83252, y: 294.20224, z: 231.6837}
+  castThrustPositionOffset: {x: 0.345, y: 0.31900004, z: -0.084}
+  castSlashRotationOffset: {x: 56.851486, y: 340.44962, z: 14.719901}
+  castSlashPositionOffset: {x: 0.17899999, y: 0.044, z: -0.40899998}
   ultSwingRotationOffsets:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
