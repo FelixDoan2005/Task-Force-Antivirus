@@ -14,6 +14,12 @@ public class PlayerController : MonoBehaviour
     public float gravity = -20f;
     public float speedMultiplier = 1f; // e.g. 0.2f while blocking = moves at 20% speed
 
+    [Tooltip("Abilities can set this to block jumping without touching gravity, so you still fall normally.")]
+    public bool suspendJump;
+
+    [Tooltip("Abilities can set this to block the double-tap dash. Read by DashAbility.")]
+    public bool suspendDash;
+
     [Header("Jump")]
     public float jumpHeight = 1.2f;
 
@@ -220,7 +226,7 @@ public class PlayerController : MonoBehaviour
             velocity.y = -2f;
 
         // Jump: holding Space jumps immediately every time we're grounded (or just left it, via coyote time)
-        bool jumpHeld = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+        bool jumpHeld = !suspendJump && Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
         bool canCoyoteJump = (Time.time - lastGroundedTime) <= coyoteTime;
 
         if (jumpHeld && canCoyoteJump && velocity.y <= 0.01f)

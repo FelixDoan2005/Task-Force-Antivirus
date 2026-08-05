@@ -91,6 +91,9 @@ public class BladeMaster : MonoBehaviour
     public float eCooldown = 12f;
     public float castLockDuration = 1.2f; // how long the whole cast animation blocks other actions
 
+    [Tooltip("Move speed multiplier while casting. 0 roots you in place for the whole animation.")]
+    public float castMoveSpeedMultiplier = 0f;
+
     [Header("E - Thrust (first wave)")]
     [Tooltip("Delay from pressing E to the thrust firing - line this up with the thrust in the animation.")]
     public float thrustDelay = 0.25f;
@@ -138,6 +141,8 @@ public class BladeMaster : MonoBehaviour
         if (playerMovement != null)
         {
             playerMovement.speedMultiplier = 1f;
+            playerMovement.suspendJump = false;
+            playerMovement.suspendDash = false;
             playerMovement.extraCameraDistance = 0f;
             playerMovement.suspendLook = false;
             playerMovement.easePitchToTarget = false;
@@ -159,7 +164,15 @@ public class BladeMaster : MonoBehaviour
 
         if (playerMovement != null)
         {
-            playerMovement.speedMultiplier = isBlocking ? blockMoveSpeedMultiplier : 1f;
+            //casting roots you in place - it takes priority over the block slowdown, though the
+            //two can't really overlap since blocking stops you casting in the first place
+            if (isCasting)
+                playerMovement.speedMultiplier = castMoveSpeedMultiplier;
+            else
+                playerMovement.speedMultiplier = isBlocking ? blockMoveSpeedMultiplier : 1f;
+
+            playerMovement.suspendJump = isCasting;
+            playerMovement.suspendDash = isCasting;
 
             //driven from state every frame rather than set once when the ult starts. pausing
             //disables this component and OnDisable clears them, so they have to be re-asserted
