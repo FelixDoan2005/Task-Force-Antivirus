@@ -30,6 +30,15 @@ public class WeaponPoseOffset : MonoBehaviour
     public Vector3 dashRotationOffset;
     public Vector3 dashPositionOffset;
 
+    [Header("E Cast Offsets")]
+    [Tooltip("Applied during the thrust, i.e. the first half of the cast.")]
+    public Vector3 castThrustRotationOffset;
+    public Vector3 castThrustPositionOffset;
+
+    [Tooltip("Applied once the horizontal slash starts (after Slash Delay on BladeMaster).")]
+    public Vector3 castSlashRotationOffset;
+    public Vector3 castSlashPositionOffset;
+
     [Header("Ult Swing Offsets")]
     [Tooltip("One entry per ult swing clip. Set the array size to match Ultimate Swing Variants on the driver.")]
     public Vector3[] ultSwingRotationOffsets = new Vector3[11];
@@ -102,6 +111,15 @@ public class WeaponPoseOffset : MonoBehaviour
             targetPos = dashPositionOffset;
             targetRot = dashRotationOffset;
             pose = "Dash";
+        }
+        //the cast has two halves with very different sword positions, so it swaps pose
+        //partway through rather than holding one for the whole animation
+        else if (bladeMaster != null && bladeMaster.IsCasting)
+        {
+            bool thrusting = bladeMaster.CastPhase == 0;
+            targetPos = thrusting ? castThrustPositionOffset : castSlashPositionOffset;
+            targetRot = thrusting ? castThrustRotationOffset : castSlashRotationOffset;
+            pose = thrusting ? "CastThrust" : "CastSlash";
         }
         //each ult swing clip gets its own placement too - same problem, 11 more clips
         else if (bladeMaster != null && bladeMaster.IsUltimateActive && animatorDriver != null
@@ -184,6 +202,18 @@ public class WeaponPoseOffset : MonoBehaviour
 
     [ContextMenu("Capture Dash Offset")]
     void CaptureDash() => Capture(ref dashPositionOffset, ref dashRotationOffset, "Dash");
+
+    [ContextMenu("Capture Cast Thrust Offset")]
+    void CaptureCastThrust() => Capture(ref castThrustPositionOffset, ref castThrustRotationOffset, "Cast thrust");
+
+    [ContextMenu("Capture Cast Slash Offset")]
+    void CaptureCastSlash() => Capture(ref castSlashPositionOffset, ref castSlashRotationOffset, "Cast slash");
+
+    [ContextMenu("Preview Cast Thrust Offset")]
+    void PreviewCastThrust() => Apply(castThrustPositionOffset, castThrustRotationOffset);
+
+    [ContextMenu("Preview Cast Slash Offset")]
+    void PreviewCastSlash() => Apply(castSlashPositionOffset, castSlashRotationOffset);
 
     [ContextMenu("Capture Ult Swing Offset")]
     void CaptureUltSwing()

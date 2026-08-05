@@ -27,6 +27,11 @@ public class BladeMaster : MonoBehaviour
     public int CurrentComboStep => comboStep;
 
     public bool IsUltimateActive => isUltimateActive;
+    public bool IsCasting => isCasting; // true for the length of the E cast
+
+    //0 while the thrust is going out, 1 once the slash starts - lets the sword be posed
+    //differently for each half of the cast animation
+    public int CastPhase => (Time.time - castStartTime) < slashDelay ? 0 : 1;
 
     //fired the moment a dash starts, so the animator driver can trigger the Q clip.
     //kept as an event so this class doesn't need to know an Animator exists.
@@ -82,21 +87,30 @@ public class BladeMaster : MonoBehaviour
     HashSet<VirusHealthBase> hitDuringDash = new HashSet<VirusHealthBase>(); // so a single dash doesn't multi-hit the same target every frame
     HashSet<Collider> ignoredDuringDash = new HashSet<Collider>(); // colliders we've told Physics to ignore for this dash, so we can restore them after
 
-    [Header("E - Ranged Slash")]
+    [Header("E - Twin Shockwave (cast)")]
     public float eCooldown = 12f;
-    public Transform leftSlashPoint; // where the "/" slash originates from 
-    public Transform rightSlashPoint; // where the "\" slash originates from 
-    public GameObject enhancedCrosshair; // shown only while isEnhanced is true 
-    public float slashSpeed = 20f;
-    public float slashRange = 15f;
-    public float slashThickness = 0.5f; // 
-    public float slashDamage = 10f;
+    public float castLockDuration = 1.2f; // how long the whole cast animation blocks other actions
+
+    [Header("E - Thrust (first wave)")]
+    [Tooltip("Delay from pressing E to the thrust firing - line this up with the thrust in the animation.")]
+    public float thrustDelay = 0.25f;
+    public float thrustDamage = 40f;
+    public float thrustRange = 14f;
+    public float thrustWidth = 1.5f;   // narrow, it's a piercing stab
+    public float thrustSpeed = 30f;
+
+    [Header("E - Slash (second wave)")]
+    [Tooltip("Delay from pressing E to the horizontal slash firing.")]
+    public float slashDelay = 0.75f;
+    public float slashDamage = 20f;
+    public float slashRange = 25f;     // travels much further
+    public float slashWidth = 10f;     // and is enormously wide
+    public float slashSpeed = 22f;
+    public float waveHeight = 3f;      // vertical thickness of both waves
 
     float eReadyTime;
-    bool isEnhanced;
-    public float enhancedDuration = 5f;
-    float enhancedEndTime;
-    bool nextSlashIsLeft = true; // alternates "/" (left) then "\" (right) each click while enhanced
+    bool isCasting; // blocks attacks/abilities for the length of the cast
+    float castStartTime; // used to work out which half of the cast we're in
 
     [Header("X - Ultimate: Blink Execution")]
     public float ultimateCooldown = 60f;
@@ -120,11 +134,6 @@ public class BladeMaster : MonoBehaviour
     //multipliers would stay stuck at their ultimate values - reset them on the way out
     void OnDisable()
     {
-        //pausing disables this component, so Update stops driving the crosshair and it would
-        //stay on top of the menu. Update puts it back when we're re-enabled if isEnhanced is
-        //still true, and the ability's timer is frozen meanwhile because Time.time is paused.
-        if (enhancedCrosshair != null) enhancedCrosshair.SetActive(false);
-
         if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
         if (playerMovement != null)
         {
@@ -221,34 +230,16 @@ public class BladeMaster : MonoBehaviour
             }
         }
 
-        //e ability
-        if (isEnhanced && Time.time >= enhancedEndTime)
-            isEnhanced = false;
-
-        //drive the crosshair from the ability's state every frame rather than toggling it once
-        //on activation. anything else that hides it (pausing, class switching) then gets undone
-        //automatically as soon as this runs again, instead of leaving it hidden for the rest of
-        //the ability. Time.time doesn't advance while paused, so the duration pauses with it.
-        if (enhancedCrosshair != null)
-            enhancedCrosshair.SetActive(isEnhanced);
-
-
-
     }
 
     public void Attack()
     {
         if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
         if (isBlocking) return; // can't attack while holding block
+        if (isCasting) return;  // locked out for the length of the E cast
         if (Time.time < attackReadyTime) return; // still mid-swing, ignore the click
 
         attackReadyTime = Time.time + comboStagger;
-
-        if (isEnhanced)
-        {
-            FireEnhancedSlash();
-            return;
-        }
 
         if (Time.time - lastAttackTime > comboWindow)
             comboStep = 0; // window expired, back to hit 1
@@ -267,16 +258,6 @@ public class BladeMaster : MonoBehaviour
             case 3: Swing4_BottomRightToTopLeft(); break;
             case 4: Swing5_PullBackStab(); break;
         }
-    }
-
-    // one click = one slash while enhanced, alternating "/" (left) and "\" (right) each time
-    void FireEnhancedSlash()
-    {
-        Vector3 centre = GetCrosshairPoint();
-        Transform origin = nextSlashIsLeft ? leftSlashPoint : rightSlashPoint;
-
-        StartCoroutine(FireSlash(origin.position, centre, nextSlashIsLeft));
-        nextSlashIsLeft = !nextSlashIsLeft;
     }
 
     // 1: red - sheathed at the left hip, diagonal slash up to the right at 45 degrees
@@ -410,6 +391,7 @@ public class BladeMaster : MonoBehaviour
         if (Time.time < qReadyTime) return;
         if (isUltimateActive) return;
         if (isBlocking) return;
+        if (isCasting) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
@@ -429,56 +411,70 @@ public class BladeMaster : MonoBehaviour
         if (Time.time < eReadyTime) return;
         if (isUltimateActive) return;
         if (isBlocking) return;
+        if (isCasting) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
-        isEnhanced = true;
-        enhancedEndTime = Time.time + enhancedDuration;
-        nextSlashIsLeft = true; // always start each enhanced window with the "/" slash
-        //no SetActive here - Update drives the crosshair from isEnhanced every frame
-
-        OnEnhancedActivated?.Invoke();
+        OnEnhancedActivated?.Invoke(); // animator plays the thrust-then-slash clip
+        StartCoroutine(CastSequence());
     }
 
-    // where the reticle is currently pointing - same raycast CrosshairTarget.cs uses (screen centre),
-    // falls back to a fixed point straight ahead if nothing's hit within slashRange
-    Vector3 GetCrosshairPoint()
+    //both waves are scheduled off the same cast, each with its own delay so they line up with
+    //the thrust and the slash in the animation
+    IEnumerator CastSequence()
     {
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        if (Physics.Raycast(ray, out RaycastHit hit, slashRange))
-            return hit.point;
+        isCasting = true;
+        castStartTime = Time.time;
 
-        return Origin + Forward * slashRange;
+        StartCoroutine(FireShockwave(thrustDelay, thrustDamage, thrustRange, thrustWidth, thrustSpeed, Color.cyan));
+        StartCoroutine(FireShockwave(slashDelay, slashDamage, slashRange, slashWidth, slashSpeed, Color.magenta));
+
+        yield return new WaitForSeconds(castLockDuration);
+        isCasting = false;
     }
 
-    // sweeps a point from 'start' to 'end' over time, hitting (and piercing through) anything within slashThickness of its path
-    IEnumerator FireSlash(Vector3 start, Vector3 end, bool isLeftSlash)
+    //sweeps a wide flat box forward along the facing direction, damaging each virus once.
+    //width is what separates the two waves - the thrust is narrow and hard hitting, the slash
+    //is enormously wide but weaker.
+    IEnumerator FireShockwave(float delay, float damage, float range, float width, float speed, Color debugColor)
     {
+        yield return new WaitForSeconds(delay);
+
+        Vector3 origin = Origin;
+        Vector3 dir = Forward;
+        dir.y = 0f;
+        dir = dir.normalized;
+        Vector3 side = Vector3.Cross(Vector3.up, dir); // horizontal axis of the wave
+
+        Quaternion waveRotation = Quaternion.LookRotation(dir);
+        Vector3 halfExtents = new Vector3(width * 0.5f, waveHeight * 0.5f, 0.5f);
+
         HashSet<VirusHealthBase> alreadyHit = new HashSet<VirusHealthBase>();
-        float travelTime = Vector3.Distance(start, end) / slashSpeed;
-        float elapsed = 0f;
+        float travelled = 0f;
 
-        Vector3 tiltAxis = (isLeftSlash ? (Right + Up) : (Right - Up)).normalized; // "/" vs "\"
-        float visualLength = slashThickness * 2f;
-
-        while (elapsed < travelTime)
+        while (travelled < range)
         {
-            elapsed += Time.deltaTime;
-            Vector3 point = Vector3.Lerp(start, end, elapsed / travelTime);
+            travelled += speed * Time.deltaTime;
+            Vector3 point = origin + dir * travelled;
 
-            Collider[] hits = Physics.OverlapSphere(point, slashThickness);
-            foreach (Collider c in hits)
+            foreach (Collider c in Physics.OverlapBox(point, halfExtents, waveRotation))
             {
                 VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
                 if (vh == null || alreadyHit.Contains(vh)) continue;
 
-                vh.TakeDamage(slashDamage);
+                vh.TakeDamage(damage);
                 alreadyHit.Add(vh);
-                Debug.DrawLine(point, vh.transform.position, Color.white, 0.2f);
+
+                //white hit marker - a line from the wave to whoever it caught, plus a small
+                //cross on the target itself so it's visible even when the wave is behind them
+                Vector3 target = vh.transform.position;
+                Debug.DrawLine(point, target, Color.white, 0.4f);
+                Debug.DrawLine(target + Vector3.up * 1.2f, target - Vector3.up * 0.2f, Color.white, 0.4f);
+                Debug.DrawLine(target - side * 0.6f, target + side * 0.6f, Color.white, 0.4f);
             }
 
-            // draws the actual diagonal slash mark ("/" or "\") at the blade's current position, instead of a single tiny tick
-            Debug.DrawLine(point - tiltAxis * visualLength, point + tiltAxis * visualLength, Color.red, 0.15f);
+            //draw the wave as a horizontal bar so its width is obvious in the scene view
+            Debug.DrawLine(point - side * (width * 0.5f), point + side * (width * 0.5f), debugColor, 0.1f);
             yield return null;
         }
     }
@@ -488,6 +484,7 @@ public class BladeMaster : MonoBehaviour
         if (Time.time < ultimateReadyTime) return;
         if (isUltimateActive) return;
         if (isBlocking) return;
+        if (isCasting) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         ultimateReadyTime = Time.time + ultimateCooldown;
 
