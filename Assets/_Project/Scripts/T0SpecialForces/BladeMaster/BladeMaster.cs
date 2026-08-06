@@ -124,6 +124,24 @@ public class BladeMaster : MonoBehaviour
     public float blinkInterval = 0.15f; // time between each blink/hit
     public float ultimateCameraPullback = 4f; // how far the camera eases out for the duration
 
+    [Header("X - Ultimate FX")]
+    public CameraShake cameraShake;
+
+    [Tooltip("Shake level held during the windup, 0-1. Ramps from 0 to this over the windup.")]
+    [Range(0f, 1f)] public float windupShakeIntensity = 0.6f;
+
+    [Tooltip("Trauma added by each blink strike.")]
+    public float blinkShake = 0.22f;
+
+    [Tooltip("Spawned once where the player stands during the windup. Wind / charge-up particles.")]
+    public GameObject windupVfxPrefab;
+
+    [Tooltip("Spawned at each blink, facing the target. Slash / impact particles.")]
+    public GameObject blinkSlashVfxPrefab;
+
+    [Tooltip("How long spawned VFX live before being destroyed.")]
+    public float vfxLifetime = 2f;
+
     float ultimateReadyTime;
     bool isUltimateActive; // true for the whole windup + blink sequence - blocks Attack()/Q/E while it runs
 
@@ -526,10 +544,21 @@ public class BladeMaster : MonoBehaviour
         // idle windup - continuously rescan every frame so enemies that walk into range mid-windup get marked
         // too (HashSet.Add ignores anything already marked), drawing a scan line to everyone currently marked
         HashSet<VirusHealthBase> targets = new HashSet<VirusHealthBase>();
+
+        //wind / charge-up effect, parented so it follows if anything moves the player
+        GameObject windupVfx = null;
+        if (windupVfxPrefab != null)
+            windupVfx = Instantiate(windupVfxPrefab, startPosition, Quaternion.identity, playerController.transform);
+
         float windupTimer = 0f;
         while (windupTimer < ultimateWindup)
         {
             windupTimer += Time.deltaTime;
+
+            //rumble that builds as the windup progresses. held at a level rather than added to,
+            //since decay drains faster than small per-frame additions could ever accumulate
+            if (cameraShake != null)
+                cameraShake.SetTraumaFloor(windupShakeIntensity * (windupTimer / ultimateWindup));
 
             Collider[] hits = Physics.OverlapSphere(startPosition, ultimateRadius);
             foreach (Collider c in hits)
@@ -547,6 +576,8 @@ public class BladeMaster : MonoBehaviour
 
             yield return null;
         }
+
+        if (windupVfx != null) Destroy(windupVfx); // windup's over either way
 
         // safety exit - nothing was ever marked during the whole windup, so skip the blink phase entirely.
         // Cooldown's already ticking from the moment X was pressed, so nothing extra needed there.
@@ -616,6 +647,22 @@ public class BladeMaster : MonoBehaviour
             FaceTarget(target.transform.position);
             target.TakeDamage(ultimateDamagePerHit);
             OnUltimateBlink?.Invoke();
+
+            //punch the camera on every strike - these stack, so a fast blink sequence builds
+            //into a proper rumble rather than 25 identical little taps
+            if (cameraShake != null)
+                cameraShake.AddTrauma(blinkShake);
+
+            //slash effect at the victim, turned to face the way we struck from
+            if (blinkSlashVfxPrefab != null)
+            {
+                Vector3 toTarget = target.transform.position - blinkPoint;
+                Quaternion facing = toTarget.sqrMagnitude > 0.001f
+                    ? Quaternion.LookRotation(toTarget)
+                    : Quaternion.identity;
+                Destroy(Instantiate(blinkSlashVfxPrefab, target.transform.position, facing), vfxLifetime);
+            }
+
             Debug.DrawLine(blinkPoint, target.transform.position, Color.magenta, blinkInterval);
 
             yield return new WaitForSeconds(blinkInterval);

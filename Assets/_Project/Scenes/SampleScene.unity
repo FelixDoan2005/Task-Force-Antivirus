@@ -828,6 +828,7 @@ MonoBehaviour:
   dashDamage: 100
   eCooldown: 1
   castLockDuration: 1.2
+  castMoveSpeedMultiplier: 0
   thrustDelay: 0.25
   thrustDamage: 100
   thrustRange: 100
@@ -846,6 +847,12 @@ MonoBehaviour:
   totalSlashes: 25
   blinkInterval: 0.18
   ultimateCameraPullback: 4
+  cameraShake: {fileID: 330585548}
+  windupShakePerSecond: 0.35
+  blinkShake: 0.22
+  windupVfxPrefab: {fileID: 0}
+  blinkSlashVfxPrefab: {fileID: 0}
+  vfxLifetime: 2
 --- !u!1 &127885314
 GameObject:
   m_ObjectHideFlags: 0
@@ -1945,6 +1952,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585548}
   m_Layer: 3
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2070,6 +2078,22 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &330585548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39c673a7fb2293d4393767a530dc4562, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShake
+  maxOffset: 0.35
+  maxRoll: 2.5
+  decay: 1.6
+  frequency: 22
 --- !u!1 &363964598
 GameObject:
   m_ObjectHideFlags: 0
@@ -4189,6 +4213,8 @@ MonoBehaviour:
   sprintSpeed: 10
   gravity: -20
   speedMultiplier: 1
+  suspendJump: 0
+  suspendDash: 0
   jumpHeight: 1.2
   coyoteTime: 0.12
   fallMultiplier: 1.6
@@ -4200,6 +4226,7 @@ MonoBehaviour:
   cameraCollisionBuffer: 0.2
   extraCameraDistance: 0
   cameraDistanceLerpSpeed: 2
+  sprintCameraPullback: 1.5
   suspendLook: 0
   easePitchToTarget: 0
   targetPitch: 5
@@ -4340,6 +4367,7 @@ MonoBehaviour:
   dashDuration: 0.15
   dashCooldown: 0.5
   doubleTapWindow: 0.3
+  playerMovement: {fileID: 689043505}
   weaponSwitcher: {fileID: 689043512}
   allowedWeaponIndices: 0000000003000000
 --- !u!114 &689043515
@@ -12766,8 +12794,8 @@ MonoBehaviour:
   restPosition: {x: -0.255, y: 0.281, z: 0.084}
   restEuler: {x: 339.098, y: 286.57898, z: 222.043}
   restCaptured: 1
-  dashRotationOffset: {x: 70, y: 60, z: 0}
-  dashPositionOffset: {x: 0, y: 0.4, z: 0.2}
+  dashRotationOffset: {x: 87.18548, y: 54.91092, z: 273.60956}
+  dashPositionOffset: {x: 0.13299999, y: 0.424, z: 0.30200002}
   castThrustRotationOffset: {x: 40.737644, y: 337.3992, z: 344.8018}
   castThrustPositionOffset: {x: -0.058, y: 0.266, z: -0.32}
   castSlashRotationOffset: {x: 0, y: 0, z: 0}
@@ -12818,6 +12846,8 @@ MonoBehaviour:
   backPositionOffset: {x: -0.1, y: -0.1, z: -0.2}
   sprintRotationOffset: {x: 44.22796, y: 281.42877, z: 312.10208}
   sprintPositionOffset: {x: 0.11, y: 0.081, z: 0.001000002}
+  snapToDashPose: 1
+  dashPoseHold: 0.35
   blendSpeed: 25
   moveThreshold: 0.1
   logActivePose: 1
