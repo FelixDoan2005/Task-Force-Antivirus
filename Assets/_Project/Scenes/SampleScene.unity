@@ -848,10 +848,10 @@ MonoBehaviour:
   blinkInterval: 0.18
   ultimateCameraPullback: 4
   cameraShake: {fileID: 330585548}
-  windupShakePerSecond: 0.35
+  windupShakeIntensity: 0.6
   blinkShake: 0.22
   windupVfxPrefab: {fileID: 0}
-  blinkSlashVfxPrefab: {fileID: 0}
+  blinkSlashVfxPrefab: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
   vfxLifetime: 2
 --- !u!1 &127885314
 GameObject:
@@ -2091,7 +2091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShake
   maxOffset: 0.35
-  maxRoll: 2.5
+  maxRoll: 0
   decay: 1.6
   frequency: 22
 --- !u!1 &363964598
@@ -9375,7 +9375,6 @@ Transform:
   - {fileID: 2050896635}
   - {fileID: 1486071845}
   - {fileID: 583606127}
-  - {fileID: 2019509469}
   - {fileID: 910520278}
   - {fileID: 1331622920}
   - {fileID: 1203543134}
@@ -13076,54 +13075,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1997794961}
   m_CullTransparentMesh: 1
---- !u!1 &2019509468
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2019509469}
-  - component: {fileID: 2019509470}
-  m_Layer: 0
-  m_Name: TankVirusSpawn (9)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2019509469
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2019509468}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.28, y: -10.4, z: -5.74}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1386654044}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2019509470
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2019509468}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ZombieSpawner
-  virusPrefab: {fileID: 3802212209892273281, guid: 89b4c6da926d6984dbd48cbae3729015, type: 3}
-  wallTarget: {fileID: 1555323497}
-  spawnInterval: 6
-  maxAlive: 1
 --- !u!1 &2026819898
 GameObject:
   m_ObjectHideFlags: 0
