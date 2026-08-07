@@ -29,9 +29,15 @@ public class BladeMaster : MonoBehaviour
     public bool IsUltimateActive => isUltimateActive;
     public bool IsCasting => isCasting; // true for the length of the E cast
 
+    //when the slash actually fires. a gap above 0 positions it relative to the thrust rather
+    //than to the keypress, so nudging the thrust carries the slash with it
+    public float EffectiveSlashDelay => slashGapAfterThrust > 0f
+        ? thrustDelay + slashGapAfterThrust
+        : slashDelay;
+
     //0 while the thrust is going out, 1 once the slash starts - lets the sword be posed
     //differently for each half of the cast animation
-    public int CastPhase => (Time.time - castStartTime) < slashDelay ? 0 : 1;
+    public int CastPhase => (Time.time - castStartTime) < EffectiveSlashDelay ? 0 : 1;
 
     //fired the moment a dash starts, so the animator driver can trigger the Q clip.
     //kept as an event so this class doesn't need to know an Animator exists.
@@ -67,6 +73,34 @@ public class BladeMaster : MonoBehaviour
     float lastAttackTime = -999f;
     float attackReadyTime; // enforces comboStagger
 
+    //everything about one swing's slash effect, grouped so each combo step is a single
+    //foldout in the Inspector rather than the same index across six separate arrays
+    [System.Serializable]
+    public struct ComboSlashFx
+    {
+        [Tooltip("Leave empty for no effect on this swing.")]
+        public GameObject vfx;
+
+        [Tooltip("Wait this long after the click before it appears, so it lands with the blade.")]
+        public float delay;
+
+        [Tooltip("Relative to the player: X = right, Y = up, Z = forward.")]
+        public Vector3 positionOffset;
+
+        [Tooltip("Z rolls the slash (180 flips it), Y sweeps it the other way.")]
+        public Vector3 rotationOffset;
+
+        [Tooltip("0 is treated as 1.")]
+        public float scale;
+
+        [Tooltip("0 falls back to 2 seconds.")]
+        public float lifetime;
+    }
+
+    [Header("Combo FX")]
+    [Tooltip("One entry per combo step, in order.")]
+    public ComboSlashFx[] comboSlashFx = new ComboSlashFx[5];
+
     Vector3 Origin => attackPoint != null ? attackPoint.position : transform.position;
     Vector3 Right => playerCamera.transform.right;
     Vector3 Up => playerCamera.transform.up;
@@ -80,8 +114,39 @@ public class BladeMaster : MonoBehaviour
     public float dashHitRadius = 1f; // radius checked around the player each tick while dashing
     public float dashDamage = 100f;
 
+    [Header("Q - Dash FX")]
+    [Tooltip("Parented to the player for the length of the dash, so it follows automatically.")]
+    public GameObject dashVfxPrefab;
+    [Tooltip("Relative to the dash direction: X = right, Y = up, Z = forward.")]
+    public Vector3 dashVfxPositionOffset;
+    public Vector3 dashVfxRotationOffset;
+    public float dashVfxScale = 1f;
+    [Tooltip("How long the trail keeps playing after the dash ends.")]
+    public float dashVfxLinger = 0.3f;
+
+    [Tooltip("Seconds between repeat spawns along the dash path, leaving a continuous streak. " +
+             "0 spawns a single copy parented to the player instead.")]
+    public float dashVfxSpawnInterval = 0.03f;
+
+    [Tooltip("Spawned once where the dash finishes - the spin at the end.")]
+    public GameObject dashEndVfxPrefab;
+    public Vector3 dashEndVfxPositionOffset;
+    public Vector3 dashEndVfxRotationOffset;
+    public float dashEndVfxScale = 1f;
+    public float dashEndVfxLifetime = 1.5f;
+
+    [Tooltip("Spawned on each virus the dash passes through.")]
+    public GameObject dashHitVfxPrefab;
+    public float dashHitVfxScale = 1f;
+    public float dashHitVfxLifetime = 1f;
+
+    [Tooltip("Camera trauma added when the dash starts. 0 for none.")]
+    public float dashShake = 0.25f;
+
     float qReadyTime;
     bool isDashing;
+    GameObject activeDashVfx;
+    float dashVfxTimer;
     Vector3 dashDirection;
     float dashEndTime;
     HashSet<VirusHealthBase> hitDuringDash = new HashSet<VirusHealthBase>(); // so a single dash doesn't multi-hit the same target every frame
@@ -103,13 +168,35 @@ public class BladeMaster : MonoBehaviour
     public float thrustSpeed = 30f;
 
     [Header("E - Slash (second wave)")]
-    [Tooltip("Delay from pressing E to the horizontal slash firing.")]
+    [Tooltip("Delay from pressing E to the horizontal slash firing. Ignored if Slash Gap is above 0.")]
     public float slashDelay = 0.75f;
+
+    [Tooltip("Gap between the thrust and the slash. Above 0 this overrides Slash Delay, so you " +
+             "tune the spacing between the two hits directly instead of juggling two absolute times.")]
+    public float slashGapAfterThrust = 0f;
     public float slashDamage = 20f;
     public float slashRange = 25f;     // travels much further
     public float slashWidth = 10f;     // and is enormously wide
     public float slashSpeed = 22f;
     public float waveHeight = 3f;      // vertical thickness of both waves
+
+    [Header("E - FX")]
+    [Tooltip("Travels along with the thrust wave. The pack's Projectile prefabs suit this well.")]
+    public GameObject thrustVfxPrefab;
+    [Tooltip("Relative to the wave: X = right, Y = up, Z = along its travel direction.")]
+    public Vector3 thrustVfxPositionOffset;
+    public Vector3 thrustVfxRotationOffset;
+    public float thrustVfxScale = 1f;
+
+    [Tooltip("Travels along with the horizontal slash wave.")]
+    public GameObject slashVfxPrefab;
+    [Tooltip("Relative to the wave: X = right, Y = up, Z = along its travel direction.")]
+    public Vector3 slashVfxPositionOffset;
+    public Vector3 slashVfxRotationOffset;
+    public float slashVfxScale = 1f;
+
+    [Tooltip("How long a wave's effect lingers after the wave finishes travelling.")]
+    public float waveVfxLinger = 0.4f;
 
     float eReadyTime;
     bool isCasting; // blocks attacks/abilities for the length of the cast
@@ -139,8 +226,15 @@ public class BladeMaster : MonoBehaviour
     [Tooltip("Spawned at each blink, facing the target. Slash / impact particles.")]
     public GameObject blinkSlashVfxPrefab;
 
-    [Tooltip("How long spawned VFX live before being destroyed.")]
+    [Tooltip("How long spawned VFX live before being destroyed. Used as the fallback when a " +
+             "specific lifetime below is left at 0.")]
     public float vfxLifetime = 2f;
+
+    [Tooltip("Lifetime for the windup effect. 0 = destroyed when the windup ends.")]
+    public float windupVfxLifetime = 0f;
+
+    [Tooltip("Lifetime for each blink's slash effect. 0 = use Vfx Lifetime above.")]
+    public float blinkSlashVfxLifetime = 0f;
 
     float ultimateReadyTime;
     bool isUltimateActive; // true for the whole windup + blink sequence - blocks Attack()/Q/E while it runs
@@ -155,6 +249,21 @@ public class BladeMaster : MonoBehaviour
     //multipliers would stay stuck at their ultimate values - reset them on the way out
     void OnDisable()
     {
+        //coroutines die when this component is disabled or the object deactivated, so any
+        //state they were meant to clear on the way out has to be cleared here instead -
+        //otherwise a cast or ultimate interrupted by a pause/class switch leaves these stuck
+        //true and silently blocks every ability from then on
+        isCasting = false;
+        isUltimateActive = false;
+        isDashing = false;
+
+        //the dash trail is parented to the player, so it would survive a class switch otherwise
+        if (activeDashVfx != null)
+        {
+            Destroy(activeDashVfx);
+            activeDashVfx = null;
+        }
+
         if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
         if (playerMovement != null)
         {
@@ -230,6 +339,17 @@ public class BladeMaster : MonoBehaviour
             // CharacterController slides along a wall hit at an angle, unlike inferring it from distance moved
             CollisionFlags flags = playerController.Move(dashSpeed * Time.deltaTime * dashDirection);
             bool blocked = (flags & CollisionFlags.Sides) != 0;
+
+            //lay down a fresh copy every interval so the effect streaks along the whole path
+            if (dashVfxSpawnInterval > 0f && dashVfxPrefab != null)
+            {
+                dashVfxTimer += Time.deltaTime;
+                while (dashVfxTimer >= dashVfxSpawnInterval)
+                {
+                    dashVfxTimer -= dashVfxSpawnInterval;
+                    SpawnDashTrailVfx();
+                }
+            }
             Collider[] hits = Physics.OverlapSphere(transform.position, dashHitRadius);
 
             foreach (Collider c in hits)
@@ -242,6 +362,19 @@ public class BladeMaster : MonoBehaviour
                     vh.TakeDamage(dashDamage);
                     Debug.DrawLine(playerCamera.transform.position, vh.transform.position, Color.white, 0.2f);
                     hitDuringDash.Add(vh);
+
+                    //impact on whoever we just carved through
+                    if (dashHitVfxPrefab != null)
+                    {
+                        GameObject hitFx = SpawnVfx(dashHitVfxPrefab, vh.transform.position,
+                                                    Quaternion.LookRotation(dashDirection));
+                        if (hitFx != null)
+                        {
+                            if (!Mathf.Approximately(dashHitVfxScale, 1f))
+                                hitFx.transform.localScale *= dashHitVfxScale;
+                            Destroy(hitFx, dashHitVfxLifetime);
+                        }
+                    }
                 }
              }
 
@@ -250,6 +383,33 @@ public class BladeMaster : MonoBehaviour
             {
                 isDashing = false;
                 hitDuringDash.Clear();
+
+                //let the trail finish playing where the dash stopped instead of cutting out
+                if (activeDashVfx != null)
+                {
+                    activeDashVfx.transform.SetParent(null, true); // unparent so it stays put
+                    Destroy(activeDashVfx, dashVfxLinger);
+                    activeDashVfx = null;
+                }
+
+                //the spin at the end of the dash
+                if (dashEndVfxPrefab != null)
+                {
+                    Vector3 side = Vector3.Cross(Vector3.up, dashDirection);
+                    Vector3 endOffset = side * dashEndVfxPositionOffset.x
+                                        + Vector3.up * dashEndVfxPositionOffset.y
+                                        + dashDirection * dashEndVfxPositionOffset.z;
+
+                    GameObject endFx = SpawnVfx(dashEndVfxPrefab,
+                                                playerController.transform.position + endOffset,
+                                                Quaternion.LookRotation(dashDirection) * Quaternion.Euler(dashEndVfxRotationOffset));
+                    if (endFx != null)
+                    {
+                        if (!Mathf.Approximately(dashEndVfxScale, 1f))
+                            endFx.transform.localScale *= dashEndVfxScale;
+                        Destroy(endFx, dashEndVfxLifetime);
+                    }
+                }
 
                 // restore normal collision with everything this dash ignored
                 foreach (Collider c in ignoredDuringDash)
@@ -280,6 +440,7 @@ public class BladeMaster : MonoBehaviour
         lastAttackTime = Time.time;
 
         OnComboAttack?.Invoke(comboStep); // let the animator play the matching swing clip
+        SpawnComboSlashVfx();
 
         switch (comboStep)
         {
@@ -434,6 +595,22 @@ public class BladeMaster : MonoBehaviour
         dashEndTime = Time.time + dashDuration;
         hitDuringDash.Clear();
 
+        if (cameraShake != null && dashShake > 0f)
+            cameraShake.AddTrauma(dashShake);
+
+        dashVfxTimer = 0f;
+
+        if (dashVfxSpawnInterval > 0f)
+        {
+            //repeat-spawn mode: drop one now, the dash loop keeps laying more along the path
+            SpawnDashTrailVfx();
+        }
+        else if (dashVfxPrefab != null)
+        {
+            //single-copy mode: parented to the player so it follows without being moved each frame
+            activeDashVfx = SpawnDashVfxAt(playerController.transform.position, playerController.transform);
+        }
+
         OnDash?.Invoke();
     }
 
@@ -457,8 +634,12 @@ public class BladeMaster : MonoBehaviour
         isCasting = true;
         castStartTime = Time.time;
 
-        StartCoroutine(FireShockwave(thrustDelay, thrustDamage, thrustRange, thrustWidth, thrustSpeed, Color.cyan));
-        StartCoroutine(FireShockwave(slashDelay, slashDamage, slashRange, slashWidth, slashSpeed, Color.magenta));
+        StartCoroutine(FireShockwave(thrustDelay, thrustDamage, thrustRange, thrustWidth, thrustSpeed,
+                                     Color.cyan, thrustVfxPrefab, thrustVfxPositionOffset,
+                                     thrustVfxRotationOffset, thrustVfxScale));
+        StartCoroutine(FireShockwave(EffectiveSlashDelay, slashDamage, slashRange, slashWidth, slashSpeed,
+                                     Color.magenta, slashVfxPrefab, slashVfxPositionOffset,
+                                     slashVfxRotationOffset, slashVfxScale));
 
         yield return new WaitForSeconds(castLockDuration);
         isCasting = false;
@@ -467,7 +648,9 @@ public class BladeMaster : MonoBehaviour
     //sweeps a wide flat box forward along the facing direction, damaging each virus once.
     //width is what separates the two waves - the thrust is narrow and hard hitting, the slash
     //is enormously wide but weaker.
-    IEnumerator FireShockwave(float delay, float damage, float range, float width, float speed, Color debugColor)
+    IEnumerator FireShockwave(float delay, float damage, float range, float width, float speed,
+                              Color debugColor, GameObject vfxPrefab, Vector3 vfxPositionOffset,
+                              Vector3 vfxRotationOffset, float vfxScale)
     {
         yield return new WaitForSeconds(delay);
 
@@ -480,6 +663,18 @@ public class BladeMaster : MonoBehaviour
         Quaternion waveRotation = Quaternion.LookRotation(dir);
         Vector3 halfExtents = new Vector3(width * 0.5f, waveHeight * 0.5f, 0.5f);
 
+        //offset is relative to the wave itself, so it holds up whichever way you're facing
+        Vector3 vfxOffset = side * vfxPositionOffset.x
+                            + Vector3.up * vfxPositionOffset.y
+                            + dir * vfxPositionOffset.z;
+
+        //the effect rides along with the wave rather than being a one-off flash, so what you
+        //see lines up with where the hitbox actually is
+        GameObject vfx = SpawnVfx(vfxPrefab, origin + vfxOffset,
+                                  waveRotation * Quaternion.Euler(vfxRotationOffset));
+        if (vfx != null && !Mathf.Approximately(vfxScale, 1f))
+            vfx.transform.localScale *= vfxScale;
+
         HashSet<VirusHealthBase> alreadyHit = new HashSet<VirusHealthBase>();
         float travelled = 0f;
 
@@ -487,6 +682,8 @@ public class BladeMaster : MonoBehaviour
         {
             travelled += speed * Time.deltaTime;
             Vector3 point = origin + dir * travelled;
+
+            if (vfx != null) vfx.transform.position = point + vfxOffset;
 
             foreach (Collider c in Physics.OverlapBox(point, halfExtents, waveRotation))
             {
@@ -508,6 +705,9 @@ public class BladeMaster : MonoBehaviour
             Debug.DrawLine(point - side * (width * 0.5f), point + side * (width * 0.5f), debugColor, 0.1f);
             yield return null;
         }
+
+        //let it finish playing where it stopped rather than vanishing the instant the wave ends
+        if (vfx != null) Destroy(vfx, waveVfxLinger);
     }
 
     void TryActivateUltimate()
@@ -546,9 +746,15 @@ public class BladeMaster : MonoBehaviour
         HashSet<VirusHealthBase> targets = new HashSet<VirusHealthBase>();
 
         //wind / charge-up effect, parented so it follows if anything moves the player
-        GameObject windupVfx = null;
-        if (windupVfxPrefab != null)
-            windupVfx = Instantiate(windupVfxPrefab, startPosition, Quaternion.identity, playerController.transform);
+        GameObject windupVfx = SpawnVfx(windupVfxPrefab, startPosition, Quaternion.identity,
+                                        playerController.transform);
+
+        //0 keeps the default behaviour of living exactly as long as the windup does
+        if (windupVfx != null && windupVfxLifetime > 0f)
+        {
+            Destroy(windupVfx, windupVfxLifetime);
+            windupVfx = null; // already scheduled - don't destroy it a second time below
+        }
 
         float windupTimer = 0f;
         while (windupTimer < ultimateWindup)
@@ -660,7 +866,10 @@ public class BladeMaster : MonoBehaviour
                 Quaternion facing = toTarget.sqrMagnitude > 0.001f
                     ? Quaternion.LookRotation(toTarget)
                     : Quaternion.identity;
-                Destroy(Instantiate(blinkSlashVfxPrefab, target.transform.position, facing), vfxLifetime);
+
+                GameObject vfx = SpawnVfx(blinkSlashVfxPrefab, target.transform.position, facing);
+                if (vfx != null)
+                    Destroy(vfx, blinkSlashVfxLifetime > 0f ? blinkSlashVfxLifetime : vfxLifetime);
             }
 
             Debug.DrawLine(blinkPoint, target.transform.position, Color.magenta, blinkInterval);
@@ -689,6 +898,108 @@ public class BladeMaster : MonoBehaviour
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.001f)
             playerController.transform.rotation = Quaternion.LookRotation(dir);
+    }
+
+    //slash effect for whichever swing of the combo just fired. each step has its own slot so
+    //you can drop different prefabs in and compare them swing by swing.
+    void SpawnComboSlashVfx()
+    {
+        if (comboSlashFx == null || comboStep < 0 || comboStep >= comboSlashFx.Length) return;
+        if (comboSlashFx[comboStep].vfx == null) return; // empty slot = no effect on this swing
+
+        //capture the step now - comboStep will have moved on by the time a delayed spawn fires
+        int step = comboStep;
+        float delay = comboSlashFx[step].delay;
+
+        if (delay > 0f)
+            StartCoroutine(SpawnComboSlashAfter(step, delay));
+        else
+            SpawnComboSlashNow(step);
+    }
+
+    IEnumerator SpawnComboSlashAfter(int step, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SpawnComboSlashNow(step);
+    }
+
+    void SpawnComboSlashNow(int step)
+    {
+        if (comboSlashFx == null || step < 0 || step >= comboSlashFx.Length) return;
+
+        ComboSlashFx fx = comboSlashFx[step];
+        if (fx.vfx == null) return;
+
+        Vector3 flatForward = Forward;
+        flatForward.y = 0f;
+        flatForward = flatForward.normalized;
+
+        //offsets are relative to the way the player is facing, so they hold up no matter
+        //which direction you're swinging in
+        Vector3 flatRight = Vector3.Cross(Vector3.up, flatForward);
+
+        Vector3 spawnPos = Origin
+                           + flatRight * fx.positionOffset.x
+                           + Vector3.up * fx.positionOffset.y
+                           + flatForward * fx.positionOffset.z;
+
+        Quaternion rot = Quaternion.LookRotation(flatForward) * Quaternion.Euler(fx.rotationOffset);
+
+        GameObject vfx = SpawnVfx(fx.vfx, spawnPos, rot);
+        if (vfx == null) return;
+
+        //0 means "not set" for both of these, so a freshly resized array doesn't produce
+        //invisible effects or ones that get destroyed the instant they spawn
+        float scale = fx.scale > 0f ? fx.scale : 1f;
+        float life = fx.lifetime > 0f ? fx.lifetime : 2f;
+
+        if (!Mathf.Approximately(scale, 1f))
+            vfx.transform.localScale *= scale;
+
+        Destroy(vfx, life);
+    }
+
+    //one copy of the dash trail effect, positioned and rotated relative to the dash direction
+    GameObject SpawnDashVfxAt(Vector3 position, Transform parent = null)
+    {
+        if (dashVfxPrefab == null) return null;
+
+        Vector3 side = Vector3.Cross(Vector3.up, dashDirection);
+        Vector3 offset = side * dashVfxPositionOffset.x
+                         + Vector3.up * dashVfxPositionOffset.y
+                         + dashDirection * dashVfxPositionOffset.z;
+
+        GameObject go = SpawnVfx(dashVfxPrefab, position + offset,
+                                 Quaternion.LookRotation(dashDirection) * Quaternion.Euler(dashVfxRotationOffset),
+                                 parent);
+
+        if (go != null && !Mathf.Approximately(dashVfxScale, 1f))
+            go.transform.localScale *= dashVfxScale;
+
+        return go;
+    }
+
+    //drops an unparented copy at the player's current spot so it stays behind as a streak
+    void SpawnDashTrailVfx()
+    {
+        GameObject go = SpawnDashVfxAt(playerController.transform.position);
+        if (go != null) Destroy(go, dashVfxLinger);
+    }
+
+    //spawns a VFX prefab and explicitly starts its particle systems. a lot of asset-store
+    //effects ship with Play On Awake disabled (their demo scenes trigger them from script),
+    //so instantiating alone gets you an invisible object that does nothing.
+    GameObject SpawnVfx(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null)
+    {
+        if (prefab == null) return null;
+
+        GameObject go = Instantiate(prefab, position, rotation, parent);
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ps.Clear(true);
+            ps.Play(true);
+        }
+        return go;
     }
 
     // CharacterController fights direct position changes unless briefly disabled first
