@@ -54,6 +54,11 @@ public class BladeMaster : MonoBehaviour
     //fired when E is activated
     public event System.Action OnEnhancedActivated;
 
+    //fired when C is activated
+    public event System.Action OnCAbility;
+
+    public bool IsCAbilityActive => isCAbilityActive;
+
     [Header("Weapon")]
     public float damage = 5f;
     public float range = 2f;
@@ -207,6 +212,45 @@ public class BladeMaster : MonoBehaviour
     bool isCasting; // blocks attacks/abilities for the length of the cast
     float castStartTime; // used to work out which half of the cast we're in
 
+    [Header("C - TODO")]
+    public float cCooldown = 10f;
+
+    [Tooltip("How long C locks out other actions - line this up with the animation length.")]
+    public float cLockDuration = 1f;
+
+    //one effect the C ability spawns. an array of these so C can layer several - e.g. a ground
+    //circle that stays put plus a shield that follows you, each on its own timing.
+    [System.Serializable]
+    public struct AbilityFx
+    {
+        [Tooltip("Leave empty to skip this one.")]
+        public GameObject vfx;
+
+        [Tooltip("Wait this long after the ability fires before spawning it.")]
+        public float delay;
+
+        [Tooltip("Relative to the player: X = right, Y = up, Z = forward. Ground circles want Y near 0.")]
+        public Vector3 positionOffset;
+
+        public Vector3 rotationOffset;
+
+        [Tooltip("0 is treated as 1.")]
+        public float scale;
+
+        [Tooltip("0 means it lives until the ability's lock ends.")]
+        public float lifetime;
+
+        [Tooltip("Parent to the player so it follows. Off leaves it where it was cast.")]
+        public bool followPlayer;
+    }
+
+    [Header("C - FX")]
+    [Tooltip("Effects C spawns, each with its own timing and placement.")]
+    public AbilityFx[] cVfx = new AbilityFx[2];
+
+    float cReadyTime;
+    bool isCAbilityActive;
+
     [Header("X - Ultimate: Blink Execution")]
     public float ultimateCooldown = 60f;
     public float ultimateWindup = 5f; // how long the player stands idle before the blink sequence starts
@@ -261,6 +305,7 @@ public class BladeMaster : MonoBehaviour
         isCasting = false;
         isUltimateActive = false;
         isDashing = false;
+        isCAbilityActive = false;
 
         //the dash trail is parented to the player, so it would survive a class switch otherwise
         if (activeDashVfx != null)
@@ -287,6 +332,7 @@ public class BladeMaster : MonoBehaviour
         {
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateE();
+            if (Keyboard.current.cKey.wasPressedThisFrame) TryActivateC();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
@@ -433,6 +479,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
         if (isBlocking) return; // can't attack while holding block
         if (isCasting) return;  // locked out for the length of the E cast
+        if (isCAbilityActive) return;
         if (Time.time < attackReadyTime) return; // still mid-swing, ignore the click
 
         attackReadyTime = Time.time + comboStagger;
@@ -589,6 +636,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
@@ -625,6 +673,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
@@ -720,12 +769,87 @@ public class BladeMaster : MonoBehaviour
         if (vfx != null) Destroy(vfx, waveVfxLinger);
     }
 
+    //placeholder for now - fires the animation and locks out other actions so the timing can be
+    //judged. the actual effect goes in CAbilitySequence once it's designed.
+    void TryActivateC()
+    {
+        if (Time.time < cReadyTime) return;
+        if (isUltimateActive) return;
+        if (isBlocking) return;
+        if (isCasting) return;
+        if (isCAbilityActive) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
+        cReadyTime = Time.time + cCooldown;
+
+        OnCAbility?.Invoke();
+        StartCoroutine(CAbilitySequence());
+    }
+
+    IEnumerator CAbilitySequence()
+    {
+        isCAbilityActive = true;
+
+        //each entry runs on its own delay, so one coroutine per effect rather than trying to
+        //interleave them here
+        if (cVfx != null)
+        {
+            for (int i = 0; i < cVfx.Length; i++)
+            {
+                if (cVfx[i].vfx != null)
+                    StartCoroutine(SpawnAbilityFx(cVfx[i], cLockDuration));
+            }
+        }
+
+        //TODO: the actual ability - buff, damage, whatever it turns out to be
+
+        yield return new WaitForSeconds(cLockDuration);
+        isCAbilityActive = false;
+    }
+
+    //spawns one AbilityFx entry after its delay and cleans it up afterwards
+    IEnumerator SpawnAbilityFx(AbilityFx fx, float defaultLifetime)
+    {
+        if (fx.delay > 0f)
+            yield return new WaitForSeconds(fx.delay);
+
+        Vector3 flatForward = Forward;
+        flatForward.y = 0f;
+        flatForward = flatForward.normalized;
+        Vector3 side = Vector3.Cross(Vector3.up, flatForward);
+
+        Vector3 spawnPos = playerController.transform.position
+                           + side * fx.positionOffset.x
+                           + Vector3.up * fx.positionOffset.y
+                           + flatForward * fx.positionOffset.z;
+
+        //parenting makes it follow you, which suits a shield; unparented suits a ground circle
+        GameObject go = SpawnVfx(fx.vfx, spawnPos,
+                                 Quaternion.LookRotation(flatForward) * Quaternion.Euler(fx.rotationOffset),
+                                 fx.followPlayer ? playerController.transform : null);
+        if (go == null) yield break;
+
+        float scale = fx.scale > 0f ? fx.scale : 1f;
+        if (!Mathf.Approximately(scale, 1f))
+            go.transform.localScale *= scale;
+
+        float life = fx.lifetime > 0f ? fx.lifetime : Mathf.Max(0f, defaultLifetime - fx.delay);
+        yield return new WaitForSeconds(life);
+
+        if (go != null)
+        {
+            //unparent first so it doesn't keep trailing you while it fades
+            go.transform.SetParent(null, true);
+            Destroy(go);
+        }
+    }
+
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         ultimateReadyTime = Time.time + ultimateCooldown;
 
