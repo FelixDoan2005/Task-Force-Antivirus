@@ -74,12 +74,14 @@ Material:
     - _DistortionEnabled: 1
     - _DistortionSpeed: 0
     - _DstBlend: 10
+    - _DstBlendAlpha: 10
     - _Emission: 1
     - _Opacity: 504.04
     - _QueueControl: 0
     - _QueueOffset: 0
     - _Soft_Particle: 1
     - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
     - _Surface: 1
     - _ZTest: 4
     - _ZWrite: 0

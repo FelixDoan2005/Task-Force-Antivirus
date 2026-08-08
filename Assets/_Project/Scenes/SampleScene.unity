@@ -798,13 +798,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 99479710}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f8c06f1f215339498068644fd457936, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BladeMaster
   playerCamera: {fileID: 330585545}
-  attackPoint: {fileID: 1169286949}
+  attackPoint: {fileID: 1068929453}
   playerController: {fileID: 689043506}
   playerMovement: {fileID: 689043505}
   playerHealth: {fileID: 689043510}
@@ -820,12 +820,58 @@ MonoBehaviour:
   maxComboHits: 5
   comboWindow: 1
   comboStagger: 0.5
+  comboSlashFx:
+  - vfx: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
+    delay: 0.4
+    positionOffset: {x: 0, y: 1, z: 0}
+    rotationOffset: {x: 180, y: 90, z: 0}
+    scale: 2
+    lifetime: 2
+  - vfx: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
+    delay: 0.2
+    positionOffset: {x: 3, y: 1, z: 3}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 0
+    lifetime: 0
+  - vfx: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
+    delay: 0.2
+    positionOffset: {x: 0, y: 1, z: 0}
+    rotationOffset: {x: 210, y: 90, z: 0}
+    scale: 2
+    lifetime: 2
+  - vfx: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
+    delay: 0
+    positionOffset: {x: 1, y: 1, z: 2}
+    rotationOffset: {x: 60, y: 90, z: 0}
+    scale: 2
+    lifetime: 2
+  - vfx: {fileID: 1116249604692860204, guid: 8a02c4042c68dd244abad8cf394dab42, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 0.9
+    lifetime: 0
   qCooldown: 3
   dashSpeed: 25
   dashDuration: 0.25
   dashDistance: 30
   dashHitRadius: 1
   dashDamage: 100
+  dashVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
+  dashVfxPositionOffset: {x: 0, y: 0, z: 0}
+  dashVfxRotationOffset: {x: 0, y: 0, z: 0}
+  dashVfxScale: 1
+  dashVfxLinger: 0.3
+  dashVfxSpawnInterval: 0.03
+  dashEndVfxPrefab: {fileID: 2183146480622160771, guid: 131ad0e894ecda14eac32155d82d6c3d, type: 3}
+  dashEndVfxPositionOffset: {x: 0, y: 2, z: 0}
+  dashEndVfxRotationOffset: {x: 0, y: 0, z: 0}
+  dashEndVfxScale: 1
+  dashEndVfxLifetime: 1.5
+  dashHitVfxPrefab: {fileID: 1116249604692860204, guid: 8a02c4042c68dd244abad8cf394dab42, type: 3}
+  dashHitVfxScale: 1
+  dashHitVfxLifetime: 1
+  dashShake: 0.25
   eCooldown: 1
   castLockDuration: 1.2
   castMoveSpeedMultiplier: 0
@@ -835,11 +881,23 @@ MonoBehaviour:
   thrustWidth: 1.5
   thrustSpeed: 80
   slashDelay: 1
+  slashGapAfterThrust: 0
   slashDamage: 50
   slashRange: 100
   slashWidth: 10
   slashSpeed: 80
-  waveHeight: 3
+  waveHeight: 5
+  thrustOriginOffset: {x: 0, y: 0, z: 0}
+  slashOriginOffset: {x: 0, y: 0, z: 0}
+  thrustVfxPrefab: {fileID: 4416080445347060711, guid: 0a6aa35eeb2241a43befc4ccae423907, type: 3}
+  thrustVfxPositionOffset: {x: 0, y: 2, z: 0}
+  thrustVfxRotationOffset: {x: 0, y: 0, z: 90}
+  thrustVfxScale: 1
+  slashVfxPrefab: {fileID: 6882116249847192011, guid: c4b2ddd78a478394da66879a43e7af99, type: 3}
+  slashVfxPositionOffset: {x: 0, y: 1, z: 0}
+  slashVfxRotationOffset: {x: 0, y: 0, z: 0}
+  slashVfxScale: 5
+  waveVfxLinger: 0.4
   ultimateCooldown: 5
   ultimateWindup: 5
   ultimateRadius: 30
@@ -850,9 +908,11 @@ MonoBehaviour:
   cameraShake: {fileID: 330585548}
   windupShakeIntensity: 0.6
   blinkShake: 0.22
-  windupVfxPrefab: {fileID: 0}
-  blinkSlashVfxPrefab: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
+  windupVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
+  blinkSlashVfxPrefab: {fileID: 2183146480622160771, guid: 131ad0e894ecda14eac32155d82d6c3d, type: 3}
   vfxLifetime: 2
+  windupVfxLifetime: 0
+  blinkSlashVfxLifetime: 1
 --- !u!1 &127885314
 GameObject:
   m_ObjectHideFlags: 0

@@ -126,8 +126,9 @@ Material:
     - _DistortionPower: 0.08
     - _DistortionSpeed: 1
     - _DstBlend: 10
-    - _DstBlendAlpha: 0
+    - _DstBlendAlpha: 10
     - _Emission: 1
+    - _Enable_Speed_Control: 0
     - _EnvironmentReflections: 1
     - _FlagOffset: 0
     - _GlossMapScale: 0

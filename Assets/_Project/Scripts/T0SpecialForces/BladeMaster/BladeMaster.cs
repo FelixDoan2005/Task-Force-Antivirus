@@ -180,6 +180,11 @@ public class BladeMaster : MonoBehaviour
     public float slashSpeed = 22f;
     public float waveHeight = 3f;      // vertical thickness of both waves
 
+    [Tooltip("Where each wave starts, relative to the player: X = right, Y = up, Z = forward. " +
+             "Moves the actual hitbox, not just the effect.")]
+    public Vector3 thrustOriginOffset;
+    public Vector3 slashOriginOffset;
+
     [Header("E - FX")]
     [Tooltip("Travels along with the thrust wave. The pack's Projectile prefabs suit this well.")]
     public GameObject thrustVfxPrefab;
@@ -635,10 +640,10 @@ public class BladeMaster : MonoBehaviour
         castStartTime = Time.time;
 
         StartCoroutine(FireShockwave(thrustDelay, thrustDamage, thrustRange, thrustWidth, thrustSpeed,
-                                     Color.cyan, thrustVfxPrefab, thrustVfxPositionOffset,
+                                     Color.cyan, thrustOriginOffset, thrustVfxPrefab, thrustVfxPositionOffset,
                                      thrustVfxRotationOffset, thrustVfxScale));
         StartCoroutine(FireShockwave(EffectiveSlashDelay, slashDamage, slashRange, slashWidth, slashSpeed,
-                                     Color.magenta, slashVfxPrefab, slashVfxPositionOffset,
+                                     Color.magenta, slashOriginOffset, slashVfxPrefab, slashVfxPositionOffset,
                                      slashVfxRotationOffset, slashVfxScale));
 
         yield return new WaitForSeconds(castLockDuration);
@@ -649,16 +654,21 @@ public class BladeMaster : MonoBehaviour
     //width is what separates the two waves - the thrust is narrow and hard hitting, the slash
     //is enormously wide but weaker.
     IEnumerator FireShockwave(float delay, float damage, float range, float width, float speed,
-                              Color debugColor, GameObject vfxPrefab, Vector3 vfxPositionOffset,
-                              Vector3 vfxRotationOffset, float vfxScale)
+                              Color debugColor, Vector3 originOffset, GameObject vfxPrefab,
+                              Vector3 vfxPositionOffset, Vector3 vfxRotationOffset, float vfxScale)
     {
         yield return new WaitForSeconds(delay);
 
-        Vector3 origin = Origin;
         Vector3 dir = Forward;
         dir.y = 0f;
         dir = dir.normalized;
         Vector3 side = Vector3.Cross(Vector3.up, dir); // horizontal axis of the wave
+
+        //shift where the wave actually begins - moves the hitbox, not just the visual
+        Vector3 origin = Origin
+                         + side * originOffset.x
+                         + Vector3.up * originOffset.y
+                         + dir * originOffset.z;
 
         Quaternion waveRotation = Quaternion.LookRotation(dir);
         Vector3 halfExtents = new Vector3(width * 0.5f, waveHeight * 0.5f, 0.5f);
