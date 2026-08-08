@@ -125,6 +125,7 @@ Material:
     - _Distortion: 0
     - _DistortionSpeed: 1
     - _DstBlend: 10
+    - _DstBlendAlpha: 10
     - _Emission: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
@@ -145,6 +146,7 @@ Material:
     - _Soft_Particle: 373.5
     - _SpecularHighlights: 1
     - _SrcBlend: 5
+    - _SrcBlendAlpha: 1
     - _Surface: 1
     - _WorkflowMode: 1
     - _ZTest: 4
