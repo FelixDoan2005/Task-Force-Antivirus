@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 89e9f15e48f979d47ac5f08710653111
+timeCreated: 1489367605
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_Parts/Katana_Part_Seppa.prefab
+  uploadId: 337636

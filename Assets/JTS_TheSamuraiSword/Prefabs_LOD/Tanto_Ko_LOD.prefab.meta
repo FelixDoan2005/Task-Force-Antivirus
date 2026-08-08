@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 667c8201e36d8ad4f98c048f611c547c
+timeCreated: 1468937594
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Tanto_Ko_LOD.prefab
+  uploadId: 337636

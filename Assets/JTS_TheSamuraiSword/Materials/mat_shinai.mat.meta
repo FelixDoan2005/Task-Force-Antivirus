@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bdc9ed7d056f08943ad4fbdd29cfeff2
+timeCreated: 1465598468
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_shinai.mat
+  uploadId: 337636

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 923e2c857250b784eb3a49ce857086c2
+timeCreated: 1469792981
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Wakizashi.prefab
+  uploadId: 337636

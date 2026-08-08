@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1ef29aad46d7e414f88bd8440410d552
+timeCreated: 1468955709
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_sword_musashi.mat
+  uploadId: 337636

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0f9db907853a22044a2fd27956a067ab
+timeCreated: 1464666596
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_plainwood.mat
+  uploadId: 337636

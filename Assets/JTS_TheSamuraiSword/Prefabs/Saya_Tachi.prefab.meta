@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6fe8b0f6aa8289447b5018d9fe300ebd
+timeCreated: 1509979979
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Saya_Tachi.prefab
+  uploadId: 337636

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a9df2be7b045c504888b9bc4c55ab9c8
+timeCreated: 1469303214
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Katana_Musashi_LOD.prefab
+  uploadId: 337636

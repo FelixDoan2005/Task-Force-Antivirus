@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 359567293812c714f968fd2ebfd7ec76
+timeCreated: 1469792395
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Katana_Rust.prefab
+  uploadId: 337636

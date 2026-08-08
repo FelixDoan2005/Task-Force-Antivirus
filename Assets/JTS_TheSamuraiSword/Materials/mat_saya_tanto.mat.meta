@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fa340657fc51ed846898b77ed9d8502b
+timeCreated: 1470177948
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_tanto.mat
+  uploadId: 337636

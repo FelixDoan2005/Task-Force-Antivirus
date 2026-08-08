@@ -49,7 +49,10 @@ public class PauseMenuUI : MonoBehaviour
         }
 
         if (weaponSwitcher != null)
+        {
             weaponSwitcher.SetWeaponInputEnabled(!isPaused);
+            weaponSwitcher.SetCrosshairMenuOpen(isPaused);
+        }
 
         Time.timeScale = isPaused ? 0f : 1f;
         Cursor.lockState = isPaused ? CursorLockMode.None : CursorLockMode.Locked;
@@ -156,6 +159,7 @@ public class PauseMenuUI : MonoBehaviour
         {
             weaponSwitcher.SetWeaponInputEnabled(true);
             weaponSwitcher.SetActive(weaponSwitcherIndex);
+            weaponSwitcher.SetCrosshairMenuOpen(false);
         }
 
         if (classSelectorPanel != null) classSelectorPanel.SetActive(false);

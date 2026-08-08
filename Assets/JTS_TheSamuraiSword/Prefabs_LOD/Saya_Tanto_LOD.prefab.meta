@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c61aafe5f820e6b4196cadc138ae3935
+timeCreated: 1468943651
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Saya_Tanto_LOD.prefab
+  uploadId: 337636
