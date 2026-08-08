@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 761be8dd326f1a14398306c0c7ec39da
+timeCreated: 1467377117
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_mokko.mat
+  uploadId: 337636

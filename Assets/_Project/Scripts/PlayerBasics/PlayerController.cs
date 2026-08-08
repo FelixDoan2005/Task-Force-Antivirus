@@ -14,6 +14,12 @@ public class PlayerController : MonoBehaviour
     public float gravity = -20f;
     public float speedMultiplier = 1f; // e.g. 0.2f while blocking = moves at 20% speed
 
+    [Tooltip("Abilities can set this to block jumping without touching gravity, so you still fall normally.")]
+    public bool suspendJump;
+
+    [Tooltip("Abilities can set this to block the double-tap dash. Read by DashAbility.")]
+    public bool suspendDash;
+
     [Header("Jump")]
     public float jumpHeight = 1.2f;
 
@@ -31,6 +37,29 @@ public class PlayerController : MonoBehaviour
     [Header("Camera Collision")]
     public float cameraCollisionBuffer = 0.2f;
     int cameraCollisionMask;
+
+    [Header("Camera Pullback")]
+    [Tooltip("Extra distance abilities can request. Set it and the camera eases out; set it back to 0 and it eases in.")]
+    public float extraCameraDistance;
+
+    [Tooltip("How fast the camera eases toward the requested extra distance. Lower = more cinematic.")]
+    public float cameraDistanceLerpSpeed = 2f;
+
+    [Tooltip("Extra distance while sprinting. Added on top of any ability pullback rather than replacing it.")]
+    public float sprintCameraPullback = 1.5f;
+
+    float currentExtraCamDistance;
+
+    [Tooltip("Abilities can set this to freeze mouse look. The camera keeps updating distance/collision, it just stops turning.")]
+    public bool suspendLook;
+
+    [Tooltip("Abilities can set this to ease the camera to a level pitch, so locking doesn't leave you staring at the floor.")]
+    public bool easePitchToTarget;
+
+    [Tooltip("Pitch to ease toward. 0 is dead level, positive looks down.")]
+    public float targetPitch = 5f;
+
+    public float pitchEaseSpeed = 3f;
 
     [Header("Look")]
     public float mouseSensitivity = 0.02f; // start around 0.015 - 0.03
@@ -50,6 +79,12 @@ public class PlayerController : MonoBehaviour
     Transform camTransform;
 
     public bool suspendGravity;
+
+    //raw WASD input this frame, -1..1 on each axis. read by the active class's animator driver
+    public Vector2 MoveInput { get; private set; }
+
+    //true only while sprinting AND actually moving
+    public bool IsSprinting { get; private set; }
 
 
     void Awake()
@@ -87,13 +122,22 @@ public class PlayerController : MonoBehaviour
     {
         if (Mouse.current == null) return;
 
-        Vector2 mouseDelta = 60f * mouseSensitivity * Time.deltaTime * Mouse.current.delta.ReadValue();
+        //zeroing the delta rather than returning early keeps the camera distance and wall
+        //collision below still updating, so an ability's pullback still animates while locked
+        Vector2 mouseDelta = suspendLook
+            ? Vector2.zero
+            : 60f * mouseSensitivity * Time.deltaTime * Mouse.current.delta.ReadValue();
 
         // yaw (left/right) rotates the hero
         transform.Rotate(Vector3.up * mouseDelta.x);
 
         // pitch (up/down) rotates the camera pivot
         pitch -= mouseDelta.y;
+
+        //an ability can ask for a level view - eases there rather than snapping, so locking
+        //the camera while you're staring at the floor still ends up looking forward
+        if (easePitchToTarget)
+            pitch = Mathf.Lerp(pitch, targetPitch, pitchEaseSpeed * Time.deltaTime);
 
         // clamp so you can't flip the camera
         pitch = Mathf.Clamp(pitch, -80f, 60f);
@@ -116,6 +160,14 @@ public class PlayerController : MonoBehaviour
             float dist = Mathf.Lerp(minCamDistance, maxCamDistance, camT);
             float neutralBoost = 0.8f * (1f - Mathf.Abs(camT - 0.5f) * 2f); // 0 at extremes, max at center
             dist += neutralBoost;
+
+            //ease toward whatever pullback is being asked for, so it glides out and back
+            //instead of snapping. applied before the collision check so walls still clamp it.
+            //ability pullback and sprint pullback add together rather than overriding each other.
+            float targetExtra = extraCameraDistance + (IsSprinting ? sprintCameraPullback : 0f);
+            currentExtraCamDistance = Mathf.Lerp(currentExtraCamDistance, targetExtra,
+                                                 cameraDistanceLerpSpeed * Time.deltaTime);
+            dist += currentExtraCamDistance;
 
             // camera collision: don't let the desired position clip through walls
             Vector3 desiredLocalOffset = new(baseCameraLocalPos.x, baseCameraLocalPos.y, -dist);
@@ -149,13 +201,18 @@ public class PlayerController : MonoBehaviour
             if (Keyboard.current.aKey.isPressed) input.x -= 1.0f;
         }
 
+        MoveInput = input; // exposed so each class's model can drive its own locomotion blend tree
+
         Vector3 move = transform.right * input.x + transform.forward * input.y;
         if (move.sqrMagnitude > 1f) move.Normalize();
 
         // Sprint
-        float speed = moveSpeed;
-        if (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed)
-            speed = sprintSpeed;
+        bool sprintHeld = Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        float speed = sprintHeld ? sprintSpeed : moveSpeed;
+
+        //only counts as sprinting if we're actually moving, otherwise holding shift while
+        //standing still would push the blend tree into the sprint clip
+        IsSprinting = sprintHeld && input.sqrMagnitude > 0.01f;
 
         controller.Move(speed * speedMultiplier * Time.deltaTime * move);
 
@@ -169,7 +226,7 @@ public class PlayerController : MonoBehaviour
             velocity.y = -2f;
 
         // Jump: holding Space jumps immediately every time we're grounded (or just left it, via coyote time)
-        bool jumpHeld = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
+        bool jumpHeld = !suspendJump && Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
         bool canCoyoteJump = (Time.time - lastGroundedTime) <= coyoteTime;
 
         if (jumpHeld && canCoyoteJump && velocity.y <= 0.01f)

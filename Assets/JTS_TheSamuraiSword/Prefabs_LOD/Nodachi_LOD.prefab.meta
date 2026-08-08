@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ee7f5fef032a2c142aa49d9c9e0a4265
+timeCreated: 1468938398
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_LOD/Nodachi_LOD.prefab
+  uploadId: 337636

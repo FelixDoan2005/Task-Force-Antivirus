@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 27c05f3363266034b87841009bda66b8
+timeCreated: 1509979971
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Tachi.prefab
+  uploadId: 337636

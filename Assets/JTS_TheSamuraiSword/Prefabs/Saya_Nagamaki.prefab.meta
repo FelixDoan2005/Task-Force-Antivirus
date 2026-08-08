@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ffeba98f4326d1441860288cccd4d557
+timeCreated: 1469793227
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Saya_Nagamaki.prefab
+  uploadId: 337636

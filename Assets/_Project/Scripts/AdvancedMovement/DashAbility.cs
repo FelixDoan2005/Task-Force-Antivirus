@@ -13,6 +13,7 @@ public class DashAbility : MonoBehaviour
     public float doubleTapWindow = 0.3f;
 
     [Header("Weapon Restriction")]
+    public PlayerController playerMovement; // read for suspendDash, e.g. while an ability is casting
     public WeaponSwitcher weaponSwitcher;
     public int[] allowedWeaponIndices = { 0, 3 }; // 0 = bow, 3 = blademaster
 
@@ -67,6 +68,7 @@ public class DashAbility : MonoBehaviour
     {
         if (isDashing) return;
         if (Time.time < nextDashReadyTime) return;
+        if (playerMovement != null && playerMovement.suspendDash) return; // locked out mid-cast
         if (!IsCurrentWeaponAllowed()) return;
 
         dashDirection = direction.normalized;

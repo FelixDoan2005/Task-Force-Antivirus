@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f6807f1ee58859b40b13480a2eba028c
+timeCreated: 1469791348
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Bokuto.prefab
+  uploadId: 337636

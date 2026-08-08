@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 418d85683e93d9549b0037ddcc9ab09d
+timeCreated: 1470068415
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_sword_katanako.mat
+  uploadId: 337636

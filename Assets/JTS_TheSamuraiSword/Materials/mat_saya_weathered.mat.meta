@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2382172aa2c60b74b9571fd56a1a62a2
+timeCreated: 1467379415
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/mat_saya_weathered.mat
+  uploadId: 337636

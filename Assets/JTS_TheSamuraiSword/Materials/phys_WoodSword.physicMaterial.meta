@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8b4943cbf437a834b97f3add592237e1
+timeCreated: 1469291554
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Materials/phys_WoodSword.physicMaterial
+  uploadId: 337636

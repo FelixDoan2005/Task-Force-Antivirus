@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 86bde388173e8174eb10971ee09f7895
+timeCreated: 1489367553
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs_Parts/Katana_Part_Fuchi.prefab
+  uploadId: 337636

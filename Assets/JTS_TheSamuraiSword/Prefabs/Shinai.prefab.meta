@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ff8e11631c2cba8428520b252886481a
+timeCreated: 1469792773
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 68373
+  packageName: The Samurai Sword
+  packageVersion: 1.4
+  assetPath: Assets/JTS_TheSamuraiSword/Prefabs/Shinai.prefab
+  uploadId: 337636
