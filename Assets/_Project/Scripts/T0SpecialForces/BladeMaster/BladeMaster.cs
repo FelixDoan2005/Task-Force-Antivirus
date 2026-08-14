@@ -340,6 +340,10 @@ public class BladeMaster : MonoBehaviour
     [Tooltip("Pause after returning to the start position before all the stored damage lands.")]
     public float ultimateDamageDelay = 1f;
 
+    [Tooltip("How far below the feet still counts as standing on something. Raise it if the " +
+             "ultimate refuses to fire on stairs or uneven ground.")]
+    public float groundCheckDistance = 0.3f;
+
     //an effect spawned at a victim's position. offsets are relative to that victim, not the player.
     [System.Serializable]
     public struct ImpactFx
@@ -481,6 +485,10 @@ public class BladeMaster : MonoBehaviour
             playerMovement.extraCameraDistance = 0f;
             playerMovement.suspendLook = false;
             playerMovement.easePitchToTarget = false;
+
+            //only the ultimate sets this, and only its coroutine clears it - so an ult cut short
+            //by a pause or class switch would leave the player frozen in place for good
+            playerMovement.suspendGravity = false;
         }
     }
 
@@ -1199,9 +1207,37 @@ public class BladeMaster : MonoBehaviour
         if (isCasting) return;
         if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
+
+        //the windup suspends gravity, so firing this mid-jump used to freeze the player hanging
+        //in the air for the whole 5 seconds. checked before the cooldown is set, so a rejected
+        //press costs nothing.
+        if (!IsGrounded())
+        {
+            if (logCharges) Debug.Log("BladeMaster ultimate: must be on the ground");
+            return;
+        }
+
         ultimateReadyTime = Time.time + ultimateCooldown;
 
         StartCoroutine(UltimateSequence());
+    }
+
+    //CharacterController.isGrounded only reports true on the frame after a Move() that hit the
+    //floor, so it flickers on slopes and steps - the raycast is the reliable half
+    bool IsGrounded()
+    {
+        if (playerController == null) return true; // nothing to test against, don't block the ability
+
+        if (playerController.isGrounded) return true;
+
+        //cast from just inside the capsule's base so it can't start below the floor
+        Vector3 origin = playerController.transform.position
+                         + playerController.center
+                         - Vector3.up * (playerController.height * 0.5f - playerController.radius);
+
+        return Physics.SphereCast(origin, playerController.radius * 0.9f, Vector3.down,
+                                  out _, groundCheckDistance + playerController.radius * 0.1f,
+                                  ~0, QueryTriggerInteraction.Ignore);
     }
 
     IEnumerator UltimateSequence()
