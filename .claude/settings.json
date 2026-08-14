@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '/guid: 1f8c06f1f215339498068644fd457936/{f=1} f&&/^---/{f=0} f' Assets/_Project/Scenes/SampleScene.unity)"
+    ]
+  }
+}
