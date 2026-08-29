@@ -10,6 +10,8 @@ public class SpeedVirusAttack : MonoBehaviour
 
     void Update()
     {
+        if (BladeMaster.UltimateFreeze) return; // frozen for the length of the BladeMaster's ultimate
+
         IDamageable target = FindNearestTarget();
         if (target == null) return;
 
