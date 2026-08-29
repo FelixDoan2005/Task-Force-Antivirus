@@ -44,6 +44,7 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateEnded += HandleUltimateEnded;
         bladeMaster.OnComboAttack += HandleComboAttack;
         bladeMaster.OnEnhancedActivated += HandleEnhancedActivated;
+        bladeMaster.OnCAbility += HandleCAbility;
     }
 
     void OnDisable()
@@ -55,11 +56,17 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnUltimateEnded -= HandleUltimateEnded;
         bladeMaster.OnComboAttack -= HandleComboAttack;
         bladeMaster.OnEnhancedActivated -= HandleEnhancedActivated;
+        bladeMaster.OnCAbility -= HandleCAbility;
     }
 
     void HandleEnhancedActivated()
     {
         animator.SetTrigger("EAbility");
+    }
+
+    void HandleCAbility()
+    {
+        animator.SetTrigger("CAbility");
     }
 
     void HandleComboAttack(int step)

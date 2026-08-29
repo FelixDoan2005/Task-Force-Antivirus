@@ -798,7 +798,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 99479710}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f8c06f1f215339498068644fd457936, type: 3}
   m_Name: 
@@ -811,7 +811,7 @@ MonoBehaviour:
   weaponSwitcher: {fileID: 689043512}
   blockMoveSpeedMultiplier: 0.2
   blockDamageTakenMultiplier: 0.25
-  damage: 30
+  damage: 50
   range: 3
   cooldown: 0.6
   swingDuration: 0.2
@@ -845,14 +845,14 @@ MonoBehaviour:
     rotationOffset: {x: 60, y: 90, z: 0}
     scale: 2
     lifetime: 2
-  - vfx: {fileID: 1116249604692860204, guid: 8a02c4042c68dd244abad8cf394dab42, type: 3}
+  - vfx: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
     delay: 0
     positionOffset: {x: 0, y: 0, z: 0}
     rotationOffset: {x: 0, y: 0, z: 0}
     scale: 0.9
     lifetime: 0
   qCooldown: 3
-  dashSpeed: 25
+  dashSpeed: 120
   dashDuration: 0.25
   dashDistance: 30
   dashHitRadius: 1
@@ -863,14 +863,14 @@ MonoBehaviour:
   dashVfxScale: 1
   dashVfxLinger: 0.3
   dashVfxSpawnInterval: 0.03
-  dashEndVfxPrefab: {fileID: 2183146480622160771, guid: 131ad0e894ecda14eac32155d82d6c3d, type: 3}
+  dashEndVfxPrefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
   dashEndVfxPositionOffset: {x: 0, y: 2, z: 0}
   dashEndVfxRotationOffset: {x: 0, y: 0, z: 0}
-  dashEndVfxScale: 1
+  dashEndVfxScale: 5
   dashEndVfxLifetime: 1.5
-  dashHitVfxPrefab: {fileID: 1116249604692860204, guid: 8a02c4042c68dd244abad8cf394dab42, type: 3}
-  dashHitVfxScale: 1
-  dashHitVfxLifetime: 1
+  dashHitVfxPrefab: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+  dashHitVfxScale: 3
+  dashHitVfxLifetime: 3
   dashShake: 0.25
   eCooldown: 1
   castLockDuration: 1.2
@@ -898,20 +898,109 @@ MonoBehaviour:
   slashVfxRotationOffset: {x: 0, y: 0, z: 0}
   slashVfxScale: 5
   waveVfxLinger: 0.4
+  cCooldown: 1
+  cLockDuration: 1
+  cMaxCharges: 5
+  cAutoHitsPerCharge: 5
+  cCountEveryClick: 1
+  cChargesPerDash: 1
+  cChargesFromUltimate: 5
+  cRequiresCharge: 1
+  logCharges: 0
+  showChargeHud: 1
+  chargeHudFontSize: 26
+  chargeHudTopMargin: 24
+  cDamagePerCharge:
+  - 50
+  - 100
+  - 150
+  - 200
+  - 250
+  cRadiusPerCharge:
+  - 3
+  - 5
+  - 8
+  - 12
+  - 15
+  cDamageDelay: 0
+  cHitFx:
+  - vfx: {fileID: 1116249604692860204, guid: d08270f9be2646d4ca8f08683da3de9e, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 0
+    scalePerCharge:
+    - 0
+    - 0.5
+    - 1
+    - 2
+    - 3
+    lifetime: 1
+  cShakePerCharge:
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.55
+  - 0.75
+  cVfx:
+  - vfx: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 0
+    scalePerCharge:
+    - 2
+    - 3.25
+    - 4.5
+    - 5.75
+    - 7
+    lifetime: 1
+    followPlayer: 0
+  - vfx: {fileID: 1116249604692860204, guid: d08270f9be2646d4ca8f08683da3de9e, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 0
+    scalePerCharge:
+    - 0.8
+    - 1
+    - 2
+    - 3
+    - 5
+    lifetime: 1
+    followPlayer: 0
   ultimateCooldown: 5
   ultimateWindup: 5
   ultimateRadius: 30
-  ultimateDamagePerHit: 200
+  ultimateDamagePerHit: 250
   totalSlashes: 25
   blinkInterval: 0.18
   ultimateCameraPullback: 4
   cameraShake: {fileID: 330585548}
   windupShakeIntensity: 0.6
   blinkShake: 0.22
-  windupVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
-  blinkSlashVfxPrefab: {fileID: 2183146480622160771, guid: 131ad0e894ecda14eac32155d82d6c3d, type: 3}
+  windupVfxPrefab: {fileID: 7131401307255788800, guid: 4d9a3b35b3bc07649b697df7fb497b6d, type: 3}
+  ultimateDamageDelay: 2
+  groundCheckDistance: 0.3
+  ultimateFinisherFx:
+  - vfx: {fileID: 2965222256817593503, guid: a164e676dbbd6e54587237e619372c98, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 3
+    scalePerCharge: []
+    lifetime: 2
+  - vfx: {fileID: 1116249604692860204, guid: d08270f9be2646d4ca8f08683da3de9e, type: 3}
+    delay: 0
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 3
+    scalePerCharge: []
+    lifetime: 2
+  ultimateFinisherShake: 0.6
+  blinkSlashVfxPrefab: {fileID: 7647375919561907788, guid: 035ce8c9cfc34104991ce416daf8aebe, type: 3}
   vfxLifetime: 2
-  windupVfxLifetime: 0
+  windupVfxLifetime: 10
   blinkSlashVfxLifetime: 1
 --- !u!1 &127885314
 GameObject:

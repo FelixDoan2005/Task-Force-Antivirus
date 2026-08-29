@@ -27,6 +27,7 @@ public class BladeMaster : MonoBehaviour
     public int CurrentComboStep => comboStep;
 
     public bool IsUltimateActive => isUltimateActive;
+    public static bool UltimateFreeze { get; private set; }
     public bool IsCasting => isCasting; // true for the length of the E cast
 
     //when the slash actually fires. a gap above 0 positions it relative to the thrust rather
@@ -53,6 +54,11 @@ public class BladeMaster : MonoBehaviour
 
     //fired when E is activated
     public event System.Action OnEnhancedActivated;
+
+    //fired when C is activated
+    public event System.Action OnCAbility;
+
+    public bool IsCAbilityActive => isCAbilityActive;
 
     [Header("Weapon")]
     public float damage = 5f;
@@ -207,6 +213,110 @@ public class BladeMaster : MonoBehaviour
     bool isCasting; // blocks attacks/abilities for the length of the cast
     float castStartTime; // used to work out which half of the cast we're in
 
+    [Header("C - Charged Blast")]
+    public float cCooldown = 10f;
+
+    [Tooltip("How long C locks out other actions - line this up with the animation length.")]
+    public float cLockDuration = 1f;
+
+    [Header("C - Charges")]
+    [Tooltip("Cap on stored charges. Everything below is indexed by charge level, so changing " +
+             "this resizes those arrays.")]
+    public int cMaxCharges = 5;
+
+    [Tooltip("How many auto attacks have to land to earn one charge.")]
+    public int cAutoHitsPerCharge = 5;
+
+    [Tooltip("On: every left click counts, whether or not it connects. Off: only clicks that " +
+             "actually damage something count - which means swings at a target that already " +
+             "died don't progress the meter.")]
+    public bool cCountEveryClick = true;
+
+    [Tooltip("Charges granted when the Q dash fires. 0 disables this source.")]
+    public int cChargesPerDash = 1;
+
+    [Tooltip("Charges granted the moment the ultimate finishes. 0 disables this source.")]
+    public int cChargesFromUltimate = 5;
+
+    [Tooltip("Off lets C be cast at 0 charges, using the 1-charge values.")]
+    public bool cRequiresCharge = true;
+
+    [Tooltip("Prints charge gains and spends to the console.")]
+    public bool logCharges;
+
+    //temporary - drawn with OnGUI so it needs no Canvas or prefab wiring. replace with a proper
+    //UI element on the HUD once the BladeMaster's interface is designed.
+    [Tooltip("TEMPORARY: on-screen charge readout at the top of the screen.")]
+    public bool showChargeHud = true;
+    public int chargeHudFontSize = 26;
+    public float chargeHudTopMargin = 24f;
+
+    int cCharges;
+    int autoHitProgress; // auto attacks landed toward the next charge
+    bool autoClickCounted; // whether the current left click has already been counted
+
+    public int CCharges => cCharges;
+    public int CMaxCharges => cMaxCharges;
+
+    //0-1 progress toward the next charge from auto attacks - for a future UI meter
+    public float AutoHitProgress01 => cAutoHitsPerCharge > 0
+        ? autoHitProgress / (float)cAutoHitsPerCharge
+        : 0f;
+
+    //one effect the C ability spawns. an array of these so C can layer several - e.g. a ground
+    //circle that stays put plus a shield that follows you, each on its own timing.
+    [System.Serializable]
+    public struct AbilityFx
+    {
+        [Tooltip("Leave empty to skip this one.")]
+        public GameObject vfx;
+
+        [Tooltip("Wait this long after the ability fires before spawning it.")]
+        public float delay;
+
+        [Tooltip("Relative to the player: X = right, Y = up, Z = forward. Ground circles want Y near 0.")]
+        public Vector3 positionOffset;
+
+        public Vector3 rotationOffset;
+
+        [Tooltip("Fallback size, used for any charge level whose Scale Per Charge entry is 0.")]
+        public float scale;
+
+        [Tooltip("Size at each charge level: element 0 = 1 charge, element 4 = 5 charges. " +
+                 "Any entry left at 0 falls back to Scale above.")]
+        public float[] scalePerCharge;
+
+        [Tooltip("0 means it lives until the ability's lock ends.")]
+        public float lifetime;
+
+        [Tooltip("Parent to the player so it follows. Off leaves it where it was cast.")]
+        public bool followPlayer;
+    }
+
+    [Header("C - AOE Explosion")]
+    [Tooltip("Damage at each charge level: element 0 = 1 charge, element 4 = 5 charges.")]
+    public float[] cDamagePerCharge = { 40f, 70f, 110f, 165f, 240f };
+
+    [Tooltip("Blast radius at each charge level, centred on the player.")]
+    public float[] cRadiusPerCharge = { 4f, 5f, 6f, 7.5f, 9f };
+
+    [Tooltip("Delay from pressing C to the blast landing - line this up with the animation.")]
+    public float cDamageDelay = 0.4f;
+
+    [Tooltip("Spawned on each virus caught in the blast. Both entries fire at every charge level - " +
+             "layer two prefabs and give each its own Scale Per Charge.")]
+    public ImpactFx[] cHitFx = new ImpactFx[2];
+
+    [Tooltip("Camera trauma at each charge level.")]
+    public float[] cShakePerCharge = { 0.2f, 0.3f, 0.4f, 0.55f, 0.75f };
+
+    [Header("C - FX")]
+    [Tooltip("Effects C spawns, each with its own timing and placement.")]
+    public AbilityFx[] cVfx = new AbilityFx[2];
+
+    float cReadyTime;
+    bool isCAbilityActive;
+
     [Header("X - Ultimate: Blink Execution")]
     public float ultimateCooldown = 60f;
     public float ultimateWindup = 5f; // how long the player stands idle before the blink sequence starts
@@ -228,6 +338,45 @@ public class BladeMaster : MonoBehaviour
     [Tooltip("Spawned once where the player stands during the windup. Wind / charge-up particles.")]
     public GameObject windupVfxPrefab;
 
+    [Tooltip("Pause after returning to the start position before all the stored damage lands.")]
+    public float ultimateDamageDelay = 1f;
+
+    [Tooltip("How far below the feet still counts as standing on something. Raise it if the " +
+             "ultimate refuses to fire on stairs or uneven ground.")]
+    public float groundCheckDistance = 0.3f;
+
+    //an effect spawned at a victim's position. offsets are relative to that victim, not the player.
+    [System.Serializable]
+    public struct ImpactFx
+    {
+        [Tooltip("Leave empty to skip this one.")]
+        public GameObject vfx;
+
+        [Tooltip("Stagger it after the hit lands, so several effects don't all pop at once.")]
+        public float delay;
+
+        [Tooltip("Relative to the victim's position.")]
+        public Vector3 positionOffset;
+        public Vector3 rotationOffset;
+
+        [Tooltip("Fallback size. Used as-is by the ultimate's effects, and by any charge level " +
+                 "whose Scale Per Charge entry is 0.")]
+        public float scale;
+
+        [Tooltip("C only - size at each charge level: element 0 = 1 charge, element 4 = 5 charges. " +
+                 "Any entry left at 0 falls back to Scale above.")]
+        public float[] scalePerCharge;
+
+        [Tooltip("0 falls back to 2 seconds.")]
+        public float lifetime;
+    }
+
+    [Tooltip("Spawned on each victim when the stored damage lands. Add as many layers as you want.")]
+    public ImpactFx[] ultimateFinisherFx = new ImpactFx[2];
+
+    [Tooltip("Camera trauma when the stored damage lands.")]
+    public float ultimateFinisherShake = 0.6f;
+
     [Tooltip("Spawned at each blink, facing the target. Slash / impact particles.")]
     public GameObject blinkSlashVfxPrefab;
 
@@ -248,6 +397,64 @@ public class BladeMaster : MonoBehaviour
     {
         if (playerCamera == null)
             playerCamera = Camera.main;
+
+        //OnValidate is editor-only and isn't guaranteed to have run before play, so the arrays
+        //get sized here too - otherwise a short/empty Scale Per Charge silently falls back to
+        //the flat Scale and it looks like per-charge scaling does nothing
+        NormaliseChargeConfig();
+    }
+
+    //keeps every per-charge array exactly Max Charges long, so the Inspector always shows one
+    //slot per charge level instead of leaving you to resize five separate lists by hand
+    void OnValidate()
+    {
+        NormaliseChargeConfig();
+    }
+
+    void NormaliseChargeConfig()
+    {
+        cMaxCharges = Mathf.Max(1, cMaxCharges);
+        cAutoHitsPerCharge = Mathf.Max(0, cAutoHitsPerCharge);
+
+        ResizeChargeArray(ref cDamagePerCharge);
+        ResizeChargeArray(ref cRadiusPerCharge);
+        ResizeChargeArray(ref cShakePerCharge);
+
+        //both FX arrays are structs, so each entry has to be copied out, changed, and put back
+        if (cVfx != null)
+        {
+            for (int i = 0; i < cVfx.Length; i++)
+            {
+                AbilityFx fx = cVfx[i];
+                ResizeChargeArray(ref fx.scalePerCharge);
+                cVfx[i] = fx;
+            }
+        }
+
+        if (cHitFx != null)
+        {
+            for (int i = 0; i < cHitFx.Length; i++)
+            {
+                ImpactFx fx = cHitFx[i];
+                ResizeChargeArray(ref fx.scalePerCharge);
+                cHitFx[i] = fx;
+            }
+        }
+    }
+
+    //grows by repeating the last value rather than padding with zeros, so a new slot starts
+    //somewhere sensible instead of silently disabling itself
+    void ResizeChargeArray(ref float[] values)
+    {
+        if (values != null && values.Length == cMaxCharges) return;
+
+        float[] resized = new float[cMaxCharges];
+        for (int i = 0; i < resized.Length; i++)
+        {
+            if (values != null && values.Length > 0)
+                resized[i] = values[Mathf.Min(i, values.Length - 1)];
+        }
+        values = resized;
     }
 
     //if this gets disabled mid-ultimate (class switch, pause) Update stops running, so the
@@ -260,7 +467,9 @@ public class BladeMaster : MonoBehaviour
         //true and silently blocks every ability from then on
         isCasting = false;
         isUltimateActive = false;
+        UltimateFreeze = false;
         isDashing = false;
+        isCAbilityActive = false;
 
         //the dash trail is parented to the player, so it would survive a class switch otherwise
         if (activeDashVfx != null)
@@ -278,6 +487,10 @@ public class BladeMaster : MonoBehaviour
             playerMovement.extraCameraDistance = 0f;
             playerMovement.suspendLook = false;
             playerMovement.easePitchToTarget = false;
+
+            //only the ultimate sets this, and only its coroutine clears it - so an ult cut short
+            //by a pause or class switch would leave the player frozen in place for good
+            playerMovement.suspendGravity = false;
         }
     }
 
@@ -287,12 +500,15 @@ public class BladeMaster : MonoBehaviour
         {
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateE();
+            if (Keyboard.current.cKey.wasPressedThisFrame) TryActivateC();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
         //block - holding right click, only while actually in the BladeMaster class and not frozen mid-ultimate
         bool isBladeMasterClass = weaponSwitcher != null && weaponSwitcher.CurrentClass == WeaponSwitcher.PlayerClass.BladeMaster;
         isBlocking = isBladeMasterClass && !isUltimateActive && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        
+        UltimateFreeze = isUltimateActive;
 
         if (playerMovement != null)
         {
@@ -309,6 +525,7 @@ public class BladeMaster : MonoBehaviour
             //driven from state every frame rather than set once when the ult starts. pausing
             //disables this component and OnDisable clears them, so they have to be re-asserted
             //here or unpausing mid-ult would hand camera control back to the player.
+
             playerMovement.suspendLook = isUltimateActive;
             playerMovement.easePitchToTarget = isUltimateActive;
             playerMovement.extraCameraDistance = isUltimateActive ? ultimateCameraPullback : 0f;
@@ -433,6 +650,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return; // standing idle / mid-blink-sequence - no attacking
         if (isBlocking) return; // can't attack while holding block
         if (isCasting) return;  // locked out for the length of the E cast
+        if (isCAbilityActive) return;
         if (Time.time < attackReadyTime) return; // still mid-swing, ignore the click
 
         attackReadyTime = Time.time + comboStagger;
@@ -443,6 +661,15 @@ public class BladeMaster : MonoBehaviour
             comboStep = (comboStep + 1) % maxComboHits; // clicked in time, advance (loops after hit 5)
 
         lastAttackTime = Time.time;
+        autoClickCounted = false; // this click hasn't damaged anything yet
+
+        //counted here rather than at the damage site, so a swing into thin air (or at something
+        //the previous swing already killed) still moves the meter
+        if (cCountEveryClick)
+        {
+            autoClickCounted = true;
+            RegisterAutoHitLanded();
+        }
 
         OnComboAttack?.Invoke(comboStep); // let the animator play the matching swing clip
         SpawnComboSlashVfx();
@@ -526,6 +753,10 @@ public class BladeMaster : MonoBehaviour
 
         List<(VirusHealthBase virus, float t)> targets = new List<(VirusHealthBase, float)>();
 
+        //one entry per virus, not per collider - a virus with a body collider plus a couple of
+        //trigger volumes was being added several times and taking the swing's damage once each
+        HashSet<VirusHealthBase> seen = new HashSet<VirusHealthBase>();
+
         Collider[] hits = Physics.OverlapSphere(origin, range);
         foreach (Collider c in hits)
         {
@@ -534,6 +765,8 @@ public class BladeMaster : MonoBehaviour
 
             Vector3 dirToTarget = (c.transform.position - origin).normalized;
             if (Vector3.Angle(Forward, dirToTarget) > meleeArc * 0.5f) continue; // outside the melee cone entirely
+
+            if (!seen.Add(vh)) continue;
 
             float targetSide = Vector3.Dot(dirToTarget, Right);
             float t = Mathf.InverseLerp(startSide, endSide, targetSide); // which side of the swing they're on, for stagger order only
@@ -557,7 +790,7 @@ public class BladeMaster : MonoBehaviour
 
             if (target.virus == null) continue;
 
-            target.virus.TakeDamage(damage);
+            DealAutoDamage(target.virus);
             Debug.DrawLine(origin, target.virus.transform.position, Color.white, 0.2f);
         }
     }
@@ -569,6 +802,9 @@ public class BladeMaster : MonoBehaviour
     {
         Vector3 viewForward = Forward;
 
+        //same per-virus de-duplication as the sweeping swings
+        HashSet<VirusHealthBase> seen = new HashSet<VirusHealthBase>();
+
         Collider[] hits = Physics.OverlapSphere(origin, range);
         foreach (Collider c in hits)
         {
@@ -578,9 +814,24 @@ public class BladeMaster : MonoBehaviour
             Vector3 dirToTarget = (c.transform.position - origin).normalized;
             if (Vector3.Angle(viewForward, dirToTarget) > meleeArc * 0.5f) continue;
 
-            vh.TakeDamage(damage);
+            if (!seen.Add(vh)) continue;
+
+            DealAutoDamage(vh);
             Debug.DrawLine(origin, vh.transform.position, Color.white, 0.2f);
         }
+    }
+
+    //every point where a left-click swing actually damages something goes through here, so the
+    //charge counter can't drift out of sync with what the sword really hit. counted once per
+    //click no matter how many viruses that click caught.
+    void DealAutoDamage(VirusHealthBase virus)
+    {
+        virus.TakeDamage(damage);
+
+        if (autoClickCounted) return;
+        autoClickCounted = true;
+
+        RegisterAutoHitLanded();
     }
 
     void TryActivateQ()
@@ -589,6 +840,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         qReadyTime = Time.time + qCooldown;
 
@@ -602,6 +854,9 @@ public class BladeMaster : MonoBehaviour
 
         if (cameraShake != null && dashShake > 0f)
             cameraShake.AddTrauma(dashShake);
+
+        //granted on the dash going off, not on it connecting - it's a mobility reward, not a hit one
+        AddCharges(cChargesPerDash, "Q dash");
 
         dashVfxTimer = 0f;
 
@@ -625,6 +880,7 @@ public class BladeMaster : MonoBehaviour
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
         eReadyTime = Time.time + eCooldown;
 
@@ -720,16 +976,273 @@ public class BladeMaster : MonoBehaviour
         if (vfx != null) Destroy(vfx, waveVfxLinger);
     }
 
+    //spends every stored charge at once - damage, radius, shake and effect size all scale with
+    //how many went in
+    void TryActivateC()
+    {
+        if (Time.time < cReadyTime) return;
+        if (isUltimateActive) return;
+        if (isBlocking) return;
+        if (isCasting) return;
+        if (isCAbilityActive) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
+
+        if (cRequiresCharge && cCharges <= 0)
+        {
+            if (logCharges) Debug.Log("BladeMaster C: no charges stored");
+            return;
+        }
+
+        //at least 1 so the 0-charge case (when charges aren't required) still uses the first
+        //entry of each array rather than falling off the front
+        int spent = Mathf.Max(1, cCharges);
+        cCharges = 0;
+        autoHitProgress = 0; // a spend resets progress toward the next one too
+
+        if (logCharges) Debug.Log($"BladeMaster C: spent {spent} charge(s)");
+
+        cReadyTime = Time.time + cCooldown;
+
+        OnCAbility?.Invoke();
+        StartCoroutine(CAbilitySequence(spent));
+    }
+
+    IEnumerator CAbilitySequence(int charges)
+    {
+        isCAbilityActive = true;
+
+        //each entry runs on its own delay, so one coroutine per effect rather than trying to
+        //interleave them here
+        if (cVfx != null)
+        {
+            for (int i = 0; i < cVfx.Length; i++)
+            {
+                if (cVfx[i].vfx != null)
+                    StartCoroutine(SpawnAbilityFx(cVfx[i], cLockDuration, charges));
+            }
+        }
+
+        StartCoroutine(CExplosion(charges));
+
+        yield return new WaitForSeconds(cLockDuration);
+        isCAbilityActive = false;
+    }
+
+    //AOE blast centred on the player, landing partway through the animation
+    IEnumerator CExplosion(int charges)
+    {
+        //read the scaled values up front - the arrays could be re-tuned mid-delay in the editor
+        float damage = ChargeValue(cDamagePerCharge, charges, 60f);
+        float radius = ChargeValue(cRadiusPerCharge, charges, 6f);
+        float shake = ChargeValue(cShakePerCharge, charges, 0.4f);
+
+        if (cDamageDelay > 0f)
+            yield return new WaitForSeconds(cDamageDelay);
+
+        Vector3 centre = playerController.transform.position;
+
+        if (cameraShake != null && shake > 0f)
+            cameraShake.AddTrauma(shake);
+
+        //ring so the radius is visible while tuning
+        const int segments = 32;
+        for (int i = 0; i < segments; i++)
+        {
+            float a0 = (i / (float)segments) * Mathf.PI * 2f;
+            float a1 = ((i + 1) / (float)segments) * Mathf.PI * 2f;
+            Vector3 p0 = centre + new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)) * radius;
+            Vector3 p1 = centre + new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1)) * radius;
+            Debug.DrawLine(p0, p1, Color.yellow, 1f);
+        }
+
+        //a virus can have several colliders, so track which ones have already been counted
+        HashSet<VirusHealthBase> alreadyHit = new HashSet<VirusHealthBase>();
+
+        foreach (Collider c in Physics.OverlapSphere(centre, radius))
+        {
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (vh == null || alreadyHit.Contains(vh)) continue;
+            alreadyHit.Add(vh);
+
+            //capture the position before damaging, in case the hit destroys it and a delayed
+            //effect has nothing left to read from
+            Vector3 hitPoint = vh.transform.position;
+
+            if (cHitFx != null)
+            {
+                foreach (ImpactFx fx in cHitFx)
+                {
+                    if (fx.vfx == null) continue;
+
+                    if (fx.delay > 0f) StartCoroutine(SpawnImpactFxAfter(fx, hitPoint, charges));
+                    else SpawnImpactFxAt(fx, hitPoint, charges);
+                }
+            }
+
+            vh.TakeDamage(damage);
+            Debug.DrawLine(centre, hitPoint, Color.white, 0.5f);
+        }
+    }
+
+    //picks the entry for this charge level, clamping rather than throwing if the array is the
+    //wrong length - the Inspector can leave it short after Max Charges is raised
+    float ChargeValue(float[] values, int charges, float fallback)
+    {
+        if (values == null || values.Length == 0) return fallback;
+        return values[Mathf.Clamp(charges - 1, 0, values.Length - 1)];
+    }
+
+    //called once per auto attack that connects with at least one virus, whatever it hit -
+    //landing on five things at once is still one attack landed
+    //one left click that dealt damage = one count. five of those = one charge.
+    void RegisterAutoHitLanded()
+    {
+        //clamped rather than trusted - a 0 left in the Inspector used to make this return
+        //immediately, which looked exactly like the counter being broken
+        int needed = Mathf.Max(1, cAutoHitsPerCharge);
+
+        autoHitProgress++;
+
+        if (logCharges)
+            Debug.Log($"BladeMaster auto landed: {autoHitProgress}/{needed}");
+
+        if (autoHitProgress < needed) return;
+
+        autoHitProgress = 0;
+        AddCharges(1, "auto attacks");
+    }
+
+    //TEMPORARY charge readout. this component is disabled on pause and on other classes, so
+    //OnGUI stops being called then and the readout hides itself without any extra checks.
+    GUIStyle chargeHudStyle;
+
+    void OnGUI()
+    {
+        if (!showChargeHud) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
+
+        //built lazily - GUI.skin isn't available before the first OnGUI call
+        chargeHudStyle ??= new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperCenter,
+            fontStyle = FontStyle.Bold
+        };
+        chargeHudStyle.fontSize = chargeHudFontSize;
+
+        //filled diamond per stored charge, hollow for the rest
+        string pips = "";
+        for (int i = 0; i < cMaxCharges; i++)
+            pips += i < cCharges ? "◆" : "◇";
+
+        string label = $"{pips}   {cCharges}/{cMaxCharges}";
+
+        //progress toward the next one, so it's obvious the auto attacks are counting
+        if (cAutoHitsPerCharge > 0 && cCharges < cMaxCharges)
+            label += $"   [{autoHitProgress}/{cAutoHitsPerCharge}]";
+
+        Rect rect = new Rect(0f, chargeHudTopMargin, Screen.width, chargeHudFontSize * 2f);
+
+        //offset copy behind it, otherwise white text vanishes against a bright scene
+        GUI.color = new Color(0f, 0f, 0f, 0.65f);
+        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), label, chargeHudStyle);
+
+        GUI.color = cCharges >= cMaxCharges ? Color.yellow : Color.white;
+        GUI.Label(rect, label, chargeHudStyle);
+
+        GUI.color = Color.white; // GUI.color is global state, leave it as we found it
+    }
+
+    void AddCharges(int amount, string source)
+    {
+        if (amount <= 0) return;
+
+        int before = cCharges;
+        cCharges = Mathf.Clamp(cCharges + amount, 0, cMaxCharges);
+
+        if (logCharges && cCharges != before)
+            Debug.Log($"BladeMaster charges: {cCharges}/{cMaxCharges} (+{cCharges - before} from {source})");
+    }
+
+    //spawns one AbilityFx entry after its delay and cleans it up afterwards
+    IEnumerator SpawnAbilityFx(AbilityFx fx, float defaultLifetime, int charges)
+    {
+        if (fx.delay > 0f)
+            yield return new WaitForSeconds(fx.delay);
+
+        Vector3 flatForward = Forward;
+        flatForward.y = 0f;
+        flatForward = flatForward.normalized;
+        Vector3 side = Vector3.Cross(Vector3.up, flatForward);
+
+        Vector3 spawnPos = playerController.transform.position
+                           + side * fx.positionOffset.x
+                           + Vector3.up * fx.positionOffset.y
+                           + flatForward * fx.positionOffset.z;
+
+        //parenting makes it follow you, which suits a shield; unparented suits a ground circle
+        GameObject go = SpawnVfx(fx.vfx, spawnPos,
+                                 Quaternion.LookRotation(flatForward) * Quaternion.Euler(fx.rotationOffset),
+                                 fx.followPlayer ? playerController.transform : null);
+        if (go == null) yield break;
+
+        //size comes from this charge level's entry, falling back to the flat Scale when that
+        //entry is 0 - so an effect that shouldn't grow can just be left alone
+        float scale = ChargeValue(fx.scalePerCharge, charges, 0f);
+        if (scale <= 0f) scale = fx.scale;
+        if (scale <= 0f) scale = 1f;
+
+        ApplyVfxScale(go, scale);
+
+        float life = fx.lifetime > 0f ? fx.lifetime : Mathf.Max(0f, defaultLifetime - fx.delay);
+        yield return new WaitForSeconds(life);
+
+        if (go != null)
+        {
+            //unparent first so it doesn't keep trailing you while it fades
+            go.transform.SetParent(null, true);
+            Destroy(go);
+        }
+    }
+
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
         if (isUltimateActive) return;
         if (isBlocking) return;
         if (isCasting) return;
+        if (isCAbilityActive) return;
         if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.BladeMaster) return;
+
+        //the windup suspends gravity, so firing this mid-jump used to freeze the player hanging
+        //in the air for the whole 5 seconds. checked before the cooldown is set, so a rejected
+        //press costs nothing.
+        if (!IsGrounded())
+        {
+            if (logCharges) Debug.Log("BladeMaster ultimate: must be on the ground");
+            return;
+        }
+
         ultimateReadyTime = Time.time + ultimateCooldown;
 
         StartCoroutine(UltimateSequence());
+    }
+
+    //CharacterController.isGrounded only reports true on the frame after a Move() that hit the
+    //floor, so it flickers on slopes and steps - the raycast is the reliable half
+    bool IsGrounded()
+    {
+        if (playerController == null) return true; // nothing to test against, don't block the ability
+
+        if (playerController.isGrounded) return true;
+
+        //cast from just inside the capsule's base so it can't start below the floor
+        Vector3 origin = playerController.transform.position
+                         + playerController.center
+                         - Vector3.up * (playerController.height * 0.5f - playerController.radius);
+
+        return Physics.SphereCast(origin, playerController.radius * 0.9f, Vector3.down,
+                                  out _, groundCheckDistance + playerController.radius * 0.1f,
+                                  ~0, QueryTriggerInteraction.Ignore);
     }
 
     IEnumerator UltimateSequence()
@@ -850,9 +1363,13 @@ public class BladeMaster : MonoBehaviour
         // blink to each target in turn and slash it - a fresh random spot around the target every single time,
         // so repeat visits (same target hit multiple times, whether back-to-back or later in the sequence)
         // never land in the same place twice
+        //damage is stored up rather than applied per strike, so nothing dies mid-sequence and the
+        //whole total lands at once after the blademaster has finished and returned
+        Dictionary<VirusHealthBase, float> pendingDamage = new Dictionary<VirusHealthBase, float>();
+
         foreach (VirusHealthBase target in hitSequence)
         {
-            if (target == null) continue; // could've been destroyed by an earlier hit in this same sequence
+            if (target == null) continue; // could've been destroyed by something else mid-sequence
 
             float randomAngle = Random.Range(0f, 360f);
             Vector3 randomDir = Quaternion.Euler(0f, randomAngle, 0f) * Vector3.forward;
@@ -861,7 +1378,10 @@ public class BladeMaster : MonoBehaviour
 
             TeleportTo(blinkPoint);
             FaceTarget(target.transform.position);
-            target.TakeDamage(ultimateDamagePerHit);
+
+            pendingDamage.TryGetValue(target, out float stored);
+            pendingDamage[target] = stored + ultimateDamagePerHit;
+
             OnUltimateBlink?.Invoke();
 
             //punch the camera on every strike - these stack, so a fast blink sequence builds
@@ -885,10 +1405,25 @@ public class BladeMaster : MonoBehaviour
             Debug.DrawLine(blinkPoint, target.transform.position, Color.magenta, blinkInterval);
 
             yield return new WaitForSeconds(blinkInterval);
+
+            //once every marked target has taken enough stored damage to die there's nothing left
+            //worth hitting, so cut the sequence short rather than slashing corpses
+            if (AllTargetsLethallyDamaged(targetList, pendingDamage))
+                break;
         }
 
         TeleportTo(startPosition);
         playerController.transform.rotation = startRotation; // face the way we did before the ult
+
+        OnUltimateEnded?.Invoke(); // animation returns to idle while the damage is still pending
+
+        //beat of stillness before it all lands
+        yield return new WaitForSeconds(ultimateDamageDelay);
+
+        ApplyPendingUltimateDamage(pendingDamage);
+
+        //straight to full, so C can be fired immediately off the back of the ultimate
+        AddCharges(cChargesFromUltimate, "ultimate");
 
         if (playerMovement != null)
         {
@@ -898,7 +1433,73 @@ public class BladeMaster : MonoBehaviour
             playerMovement.easePitchToTarget = false;
         }
         isUltimateActive = false;
-        OnUltimateEnded?.Invoke();
+    }
+
+    //true once every target still alive has enough damage stored up to finish it
+    bool AllTargetsLethallyDamaged(List<VirusHealthBase> targets, Dictionary<VirusHealthBase, float> pending)
+    {
+        foreach (VirusHealthBase t in targets)
+        {
+            if (t == null) continue; // already gone, doesn't need any more
+
+            pending.TryGetValue(t, out float stored);
+            if (stored < t.CurrentHealth) return false;
+        }
+        return true;
+    }
+
+    //everything the ultimate racked up lands at the same moment, with an effect on each victim
+    void ApplyPendingUltimateDamage(Dictionary<VirusHealthBase, float> pending)
+    {
+        if (cameraShake != null && ultimateFinisherShake > 0f)
+            cameraShake.AddTrauma(ultimateFinisherShake);
+
+        foreach (KeyValuePair<VirusHealthBase, float> entry in pending)
+        {
+            VirusHealthBase target = entry.Key;
+            if (target == null) continue;
+
+            //capture the position before damaging - the hit may destroy the target, and a
+            //delayed effect would then have no transform left to read from
+            Vector3 hitPoint = target.transform.position;
+
+            if (ultimateFinisherFx != null)
+            {
+                foreach (ImpactFx fx in ultimateFinisherFx)
+                {
+                    if (fx.vfx == null) continue;
+
+                    if (fx.delay > 0f)
+                        StartCoroutine(SpawnImpactFxAfter(fx, hitPoint));
+                    else
+                        SpawnImpactFxAt(fx, hitPoint);
+                }
+            }
+
+            target.TakeDamage(entry.Value);
+        }
+    }
+
+    //charges of 0 means "not a charged ability" - the flat Scale is used and Scale Per Charge
+    //is ignored, which is what the ultimate's finisher effects want
+    IEnumerator SpawnImpactFxAfter(ImpactFx fx, Vector3 position, int charges = 0)
+    {
+        yield return new WaitForSeconds(fx.delay);
+        SpawnImpactFxAt(fx, position, charges);
+    }
+
+    void SpawnImpactFxAt(ImpactFx fx, Vector3 position, int charges = 0)
+    {
+        GameObject go = SpawnVfx(fx.vfx, position + fx.positionOffset, Quaternion.Euler(fx.rotationOffset));
+        if (go == null) return;
+
+        float scale = charges > 0 ? ChargeValue(fx.scalePerCharge, charges, 0f) : 0f;
+        if (scale <= 0f) scale = fx.scale;   // that charge level left blank
+        if (scale <= 0f) scale = 1f;
+
+        ApplyVfxScale(go, scale);
+
+        Destroy(go, fx.lifetime > 0f ? fx.lifetime : 2f);
     }
 
     //turn to face whoever we just blinked to, otherwise the swing animation plays side-on
@@ -1010,6 +1611,22 @@ public class BladeMaster : MonoBehaviour
             ps.Play(true);
         }
         return go;
+    }
+
+    //scaling a VFX root does nothing on most asset-pack prefabs: their particle systems ship with
+    //Scaling Mode = Local, which ignores every parent transform, so the root grows while the
+    //particles stay the same size. switching them to Hierarchy makes them follow the root.
+    void ApplyVfxScale(GameObject go, float scale)
+    {
+        if (go == null || Mathf.Approximately(scale, 1f)) return;
+
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = ps.main; // struct accessor - has to go through a local
+            main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+        }
+
+        go.transform.localScale *= scale;
     }
 
     // CharacterController fights direct position changes unless briefly disabled first

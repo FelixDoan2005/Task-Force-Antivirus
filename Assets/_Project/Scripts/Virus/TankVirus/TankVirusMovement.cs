@@ -8,6 +8,8 @@ public class TankVirusMovement : MonoBehaviour
 
     void Update()
     {
+        if (BladeMaster.UltimateFreeze) return;
+        
         IDamageable target = FindNearestTarget();
         if (target == null) return;
 

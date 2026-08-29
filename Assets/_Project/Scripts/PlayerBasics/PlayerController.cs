@@ -189,7 +189,16 @@ public class PlayerController : MonoBehaviour
 
     void MoveAndJump()
     {
-        if (suspendGravity) return; // another system (e.g. grapple) has full control right now
+        if (suspendGravity)
+        {
+            //another system (e.g. the ultimate, or the grapple) has full control right now.
+            //these have to be cleared rather than just left alone - they're what the animator
+            //blend trees read, so whatever was held at the moment control was taken away would
+            //otherwise keep playing, running on the spot while the player is frozen.
+            MoveInput = Vector2.zero;
+            IsSprinting = false;
+            return;
+        }
 
         // Read movement input (WASD)
         Vector2 input = Vector2.zero; //resets movement
