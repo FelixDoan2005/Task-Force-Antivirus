@@ -27,6 +27,7 @@ public class BladeMaster : MonoBehaviour
     public int CurrentComboStep => comboStep;
 
     public bool IsUltimateActive => isUltimateActive;
+    public static bool UltimateFreeze { get; private set; }
     public bool IsCasting => isCasting; // true for the length of the E cast
 
     //when the slash actually fires. a gap above 0 positions it relative to the thrust rather
@@ -466,6 +467,7 @@ public class BladeMaster : MonoBehaviour
         //true and silently blocks every ability from then on
         isCasting = false;
         isUltimateActive = false;
+        UltimateFreeze = false;
         isDashing = false;
         isCAbilityActive = false;
 
@@ -505,6 +507,8 @@ public class BladeMaster : MonoBehaviour
         //block - holding right click, only while actually in the BladeMaster class and not frozen mid-ultimate
         bool isBladeMasterClass = weaponSwitcher != null && weaponSwitcher.CurrentClass == WeaponSwitcher.PlayerClass.BladeMaster;
         isBlocking = isBladeMasterClass && !isUltimateActive && Mouse.current != null && Mouse.current.rightButton.isPressed;
+        
+        UltimateFreeze = isUltimateActive;
 
         if (playerMovement != null)
         {
@@ -521,6 +525,7 @@ public class BladeMaster : MonoBehaviour
             //driven from state every frame rather than set once when the ult starts. pausing
             //disables this component and OnDisable clears them, so they have to be re-asserted
             //here or unpausing mid-ult would hand camera control back to the player.
+
             playerMovement.suspendLook = isUltimateActive;
             playerMovement.easePitchToTarget = isUltimateActive;
             playerMovement.extraCameraDistance = isUltimateActive ? ultimateCameraPullback : 0f;
