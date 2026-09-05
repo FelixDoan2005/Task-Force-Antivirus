@@ -96,6 +96,16 @@ public class PlayerController : MonoBehaviour
 
     float currentYawOffset;
 
+    [Header("Camera Shoulder")]
+    [Tooltip("Over-the-shoulder offset a class can request. X = right of the player, Y = up. " +
+             "Ranged classes want this; melee ones usually leave it at zero.")]
+    public Vector2 cameraShoulderOffset;
+
+    [Tooltip("How fast the camera slides to the shoulder when a class asks for it.")]
+    public float cameraShoulderLerpSpeed = 6f;
+
+    Vector2 currentShoulder;
+
     //raw WASD input this frame, -1..1 on each axis. read by the active class's animator driver
     public Vector2 MoveInput { get; private set; }
 
@@ -189,8 +199,15 @@ public class PlayerController : MonoBehaviour
                                                  cameraDistanceLerpSpeed * Time.deltaTime);
             dist += currentExtraCamDistance;
 
+            //slide toward whatever shoulder offset the active class wants, so switching between
+            //a melee and a ranged class glides rather than cutting
+            currentShoulder = Vector2.Lerp(currentShoulder, cameraShoulderOffset,
+                                           cameraShoulderLerpSpeed * Time.deltaTime);
+
             // camera collision: don't let the desired position clip through walls
-            Vector3 desiredLocalOffset = new(baseCameraLocalPos.x, baseCameraLocalPos.y, -dist);
+            Vector3 desiredLocalOffset = new(baseCameraLocalPos.x + currentShoulder.x,
+                                             baseCameraLocalPos.y + currentShoulder.y,
+                                             -dist);
             Vector3 desiredWorldPos = cameraPivot.TransformPoint(desiredLocalOffset);
             Vector3 toCam = desiredWorldPos - cameraPivot.position;
             float desiredLen = toCam.magnitude;
@@ -202,7 +219,9 @@ public class PlayerController : MonoBehaviour
             }
 
             Vector3 c = baseCameraLocalPos;
-            c.z = -dist; // behind the pivot
+            c.x += currentShoulder.x;   // over the shoulder for ranged classes
+            c.y += currentShoulder.y;
+            c.z = -dist;                // behind the pivot
             camTransform.localPosition = c;
         }
     }
