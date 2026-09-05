@@ -24,61 +24,78 @@ public class DemonClass : MonoBehaviour
     [Tooltip("Prints every heal, so the perk can be verified.")]
     public bool logLifesteal;
 
-    //---------------------------------------------------------------- auto attack: flame cone
-    [Header("Auto Attack - Flame Cone")]
-    [Tooltip("Damage per second to each virus standing in the cone.")]
-    public float flameDamagePerSecond = 40f;
+    //---------------------------------------------------------------- auto attack: damage waves
+    [Header("Auto Attack - Damage Wave")]
+    [Tooltip("Damage each virus takes from a wave. A wave hits any one target only once.")]
+    public float waveDamage = 45f;
 
-    [Tooltip("How often damage is applied. Smaller is smoother but costs more.")]
-    public float flameTickInterval = 0.1f;
+    [Tooltip("How long a wave lives before it fades. One click, one wave.")]
+    public float waveDuration = 3f;
 
-    public float flameRange = 14f;
+    [Tooltip("How fast the wave travels away from him.")]
+    public float waveSpeed = 18f;
 
-    [Tooltip("Full width of the cone in degrees.")]
-    public float flameAngle = 60f;
+    [Tooltip("How wide the wave is - this is the crowd-control part.")]
+    public float waveWidth = 9f;
 
-    [Tooltip("Held while the stream is running, destroyed on release.")]
-    public GameObject flameVfx;
-    public Vector3 flameVfxPositionOffset;
-    public Vector3 flameVfxRotationOffset;
-    public float flameVfxScale = 1f;
+    [Tooltip("Vertical thickness, so it still catches things on slopes and steps.")]
+    public float waveHeight = 3f;
 
-    float flameTickTimer;
-    GameObject activeFlameVfx;
-    bool isFiring;
+    [Tooltip("Minimum gap between clicks. Waves can overlap if this is shorter than Wave Duration.")]
+    public float waveCooldown = 0.4f;
+
+    [Tooltip("Travels along with the wave. Destroyed when the wave expires.")]
+    public GameObject waveVfx;
+
+    [Tooltip("Relative to the wave: X = right, Y = up, Z = along its travel direction.")]
+    public Vector3 waveVfxPositionOffset;
+    public Vector3 waveVfxRotationOffset;
+    public float waveVfxScale = 1f;
+
+    [Tooltip("Draws the wave's box each frame so its size is readable while tuning.")]
+    public bool drawWaveBounds = true;
+
+    float nextWaveTime;
+    bool isFiring;   // true while at least one wave is still travelling
+    int liveWaves;
     public bool IsFiring => isFiring;
 
-    //---------------------------------------------------------------- Q: bomb mode
-    [Header("Q - Bomb Mode")]
+    //---------------------------------------------------------------- Q: explosive orb
+    [Header("Q - Explosive Orb")]
     public float qCooldown = 8f;
 
-    [Tooltip("How long the auto attack stays converted to bombs.")]
-    public float bombModeDuration = 6f;
+    [Tooltip("One orb per press. Big single hit rather than a stream of small ones.")]
+    public float bombDamage = 200f;
 
-    [Tooltip("Seconds between throws while holding fire.")]
-    public float bombInterval = 0.25f;
+    [Tooltip("Blast radius. Deliberately large - this is his hardest single hit.")]
+    public float bombRadius = 12f;
 
-    public float bombDamage = 60f;
-    public float bombRadius = 5f;
-
-    [Tooltip("Furthest he can lob one. Aiming past this drops it short rather than throwing harder.")]
-    public float bombMaxRange = 32f;
+    [Tooltip("Furthest he can throw it. Aiming past this drops it short rather than throwing harder.")]
+    public float bombMaxRange = 40f;
 
     [Tooltip("Time in the air. Longer gives a lazier, higher arc.")]
-    public float bombFlightTime = 0.9f;
+    public float bombFlightTime = 1.1f;
 
     [Tooltip("Downward pull on the throw. Higher makes the arc sharper and drops it faster.")]
     public float bombGravity = 30f;
 
     [Tooltip("Leave empty and a plain sphere is used, so it plays before you have art.")]
     public GameObject bombPrefab;
+
+    [Tooltip("Size of the placeholder sphere, and of your prefab if you want it scaled up.")]
+    public float bombScale = 1.6f;
+
     public GameObject bombExplosionVfx;
-    public float bombExplosionVfxScale = 1f;
+    public float bombExplosionVfxScale = 2f;
+
+    [Tooltip("Camera trauma when the orb goes off.")]
+    public float bombShake = 0.5f;
+
+    [Tooltip("Wait between pressing Q and the orb leaving his hand, so the throw animation " +
+             "gets to play first. The cooldown starts on the press, not on the launch.")]
+    public float qLaunchDelay = 1f;
 
     float qReadyTime;
-    float bombModeUntil;
-    float bombTimer;
-    public bool IsBombMode => Time.time < bombModeUntil;
 
     //---------------------------------------------------------------- E: takeover
     [Header("E - Takeover")]
@@ -113,9 +130,11 @@ public class DemonClass : MonoBehaviour
     [Tooltip("Beams pierce, so a line of enemies all take it.")]
     public float beamThickness = 0.6f;
 
-    [Tooltip("Eye positions relative to the player: X = right, Y = up, Z = forward.")]
-    public Vector3 leftEyeOffset = new Vector3(-0.35f, 1.7f, 0.45f);
-    public Vector3 rightEyeOffset = new Vector3(0.35f, 1.7f, 0.45f);
+    [Tooltip("Where each beam starts, relative to the player: X = right, Y = up, Z = forward. " +
+             "Pushed out in front of his face so the effect isn't spawning inside his head - " +
+             "he renders 2.89 units tall, so eye level is around 2.4, not 1.7.")]
+    public Vector3 leftEyeOffset = new Vector3(-0.28f, 2.45f, 0.9f);
+    public Vector3 rightEyeOffset = new Vector3(0.28f, 2.45f, 0.9f);
 
     [Tooltip("Swing the camera round to face him during the windup.")]
     public bool frontViewDuringWindup = true;
@@ -133,7 +152,18 @@ public class DemonClass : MonoBehaviour
 
     public GameObject windupVfx;
     public float windupVfxScale = 1f;
-    public Color beamColour = new Color(1f, 0.15f, 0.05f);
+
+    [Tooltip("One is spawned per eye and follows the beam, pointing down it. Leave empty and " +
+             "you get the debug lines only.")]
+    public GameObject beamVfx;
+
+    [Tooltip("Turns the effect if its own forward axis isn't down the beam.")]
+    public Vector3 beamVfxRotationOffset;
+    public float beamVfxScale = 1f;
+
+    [Tooltip("Draws the damage line and a marker on each target that is being burned.")]
+    public bool drawBeamDebug = true;
+
     public float beamTickInterval = 0.1f;
 
     float ultimateReadyTime;
@@ -142,7 +172,7 @@ public class DemonClass : MonoBehaviour
     public bool IsUltimateActive => isUltimateActive;
     public bool BeamsFiring => beamsFiring;
 
-    LineRenderer beamLeft, beamRight;
+    GameObject beamFxLeft, beamFxRight;
 
     //the camera's normal orbit speed, stashed while the ultimate borrows it. -1 = not borrowed.
     float storedYawLerpSpeed = -1f;
@@ -155,6 +185,70 @@ public class DemonClass : MonoBehaviour
 
     [Tooltip("How much closer than the default third-person distance. Negative pulls in.")]
     public float cameraCloseness = -0.9f;
+
+    //---------------------------------------------------------------- C: soul harvest
+    [Header("C - Soul Harvest")]
+    [Tooltip("Kills needed to gain one tier. Five tiers means 50 kills for a full-power blast.")]
+    public int killsPerTier = 10;
+
+    [Tooltip("How many tiers there are. The arrays below are indexed by tier, so changing this resizes them.")]
+    public int cMaxTiers = 5;
+
+    public float cCooldown = 10f;
+
+    [Tooltip("How long C locks out other actions - line this up with the animation length.")]
+    public float cLockDuration = 1f;
+
+    [Tooltip("Delay from pressing C to the blast landing - line this up with the animation.")]
+    public float cDamageDelay = 0.4f;
+
+    [Tooltip("Off lets C be cast with no souls banked, using the tier 1 values.")]
+    public bool cRequiresSouls = true;
+
+    [Tooltip("Damage at each tier: element 0 = tier 1, element 4 = tier 5. Same as the BladeMaster.")]
+    public float[] cDamagePerTier = { 40f, 70f, 110f, 165f, 240f };
+
+    [Tooltip("Blast radius at each tier. Doubled from the BladeMaster's - he is the crowd-control class.")]
+    public float[] cRadiusPerTier = { 8f, 10f, 12f, 15f, 18f };
+
+    [Tooltip("Camera trauma at each tier.")]
+    public float[] cShakePerTier = { 0.2f, 0.3f, 0.4f, 0.55f, 0.75f };
+
+    [Tooltip("Spawned on the player when the blast goes off.")]
+    public GameObject cVfx;
+    public Vector3 cVfxPositionOffset;
+    public Vector3 cVfxRotationOffset;
+
+    [Tooltip("Size of the cast effect at each tier. 0 falls back to 1.")]
+    public float[] cVfxScalePerTier = { 1f, 1.4f, 1.8f, 2.3f, 3f };
+    public float cVfxLifetime = 2.5f;
+
+    [Tooltip("Spawned on each virus caught in the blast.")]
+    public GameObject cHitVfx;
+    public float cHitVfxScale = 1f;
+    public float cHitVfxLifetime = 2f;
+
+    [Tooltip("TEMPORARY: on-screen soul counter.")]
+    public bool showSoulHud = true;
+    public int soulHudFontSize = 26;
+    public float soulHudTopMargin = 24f;
+
+    [Tooltip("Prints every soul gained and every blast.")]
+    public bool logSouls;
+
+    [Tooltip("TESTING: start with a full soul bar so C can be tried without farming 50 kills. " +
+             "Turn off before shipping.")]
+    public bool startWithMaxSouls = true;
+
+    int souls;
+    float cReadyTime;
+    bool isCAbilityActive;
+
+    public int Souls => souls;
+    public bool IsCAbilityActive => isCAbilityActive;
+
+    //how much power is banked right now, 0 to cMaxTiers
+    public int CurrentTier => Mathf.Clamp(killsPerTier > 0 ? souls / killsPerTier : 0, 0, cMaxTiers);
 
     //---------------------------------------------------------------- flight
     [Header("Flight")]
@@ -171,6 +265,7 @@ public class DemonClass : MonoBehaviour
     public event System.Action OnFireStopped;
     public event System.Action OnBombThrown;
     public event System.Action OnTakeover;
+    public event System.Action OnCAbility;
     public event System.Action OnUltimateStarted;
     public event System.Action OnUltimateEnded;
     public event System.Action<bool> OnFlightChanged;
@@ -181,6 +276,9 @@ public class DemonClass : MonoBehaviour
     void Awake()
     {
         if (playerCamera == null) playerCamera = Camera.main;
+
+        if (startWithMaxSouls)
+            souls = killsPerTier * cMaxTiers;
     }
 
     //coroutines die when this is disabled, so anything they were going to clean up has to be
@@ -191,9 +289,8 @@ public class DemonClass : MonoBehaviour
         isUltimateActive = false;
         beamsFiring = false;
         isFiring = false;
-        bombModeUntil = 0f;
+        isCAbilityActive = false;
 
-        StopFlameVfx();
         SetBeamsVisible(false);
 
         RestoreCameraOrbit();
@@ -216,7 +313,6 @@ public class DemonClass : MonoBehaviour
 
         if (!isDemonClass)
         {
-            if (isFiring) StopFiring();
 
             //another class is up - give the camera rig back so his shoulder view doesn't linger
             if (playerMovement != null && playerMovement.cameraShoulderOffset != Vector2.zero)
@@ -233,6 +329,7 @@ public class DemonClass : MonoBehaviour
         {
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateE();
+            if (Keyboard.current.cKey.wasPressedThisFrame) TryActivateC();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
@@ -281,111 +378,111 @@ public class DemonClass : MonoBehaviour
     //---------------------------------------------------------------- auto attack
     void HandleAttackInput()
     {
-        bool held = Mouse.current != null && Mouse.current.leftButton.isPressed;
+        if (isUltimateActive || isCAbilityActive)
+            return;
 
-        if (held && !isUltimateActive)
-        {
-            if (!isFiring) StartFiring();
-
-            if (IsBombMode) TickBombs();
-            else TickFlame();
-        }
-        else if (isFiring)
-        {
-            StopFiring();
-        }
+        bool clicked = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+        if (clicked) TryFireWave();
     }
 
-    void StartFiring()
+    void TryFireWave()
     {
-        isFiring = true;
-        flameTickTimer = 0f;
-        bombTimer = bombInterval; // first bomb goes out immediately
+        if (Time.time < nextWaveTime) return;
+        nextWaveTime = Time.time + waveCooldown;
 
-        if (!IsBombMode) StartFlameVfx();
         OnFireStarted?.Invoke();
+        StartCoroutine(Wave());
     }
 
-    void StopFiring()
+    //a flat slab of damage that travels away from him. each wave remembers what it has already
+    //caught, so a target standing in its path takes it once rather than every frame.
+    IEnumerator Wave()
     {
-        isFiring = false;
-        StopFlameVfx();
-        OnFireStopped?.Invoke();
-    }
+        liveWaves++;
+        isFiring = true;
 
-    void TickFlame()
-    {
-        if (activeFlameVfx == null) StartFlameVfx();
+        Vector3 dir = Forward;
+        dir.y = 0f;
+        dir = dir.sqrMagnitude > 0.001f ? dir.normalized : transform.forward;
 
-        flameTickTimer += Time.deltaTime;
-        if (flameTickTimer < flameTickInterval) return;
+        Vector3 point = Origin;
+        Quaternion facing = Quaternion.LookRotation(dir);
 
-        float damage = flameDamagePerSecond * flameTickTimer;
-        flameTickTimer = 0f;
-
-        Vector3 origin = Origin;
-        Vector3 forward = Forward;
-        List<VirusHealthBase> hitThisTick = new List<VirusHealthBase>();
-
-        foreach (Collider c in Physics.OverlapSphere(origin, flameRange))
+        GameObject fx = null;
+        if (waveVfx != null)
         {
-            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
-            if (vh == null || hitThisTick.Contains(vh)) continue;
-            if (VirusAllegiance.IsConverted(vh)) continue;
-
-            Vector3 toTarget = vh.transform.position - origin;
-            if (Vector3.Angle(forward, toTarget) > flameAngle * 0.5f) continue;
-
-            hitThisTick.Add(vh);
-            DealDamage(vh, damage);
-            Debug.DrawLine(origin, vh.transform.position, new Color(1f, 0.5f, 0f), flameTickInterval);
+            fx = Instantiate(waveVfx, point, facing * Quaternion.Euler(waveVfxRotationOffset));
+            foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ps.Clear(true);
+                ps.Play(true);
+            }
+            if (!Mathf.Approximately(waveVfxScale, 1f)) fx.transform.localScale *= waveVfxScale;
         }
 
-        DrawCone(origin, forward);
+        List<VirusHealthBase> alreadyHit = new List<VirusHealthBase>();
+        Vector3 halfExtents = new Vector3(waveWidth * 0.5f, waveHeight * 0.5f, 1f);
+
+        float elapsed = 0f;
+        while (elapsed < waveDuration)
+        {
+            elapsed += Time.deltaTime;
+            point += waveSpeed * Time.deltaTime * dir;
+
+            if (fx != null)
+                fx.transform.position = point
+                                        + facing * new Vector3(waveVfxPositionOffset.x,
+                                                               waveVfxPositionOffset.y,
+                                                               waveVfxPositionOffset.z);
+
+            foreach (Collider c in Physics.OverlapBox(point, halfExtents, facing))
+            {
+                VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+                if (vh == null || alreadyHit.Contains(vh)) continue;
+                if (VirusAllegiance.IsConverted(vh)) continue;
+                alreadyHit.Add(vh);
+
+                DealDamage(vh, waveDamage);
+                Debug.DrawLine(point, vh.transform.position, new Color(1f, 0.4f, 0f), 0.3f);
+            }
+
+            if (drawWaveBounds) DrawWaveBox(point, facing, halfExtents);
+
+            yield return null;
+        }
+
+        if (fx != null)
+        {
+            fx.transform.SetParent(null, true);
+            Destroy(fx);
+        }
+
+        liveWaves--;
+        if (liveWaves <= 0)
+        {
+            liveWaves = 0;
+            isFiring = false;
+            OnFireStopped?.Invoke();
+        }
     }
 
-    void TickBombs()
+    void DrawWaveBox(Vector3 centre, Quaternion rot, Vector3 half)
     {
-        StopFlameVfx(); // the stream has no business playing while he is lobbing bombs
+        Vector3 r = rot * Vector3.right * half.x;
+        Vector3 u = rot * Vector3.up * half.y;
+        Color col = new Color(1f, 0.35f, 0f);
 
-        bombTimer += Time.deltaTime;
-        if (bombTimer < bombInterval) return;
-        bombTimer = 0f;
-
-        Vector3 origin = Origin;
-        Vector3 target = ThrowTarget(origin);
-        Vector3 dir = (target - origin).normalized;
-
-        GameObject go;
-        if (bombPrefab != null)
-        {
-            go = Instantiate(bombPrefab, origin, Quaternion.LookRotation(dir));
-        }
-        else
-        {
-            //placeholder so the ability is playable before there is art for it
-            go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            go.name = "DemonBomb";
-            go.transform.position = origin;
-            go.transform.localScale = Vector3.one * 0.6f;
-            Destroy(go.GetComponent<Collider>());
-        }
-
-        DemonBomb bomb = go.GetComponent<DemonBomb>();
-        if (bomb == null) bomb = go.AddComponent<DemonBomb>();
-
-        bomb.damage = bombDamage;
-        bomb.radius = bombRadius;
-        bomb.explosionVfx = bombExplosionVfx;
-        bomb.explosionVfxScale = bombExplosionVfxScale;
-        bomb.Launch(this, target, bombGravity, bombFlightTime);
-
-        OnBombThrown?.Invoke();
+        Debug.DrawLine(centre - r - u, centre + r - u, col);
+        Debug.DrawLine(centre + r - u, centre + r + u, col);
+        Debug.DrawLine(centre + r + u, centre - r + u, col);
+        Debug.DrawLine(centre - r + u, centre - r - u, col);
     }
 
-    //where the bomb should land. takes whatever the crosshair is over, then pulls it back to
-    //Bomb Max Range if that's further - so aiming at the horizon lobs it as far as he can throw
-    //rather than firing it into the distance.
+    //aim at whatever the crosshair is over, so bombs converge on the reticle rather than
+    //flying parallel to the camera
+    //where the orb should land. takes whatever the crosshair is over, then pulls it back to
+    //Bomb Max Range if that's further - so aiming at the horizon lobs it as far as he can
+    //throw rather than firing it into the distance.
     Vector3 ThrowTarget(Vector3 from)
     {
         if (playerCamera == null) return from + transform.forward * bombMaxRange;
@@ -401,7 +498,7 @@ public class DemonClass : MonoBehaviour
 
         if (flat.magnitude > bombMaxRange)
         {
-            //too far - throw as far as he can in that direction, and let it land on the ground
+            //too far - throw as far as he can that way, and let it land on the ground
             Vector3 capped = from + flat.normalized * bombMaxRange;
 
             if (Physics.Raycast(capped + Vector3.up * 50f, Vector3.down, out RaycastHit ground,
@@ -415,75 +512,69 @@ public class DemonClass : MonoBehaviour
         return aimPoint;
     }
 
-    //aim at whatever the crosshair is over, so bombs converge on the reticle rather than
-    //flying parallel to the camera
-    Vector3 AimDirection(Vector3 from)
-    {
-        if (playerCamera == null) return transform.forward;
-
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 aimPoint = Physics.Raycast(ray, out RaycastHit hit, 300f, ~0, QueryTriggerInteraction.Ignore)
-            ? hit.point
-            : ray.origin + ray.direction * 300f;
-
-        return (aimPoint - from).normalized;
-    }
-
-    void DrawCone(Vector3 origin, Vector3 forward)
-    {
-        const int rays = 9;
-        for (int i = 0; i < rays; i++)
-        {
-            float t = i / (float)(rays - 1);
-            float ang = Mathf.Lerp(-flameAngle * 0.5f, flameAngle * 0.5f, t);
-            Vector3 dir = Quaternion.AngleAxis(ang, Vector3.up) * forward;
-            Debug.DrawRay(origin, dir * flameRange, new Color(1f, 0.35f, 0f), flameTickInterval);
-        }
-    }
-
-    void StartFlameVfx()
-    {
-        if (flameVfx == null || activeFlameVfx != null) return;
-
-        Transform parent = firePoint != null ? firePoint : transform;
-        activeFlameVfx = Instantiate(flameVfx, parent);
-        activeFlameVfx.transform.localPosition = flameVfxPositionOffset;
-        activeFlameVfx.transform.localRotation = Quaternion.Euler(flameVfxRotationOffset);
-        if (!Mathf.Approximately(flameVfxScale, 1f))
-            activeFlameVfx.transform.localScale *= flameVfxScale;
-
-        foreach (ParticleSystem ps in activeFlameVfx.GetComponentsInChildren<ParticleSystem>(true))
-        {
-            ps.Clear(true);
-            ps.Play(true);
-        }
-    }
-
-    void StopFlameVfx()
-    {
-        if (activeFlameVfx == null) return;
-        Destroy(activeFlameVfx);
-        activeFlameVfx = null;
-    }
-
     //---------------------------------------------------------------- Q
     void TryActivateQ()
     {
         if (Time.time < qReadyTime) return;
-        if (isUltimateActive) return;
+        if (isUltimateActive || isCAbilityActive) return;
 
         qReadyTime = Time.time + qCooldown;
-        bombModeUntil = Time.time + bombModeDuration;
-        bombTimer = bombInterval;
 
-        StopFlameVfx();
+        //animation and cooldown start now, the orb itself is held back
+        OnBombThrown?.Invoke();
+        StartCoroutine(LaunchOrb());
+    }
+
+    IEnumerator LaunchOrb()
+    {
+        if (qLaunchDelay > 0f) yield return new WaitForSeconds(qLaunchDelay);
+
+        //aimed at launch rather than at the keypress, so turning during the wind-up still
+        //throws where you are actually looking
+        Vector3 origin = Origin;
+        Vector3 target = ThrowTarget(origin);
+        Vector3 dir = (target - origin).normalized;
+
+        GameObject go;
+        if (bombPrefab != null)
+        {
+            go = Instantiate(bombPrefab, origin, Quaternion.LookRotation(dir));
+        }
+        else
+        {
+            //placeholder so the ability is playable before there is art for it
+            go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            go.name = "DemonOrb";
+            go.transform.position = origin;
+        }
+
+        go.transform.localScale = Vector3.one * Mathf.Max(0.05f, bombScale);
+
+        //the orb sweeps forward with a SphereCast from its own position, so any collider it
+        //carries would be the first thing that cast finds - it would detonate on spawn.
+        //a rigidbody would fight the script for control of the arc.
+        foreach (Collider col in go.GetComponentsInChildren<Collider>(true)) Destroy(col);
+        Rigidbody rb = go.GetComponent<Rigidbody>();
+        if (rb != null) Destroy(rb);
+
+        DemonBomb bomb = go.GetComponent<DemonBomb>();
+        if (bomb == null) bomb = go.AddComponent<DemonBomb>();
+
+        bomb.damage = bombDamage;
+        bomb.radius = bombRadius;
+        bomb.hitRadius = bombScale * 0.4f;
+        bomb.explosionVfx = bombExplosionVfx;
+        bomb.explosionVfxScale = bombExplosionVfxScale;
+        bomb.Launch(this, target, bombGravity, bombFlightTime);
+
+        if (cameraShake != null && bombShake > 0f) cameraShake.AddTrauma(bombShake);
     }
 
     //---------------------------------------------------------------- E
     void TryActivateE()
     {
         if (Time.time < eReadyTime) return;
-        if (isUltimateActive) return;
+        if (isUltimateActive || isCAbilityActive) return;
 
         eReadyTime = Time.time + eCooldown;
 
@@ -529,11 +620,139 @@ public class DemonClass : MonoBehaviour
         Debug.Log($"Demon takeover: converted {converted} virus(es) for {takeoverDuration}s");
     }
 
+    //---------------------------------------------------------------- C
+    void TryActivateC()
+    {
+        if (Time.time < cReadyTime) return;
+        if (isUltimateActive || isCAbilityActive) return;
+
+        int tier = CurrentTier;
+
+        if (cRequiresSouls && tier < 1)
+        {
+            if (logSouls) Debug.Log($"Demon C: not enough souls ({souls}/{killsPerTier})");
+            return;
+        }
+
+        //at least tier 1 so the no-souls case still reads off the front of the arrays
+        tier = Mathf.Max(1, tier);
+
+        cReadyTime = Time.time + cCooldown;
+
+        //every soul goes into this one blast, banked or not
+        if (logSouls) Debug.Log($"Demon C: unleashing {souls} soul(s) at tier {tier}");
+        souls = 0;
+
+        OnCAbility?.Invoke();
+        StartCoroutine(SoulHarvest(tier));
+    }
+
+    IEnumerator SoulHarvest(int tier)
+    {
+        isCAbilityActive = true;
+
+        float damage = TierValue(cDamagePerTier, tier, 40f);
+        float radius = TierValue(cRadiusPerTier, tier, 8f);
+        float shake  = TierValue(cShakePerTier, tier, 0.3f);
+        float vfxScale = TierValue(cVfxScalePerTier, tier, 1f);
+        if (vfxScale <= 0f) vfxScale = 1f;
+
+        if (cVfx != null)
+        {
+            Vector3 flatForward = transform.forward;
+            Transform t = playerController != null ? playerController.transform : transform;
+            flatForward = t.forward;
+
+            Vector3 pos = t.position
+                          + t.right * cVfxPositionOffset.x
+                          + Vector3.up * cVfxPositionOffset.y
+                          + flatForward * cVfxPositionOffset.z;
+
+            GameObject fx = Instantiate(cVfx, pos,
+                                        Quaternion.LookRotation(flatForward) * Quaternion.Euler(cVfxRotationOffset));
+            foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ps.Clear(true);
+                ps.Play(true);
+            }
+
+            //asset-pack particles usually scale from the hierarchy, not their own transform
+            foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
+            fx.transform.localScale *= vfxScale;
+
+            Destroy(fx, cVfxLifetime);
+        }
+
+        if (cDamageDelay > 0f) yield return new WaitForSeconds(cDamageDelay);
+
+        Vector3 centre = playerController != null ? playerController.transform.position : transform.position;
+
+        if (cameraShake != null && shake > 0f) cameraShake.AddTrauma(shake);
+
+        //ring so the radius is readable while tuning
+        const int segs = 40;
+        for (int i = 0; i < segs; i++)
+        {
+            float a0 = i / (float)segs * Mathf.PI * 2f;
+            float a1 = (i + 1) / (float)segs * Mathf.PI * 2f;
+            Debug.DrawLine(centre + new Vector3(Mathf.Cos(a0), 0f, Mathf.Sin(a0)) * radius,
+                           centre + new Vector3(Mathf.Cos(a1), 0f, Mathf.Sin(a1)) * radius,
+                           new Color(0.7f, 0.1f, 1f), 1.5f);
+        }
+
+        List<VirusHealthBase> hit = new List<VirusHealthBase>();
+        foreach (Collider c in Physics.OverlapSphere(centre, radius))
+        {
+            VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+            if (vh == null || hit.Contains(vh)) continue;
+            if (VirusAllegiance.IsConverted(vh)) continue;
+            hit.Add(vh);
+
+            //captured before damaging - the hit may destroy it and the effect would have
+            //nothing left to read a position from
+            Vector3 point = vh.transform.position;
+
+            if (cHitVfx != null)
+            {
+                GameObject fx = Instantiate(cHitVfx, point, Quaternion.identity);
+                foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    ps.Clear(true);
+                    ps.Play(true);
+                }
+                if (!Mathf.Approximately(cHitVfxScale, 1f)) fx.transform.localScale *= cHitVfxScale;
+                Destroy(fx, cHitVfxLifetime);
+            }
+
+            DealDamage(vh, damage);
+            Debug.DrawLine(centre, point, Color.white, 0.8f);
+        }
+
+        if (logSouls) Debug.Log($"Demon C: tier {tier}, {damage} damage over {radius}m, caught {hit.Count}");
+
+        float remaining = cLockDuration - cDamageDelay;
+        if (remaining > 0f) yield return new WaitForSeconds(remaining);
+
+        isCAbilityActive = false;
+    }
+
+    //clamps rather than throwing if an array is the wrong length - the Inspector can leave
+    //it short after Max Tiers is raised
+    float TierValue(float[] values, int tier, float fallback)
+    {
+        if (values == null || values.Length == 0) return fallback;
+        return values[Mathf.Clamp(tier - 1, 0, values.Length - 1)];
+    }
+
     //---------------------------------------------------------------- X
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
-        if (isUltimateActive) return;
+        if (isUltimateActive || isCAbilityActive) return;
 
         ultimateReadyTime = Time.time + ultimateCooldown;
         StartCoroutine(LaserEyes());
@@ -542,7 +761,6 @@ public class DemonClass : MonoBehaviour
     IEnumerator LaserEyes()
     {
         isUltimateActive = true;
-        StopFiring();
         OnUltimateStarted?.Invoke();
 
         GameObject charge = null;
@@ -598,8 +816,8 @@ public class DemonClass : MonoBehaviour
             bool damageThisFrame = tick >= beamTickInterval;
 
             Vector3 aim = AimPoint();
-            FireBeam(beamLeft, EyeWorld(leftEyeOffset), aim, damageThisFrame);
-            FireBeam(beamRight, EyeWorld(rightEyeOffset), aim, damageThisFrame);
+            FireBeam(beamFxLeft, EyeWorld(leftEyeOffset), aim, damageThisFrame);
+            FireBeam(beamFxRight, EyeWorld(rightEyeOffset), aim, damageThisFrame);
 
             if (damageThisFrame) tick = 0f;
 
@@ -654,18 +872,27 @@ public class DemonClass : MonoBehaviour
             : ray.origin + ray.direction * beamRange;
     }
 
-    //beams pierce - everything on the line takes damage, which is what makes this crowd control
-    //rather than a sniper shot
-    void FireBeam(LineRenderer lr, Vector3 from, Vector3 aim, bool applyDamage)
+    //beams pierce - everything on the line takes damage, which is what makes this crowd
+    //control rather than a sniper shot
+    void FireBeam(GameObject fx, Vector3 from, Vector3 aim, bool applyDamage)
     {
         Vector3 dir = (aim - from).normalized;
         Vector3 end = from + dir * beamRange;
 
-        if (lr != null)
+        //stop the visual at the first thing it meets, so it doesn't hang through walls
+        if (Physics.Raycast(from, dir, out RaycastHit wall, beamRange, ~0, QueryTriggerInteraction.Ignore))
+            if (wall.collider.GetComponentInParent<VirusHealthBase>() == null &&
+                wall.collider.GetComponentInParent<CharacterController>() == null)
+                end = wall.point;
+
+        if (fx != null)
         {
-            lr.SetPosition(0, from);
-            lr.SetPosition(1, end);
+            fx.transform.position = from;
+            fx.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(beamVfxRotationOffset);
         }
+
+        if (drawBeamDebug)
+            Debug.DrawLine(from, end, new Color(1f, 0.25f, 0.05f));
 
         if (!applyDamage) return;
 
@@ -680,40 +907,55 @@ public class DemonClass : MonoBehaviour
             seen.Add(vh);
 
             DealDamage(vh, damage);
+
+            //white marker on whatever is being burned, same read as the BladeMaster's hits
+            if (drawBeamDebug)
+            {
+                Vector3 t = vh.transform.position;
+                Debug.DrawLine(from, t, Color.white, beamTickInterval);
+                Debug.DrawLine(t + Vector3.up * 1.2f, t - Vector3.up * 0.2f, Color.white, beamTickInterval);
+            }
         }
     }
 
     void SetBeamsVisible(bool on)
     {
-        if (on && beamLeft == null)
+        if (on)
         {
-            beamLeft = MakeBeam("Beam_L");
-            beamRight = MakeBeam("Beam_R");
+            if (beamVfx == null) return;   // debug lines only
+
+            if (beamFxLeft == null) beamFxLeft = SpawnBeamVfx("BeamFx_L");
+            if (beamFxRight == null) beamFxRight = SpawnBeamVfx("BeamFx_R");
+            return;
         }
 
-        if (beamLeft != null) beamLeft.enabled = on;
-        if (beamRight != null) beamRight.enabled = on;
+        if (beamFxLeft != null) { Destroy(beamFxLeft); beamFxLeft = null; }
+        if (beamFxRight != null) { Destroy(beamFxRight); beamFxRight = null; }
     }
 
-    LineRenderer MakeBeam(string beamName)
+    GameObject SpawnBeamVfx(string beamName)
     {
-        GameObject go = new GameObject(beamName);
-        go.transform.SetParent(transform, false);
+        GameObject go = Instantiate(beamVfx);
+        go.name = beamName;
 
-        LineRenderer lr = go.AddComponent<LineRenderer>();
-        lr.positionCount = 2;
-        lr.useWorldSpace = true;
-        lr.startWidth = beamThickness * 1.4f;
-        lr.endWidth = beamThickness * 0.7f;
+        foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ps.Clear(true);
+            ps.Play(true);
+        }
 
-        //unlit so it reads as light rather than a lit tube, and needs no scene lighting
-        Material mat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-        mat.SetColor("_BaseColor", beamColour);
-        lr.material = mat;
-        lr.startColor = beamColour;
-        lr.endColor = beamColour;
+        if (!Mathf.Approximately(beamVfxScale, 1f))
+        {
+            //asset-pack effects usually scale from the hierarchy rather than their own transform
+            foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+            }
+            go.transform.localScale *= beamVfxScale;
+        }
 
-        return lr;
+        return go;
     }
 
     //---------------------------------------------------------------- damage + lifesteal
@@ -724,7 +966,18 @@ public class DemonClass : MonoBehaviour
 
         //don't credit lifesteal for overkill - heal on what was actually taken off
         float dealt = Mathf.Min(amount, Mathf.Max(0f, target.CurrentHealth));
+
+        //a soul is banked when HIS damage is what finishes the target. checked before the hit,
+        //because afterwards the object may already be destroyed.
+        bool lethal = amount >= target.CurrentHealth;
+
         target.TakeDamage(amount);
+
+        if (lethal)
+        {
+            souls++;
+            if (logSouls) Debug.Log($"Demon souls: {souls} (tier {CurrentTier}/{cMaxTiers})");
+        }
 
         if (playerHealth == null || lifestealFraction <= 0f || dealt <= 0f) return;
 
