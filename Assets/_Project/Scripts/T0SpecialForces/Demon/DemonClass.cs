@@ -147,6 +147,15 @@ public class DemonClass : MonoBehaviour
     //the camera's normal orbit speed, stashed while the ultimate borrows it. -1 = not borrowed.
     float storedYawLerpSpeed = -1f;
 
+    //---------------------------------------------------------------- camera
+    [Header("Camera - Over the Shoulder")]
+    [Tooltip("He aims down a crosshair, so the camera sits off to one side instead of dead " +
+             "behind him. X = right of the player, Y = up. Negative X puts it over the left shoulder.")]
+    public Vector2 shoulderOffset = new Vector2(0.7f, 0.25f);
+
+    [Tooltip("How much closer than the default third-person distance. Negative pulls in.")]
+    public float cameraCloseness = -0.9f;
+
     //---------------------------------------------------------------- flight
     [Header("Flight")]
     [Tooltip("Two space presses inside this window toggle flight.")]
@@ -193,6 +202,7 @@ public class DemonClass : MonoBehaviour
         {
             playerMovement.speedMultiplier = 1f;
             playerMovement.extraCameraDistance = 0f;
+            playerMovement.cameraShoulderOffset = Vector2.zero;
             playerMovement.flightMode = false;
         }
 
@@ -207,6 +217,13 @@ public class DemonClass : MonoBehaviour
         if (!isDemonClass)
         {
             if (isFiring) StopFiring();
+
+            //another class is up - give the camera rig back so his shoulder view doesn't linger
+            if (playerMovement != null && playerMovement.cameraShoulderOffset != Vector2.zero)
+            {
+                playerMovement.cameraShoulderOffset = Vector2.zero;
+                playerMovement.extraCameraDistance = 0f;
+            }
             return;
         }
 
@@ -228,6 +245,11 @@ public class DemonClass : MonoBehaviour
             //no camera pullback during the ultimate - it stays tight on him
             playerMovement.speedMultiplier = isUltimateActive ? ultimateMoveSpeedMultiplier : 1f;
             playerMovement.flightMode = isFlying;
+
+            //asserted every frame rather than set once on class switch, so it survives a pause
+            //or anything else that resets the camera rig
+            playerMovement.cameraShoulderOffset = shoulderOffset;
+            playerMovement.extraCameraDistance = cameraCloseness;
         }
     }
 
