@@ -64,11 +64,20 @@ public class DemonClass : MonoBehaviour
     [Header("Q - Explosive Orb")]
     public float qCooldown = 8f;
 
-    [Tooltip("One orb per press. Big single hit rather than a stream of small ones.")]
+    [Tooltip("Damage on impact, the moment it lands.")]
     public float bombDamage = 200f;
 
-    [Tooltip("Blast radius. Deliberately large - this is his hardest single hit.")]
+    [Tooltip("Blast radius on impact.")]
     public float bombRadius = 12f;
+
+    [Tooltip("Seconds after the impact before the second, bigger blast.")]
+    public float bombSecondaryDelay = 1f;
+
+    [Tooltip("Damage of the delayed blast. Standing in the crater after the first hit is a mistake.")]
+    public float bombSecondaryDamage = 320f;
+
+    [Tooltip("Radius of the delayed blast - wider than the impact.")]
+    public float bombSecondaryRadius = 18f;
 
     [Tooltip("Furthest he can throw it. Aiming past this drops it short rather than throwing harder.")]
     public float bombMaxRange = 40f;
@@ -85,11 +94,19 @@ public class DemonClass : MonoBehaviour
     [Tooltip("Size of the placeholder sphere, and of your prefab if you want it scaled up.")]
     public float bombScale = 1.6f;
 
+    [Tooltip("Played on impact.")]
     public GameObject bombExplosionVfx;
     public float bombExplosionVfxScale = 2f;
 
-    [Tooltip("Camera trauma when the orb goes off.")]
-    public float bombShake = 0.5f;
+    [Tooltip("Played on the delayed blast. Leave empty for no effect on that stage.")]
+    public GameObject bombSecondaryVfx;
+    public float bombSecondaryVfxScale = 3f;
+
+    [Tooltip("Camera trauma on impact.")]
+    public float bombShake = 0.35f;
+
+    [Tooltip("Camera trauma on the delayed blast.")]
+    public float bombSecondaryShake = 0.7f;
 
     [Tooltip("Wait between pressing Q and the orb leaving his hand, so the throw animation " +
              "gets to play first. The cooldown starts on the press, not on the launch.")]
@@ -150,16 +167,36 @@ public class DemonClass : MonoBehaviour
     public float windupShake = 0.35f;
     public float beamShake = 0.15f;
 
+    [Tooltip("Spawned at his eyes for the charge-up and destroyed when the beams fire.")]
     public GameObject windupVfx;
+
+    [Tooltip("Relative to the player: X = right, Y = up, Z = forward. " +
+             "Leave at zero to sit exactly between the two eye points.")]
+    public Vector3 windupVfxPositionOffset;
+
+    [Tooltip("Turns the effect if it doesn't face the way you want out of the box.")]
+    public Vector3 windupVfxRotationOffset;
+
     public float windupVfxScale = 1f;
+
+    [Tooltip("Parent it to the player so it follows him as he turns. Off leaves it where it spawned.")]
+    public bool windupVfxFollowsPlayer = true;
 
     [Tooltip("One is spawned per eye and follows the beam, pointing down it. Leave empty and " +
              "you get the debug lines only.")]
     public GameObject beamVfx;
 
+    [Tooltip("Nudges the effect off the beam origin. X = right of the player, Y = up, " +
+             "Z = along the beam. Use it to bring the effect down toward his hands.")]
+    public Vector3 beamVfxPositionOffset;
+
     [Tooltip("Turns the effect if its own forward axis isn't down the beam.")]
     public Vector3 beamVfxRotationOffset;
     public float beamVfxScale = 1f;
+
+    [Tooltip("Forces every particle system in the beam effect to loop, so a one-shot prefab " +
+             "holds for the whole 8 seconds instead of burning out after its own duration.")]
+    public bool loopBeamVfx = true;
 
     [Tooltip("Draws the damage line and a marker on each target that is being burned.")]
     public bool drawBeamDebug = true;
@@ -563,11 +600,24 @@ public class DemonClass : MonoBehaviour
         bomb.damage = bombDamage;
         bomb.radius = bombRadius;
         bomb.hitRadius = bombScale * 0.4f;
+
+        bomb.secondaryDelay = bombSecondaryDelay;
+        bomb.secondaryDamage = bombSecondaryDamage;
+        bomb.secondaryRadius = bombSecondaryRadius;
+
         bomb.explosionVfx = bombExplosionVfx;
         bomb.explosionVfxScale = bombExplosionVfxScale;
-        bomb.Launch(this, target, bombGravity, bombFlightTime);
 
-        if (cameraShake != null && bombShake > 0f) cameraShake.AddTrauma(bombShake);
+        //no fallback - an empty slot means no effect on that stage
+        bomb.secondaryVfx = bombSecondaryVfx;
+        bomb.secondaryVfxScale = bombSecondaryVfxScale;
+
+        //the bomb shakes the camera itself, since both blasts happen after it has left his hand
+        bomb.cameraShake = cameraShake;
+        bomb.impactShake = bombShake;
+        bomb.secondaryShake = bombSecondaryShake;
+
+        bomb.Launch(this, target, bombGravity, bombFlightTime);
     }
 
     //---------------------------------------------------------------- E
@@ -766,14 +816,35 @@ public class DemonClass : MonoBehaviour
         GameObject charge = null;
         if (windupVfx != null)
         {
-            charge = Instantiate(windupVfx, EyeCentre(), Quaternion.identity, transform);
+            Transform anchor = playerController != null ? playerController.transform : transform;
+
+            //offset is applied in his local axes, so X really is his right regardless of facing
+            Vector3 pos = EyeCentre()
+                          + anchor.right * windupVfxPositionOffset.x
+                          + Vector3.up * windupVfxPositionOffset.y
+                          + anchor.forward * windupVfxPositionOffset.z;
+
+            Quaternion rot = Quaternion.LookRotation(anchor.forward) * Quaternion.Euler(windupVfxRotationOffset);
+
+            charge = Instantiate(windupVfx, pos, rot,
+                                 windupVfxFollowsPlayer ? anchor : null);
+
             foreach (ParticleSystem ps in charge.GetComponentsInChildren<ParticleSystem>(true))
             {
                 ps.Clear(true);
                 ps.Play(true);
             }
+
             if (!Mathf.Approximately(windupVfxScale, 1f))
+            {
+                //asset-pack effects usually scale from the hierarchy, not their own transform
+                foreach (ParticleSystem ps in charge.GetComponentsInChildren<ParticleSystem>(true))
+                {
+                    ParticleSystem.MainModule main = ps.main;
+                    main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+                }
                 charge.transform.localScale *= windupVfxScale;
+            }
         }
 
         // ---- windup: the camera whips round to look him in the face
@@ -887,7 +958,15 @@ public class DemonClass : MonoBehaviour
 
         if (fx != null)
         {
-            fx.transform.position = from;
+            //X/Y in his own axes so they stay predictable however the beam is angled,
+            //Z along the beam so it can be pushed out in front of him
+            Transform anchor = playerController != null ? playerController.transform : transform;
+
+            fx.transform.position = from
+                                    + anchor.right * beamVfxPositionOffset.x
+                                    + Vector3.up * beamVfxPositionOffset.y
+                                    + dir * beamVfxPositionOffset.z;
+
             fx.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(beamVfxRotationOffset);
         }
 
@@ -940,6 +1019,14 @@ public class DemonClass : MonoBehaviour
 
         foreach (ParticleSystem ps in go.GetComponentsInChildren<ParticleSystem>(true))
         {
+            //most beam prefabs ship as one-shots - their sub-systems run for a second or two
+            //and stop, which leaves the beam invisible for most of its duration
+            if (loopBeamVfx)
+            {
+                ParticleSystem.MainModule loopMain = ps.main;
+                loopMain.loop = true;
+            }
+
             ps.Clear(true);
             ps.Play(true);
         }
@@ -956,6 +1043,44 @@ public class DemonClass : MonoBehaviour
         }
 
         return go;
+    }
+
+    //TEMPORARY soul readout, same idea as the BladeMaster's charge HUD. this component is
+    //disabled on pause and on other classes, so OnGUI stops being called and it hides itself.
+    GUIStyle soulHudStyle;
+
+    void OnGUI()
+    {
+        if (!showSoulHud) return;
+        if (weaponSwitcher != null && weaponSwitcher.CurrentClass != WeaponSwitcher.PlayerClass.Demon) return;
+
+        soulHudStyle ??= new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperCenter,
+            fontStyle = FontStyle.Bold
+        };
+        soulHudStyle.fontSize = soulHudFontSize;
+
+        int tier = CurrentTier;
+
+        //filled diamond per earned tier, hollow for the rest
+        string pips = "";
+        for (int i = 0; i < cMaxTiers; i++) pips += i < tier ? "◆" : "◇";
+
+        string label = $"{pips}   {souls} souls";
+        if (tier < cMaxTiers && killsPerTier > 0)
+            label += $"   [{souls % killsPerTier}/{killsPerTier}]";
+
+        Rect rect = new Rect(0f, soulHudTopMargin, Screen.width, soulHudFontSize * 2f);
+
+        //offset copy behind it, otherwise the text vanishes against a bright scene
+        GUI.color = new Color(0f, 0f, 0f, 0.65f);
+        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), label, soulHudStyle);
+
+        GUI.color = tier >= cMaxTiers ? new Color(0.8f, 0.4f, 1f) : Color.white;
+        GUI.Label(rect, label, soulHudStyle);
+
+        GUI.color = Color.white; // GUI.color is global state, leave it as we found it
     }
 
     //---------------------------------------------------------------- damage + lifesteal
