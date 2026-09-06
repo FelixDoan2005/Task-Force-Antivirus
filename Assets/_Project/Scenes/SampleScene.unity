@@ -802,23 +802,24 @@ MonoBehaviour:
   waveSpeed: 18
   waveWidth: 9
   waveHeight: 3
-  waveCooldown: 0.4
+  waveCooldown: 1
   waveVfx: {fileID: 0}
   waveVfxPositionOffset: {x: 0, y: 0, z: 0}
   waveVfxRotationOffset: {x: 0, y: 0, z: 0}
   waveVfxScale: 1
   drawWaveBounds: 1
   qCooldown: 16
-  bombModeDuration: 6
-  bombInterval: 0.12
   bombDamage: 60
   bombRadius: 5
   bombMaxRange: 32
   bombFlightTime: 0.9
   bombGravity: 30
   bombPrefab: {fileID: 0}
+  bombScale: 1.6
   bombExplosionVfx: {fileID: 0}
   bombExplosionVfxScale: 1
+  bombShake: 0.5
+  qLaunchDelay: 1
   eCooldown: 24
   takeoverRadius: 20
   takeoverDuration: 10
@@ -827,7 +828,7 @@ MonoBehaviour:
   takeoverVfxScale: 1
   takeoverVfxLifetime: 2
   ultimateCooldown: 70
-  ultimateWindup: 5
+  ultimateWindup: 2.3666668
   ultimateBeamDuration: 8
   beamDamagePerSecond: 80
   beamRange: 120
@@ -842,7 +843,10 @@ MonoBehaviour:
   beamShake: 0.15
   windupVfx: {fileID: 0}
   windupVfxScale: 1
-  beamColour: {r: 1, g: 0.15, b: 0.05, a: 1}
+  beamVfx: {fileID: 0}
+  beamVfxRotationOffset: {x: 0, y: 0, z: 0}
+  beamVfxScale: 1
+  drawBeamDebug: 1
   beamTickInterval: 0.1
   shoulderOffset: {x: 0.7, y: 0.25}
   cameraCloseness: -0.9
@@ -887,6 +891,7 @@ MonoBehaviour:
   soulHudFontSize: 26
   soulHudTopMargin: 24
   logSouls: 0
+  startWithMaxSouls: 1
   doubleTapWindow: 0.3
   flightVerticalSpeed: 9
 --- !u!1 &1203543133
