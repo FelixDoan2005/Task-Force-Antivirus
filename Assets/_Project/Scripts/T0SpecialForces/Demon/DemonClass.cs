@@ -120,6 +120,17 @@ public class DemonClass : MonoBehaviour
     public float takeoverRadius = 20f;
     public float takeoverDuration = 10f;
 
+    [Tooltip("How long they stand frozen after the takeover ends, before turning hostile again. " +
+             "A window to kill them while they can't fight back.")]
+    public float takeoverFreezeDuration = 3f;
+
+    [Tooltip("How long E roots him in place - line this up with the animation length.")]
+    public float eLockDuration = 3.53f;
+
+    [Tooltip("Delay from pressing E to the viruses actually turning - line this up with the " +
+             "moment in the animation where the takeover lands.")]
+    public float takeoverDelay = 1.2f;
+
     [Tooltip("Tank-class viruses are too strong to convert. Off lets him take anything.")]
     public bool lowClassOnly = true;
 
@@ -128,6 +139,8 @@ public class DemonClass : MonoBehaviour
     public float takeoverVfxLifetime = 2f;
 
     float eReadyTime;
+    bool isEAbilityActive;
+    public bool IsEAbilityActive => isEAbilityActive;
 
     //---------------------------------------------------------------- X: laser eyes
     [Header("X - Laser Eyes")]
@@ -327,6 +340,7 @@ public class DemonClass : MonoBehaviour
         beamsFiring = false;
         isFiring = false;
         isCAbilityActive = false;
+        isEAbilityActive = false;
 
         SetBeamsVisible(false);
 
@@ -337,6 +351,8 @@ public class DemonClass : MonoBehaviour
             playerMovement.speedMultiplier = 1f;
             playerMovement.extraCameraDistance = 0f;
             playerMovement.cameraShoulderOffset = Vector2.zero;
+            playerMovement.suspendJump = false;
+            playerMovement.suspendDash = false;
             playerMovement.flightMode = false;
         }
 
@@ -376,8 +392,18 @@ public class DemonClass : MonoBehaviour
         //leave the camera or movement stuck
         if (playerMovement != null)
         {
-            //no camera pullback during the ultimate - it stays tight on him
-            playerMovement.speedMultiplier = isUltimateActive ? ultimateMoveSpeedMultiplier : 1f;
+            //E and C root him completely for the length of their animations; the ultimate
+            //only slows him. asserted every frame so a pause can't leave him stuck.
+            bool rooted = isEAbilityActive || isCAbilityActive;
+
+            if (rooted)
+                playerMovement.speedMultiplier = 0f;
+            else
+                playerMovement.speedMultiplier = isUltimateActive ? ultimateMoveSpeedMultiplier : 1f;
+
+            playerMovement.suspendJump = rooted;
+            playerMovement.suspendDash = rooted;
+
             playerMovement.flightMode = isFlying;
 
             //asserted every frame rather than set once on class switch, so it survives a pause
@@ -553,7 +579,7 @@ public class DemonClass : MonoBehaviour
     void TryActivateQ()
     {
         if (Time.time < qReadyTime) return;
-        if (isUltimateActive || isCAbilityActive) return;
+        if (isUltimateActive || isCAbilityActive || isEAbilityActive) return;
 
         qReadyTime = Time.time + qCooldown;
 
@@ -624,10 +650,22 @@ public class DemonClass : MonoBehaviour
     void TryActivateE()
     {
         if (Time.time < eReadyTime) return;
-        if (isUltimateActive || isCAbilityActive) return;
-
+        if (isUltimateActive || isCAbilityActive || isEAbilityActive) return;
         eReadyTime = Time.time + eCooldown;
 
+        StartCoroutine(ELock());
+
+        //animation fires now, the conversion lands partway through it
+        OnTakeover?.Invoke();
+        StartCoroutine(Takeover());
+    }
+
+    IEnumerator Takeover()
+    {
+        if (takeoverDelay > 0f) yield return new WaitForSeconds(takeoverDelay);
+
+        //scanned at the moment it lands rather than on the keypress, so anything that walked
+        //into range during the cast gets caught too
         Vector3 centre = playerController != null ? playerController.transform.position : transform.position;
         int converted = 0;
 
@@ -647,7 +685,7 @@ public class DemonClass : MonoBehaviour
                 if (mb != null && mb != vh && mb.enabled) toSuspend.Add(mb);
 
             VirusAllegiance allegiance = vh.gameObject.AddComponent<VirusAllegiance>();
-            allegiance.Begin(takeoverDuration, toSuspend.ToArray());
+            allegiance.Begin(takeoverDuration, takeoverFreezeDuration, toSuspend.ToArray());
 
             if (takeoverVfx != null)
             {
@@ -666,15 +704,23 @@ public class DemonClass : MonoBehaviour
             converted++;
         }
 
-        OnTakeover?.Invoke();
-        Debug.Log($"Demon takeover: converted {converted} virus(es) for {takeoverDuration}s");
+        Debug.Log($"Demon takeover: converted {converted} virus(es) for {takeoverDuration}s, " +
+                  $"then frozen for {takeoverFreezeDuration}s");
+    }
+
+    //roots him for the length of the cast animation
+    IEnumerator ELock()
+    {
+        isEAbilityActive = true;
+        yield return new WaitForSeconds(eLockDuration);
+        isEAbilityActive = false;
     }
 
     //---------------------------------------------------------------- C
     void TryActivateC()
     {
         if (Time.time < cReadyTime) return;
-        if (isUltimateActive || isCAbilityActive) return;
+        if (isUltimateActive || isCAbilityActive || isEAbilityActive) return;
 
         int tier = CurrentTier;
 
@@ -802,7 +848,7 @@ public class DemonClass : MonoBehaviour
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
-        if (isUltimateActive || isCAbilityActive) return;
+        if (isUltimateActive || isCAbilityActive || isEAbilityActive) return;
 
         ultimateReadyTime = Time.time + ultimateCooldown;
         StartCoroutine(LaserEyes());

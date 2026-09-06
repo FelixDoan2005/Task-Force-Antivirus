@@ -12,8 +12,14 @@ public abstract class VirusHealthBase : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    //set while something else is protecting this virus - currently the Demon's takeover, which
+    //turns it to the player's side and shouldn't have it dying to the fight it was sent into
+    public bool invulnerable;
+
     public void TakeDamage(float amount)
     {
+        if (invulnerable) return;
+
         currentHealth -= amount;
 
         if (currentHealth <= 0f)
