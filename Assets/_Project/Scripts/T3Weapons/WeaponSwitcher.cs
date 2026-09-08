@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class WeaponSwitcher : MonoBehaviour
 {
-    public enum PlayerClass { Bow, Sword, Riflemen, BladeMaster }
+    public enum PlayerClass { Bow, Sword, Riflemen, BladeMaster, Demon }
 
     [Header("Assign your weapon GameObjects here")]
     [SerializeField] private GameObject bowObject;
@@ -18,6 +18,8 @@ public class WeaponSwitcher : MonoBehaviour
     [SerializeField] private PistolWeapon pistol;
     [SerializeField] private GrenadeWeapon grenade;
     [SerializeField] private BladeMaster bladeMaster;
+    [SerializeField] private GameObject demonObject;
+    [SerializeField] private DemonClass demon;
     [SerializeField] private CrosshairTarget crosshairTarget;
 
     private PlayerClass currentClass = PlayerClass.Bow;
@@ -135,6 +137,7 @@ public class WeaponSwitcher : MonoBehaviour
             PlayerClass.Bow => "Bow",
             PlayerClass.Sword => "Sword",
             PlayerClass.BladeMaster => "BladeMaster",
+            PlayerClass.Demon => "Demon",
             PlayerClass.Riflemen => riflemenWeaponIndex switch
             {
                 0 => "Riflemen (Rifle)",
@@ -177,6 +180,9 @@ public class WeaponSwitcher : MonoBehaviour
 
         if (bladeMaster != null)
             bladeMaster.enabled = value;
+
+        if (demon != null)
+            demon.enabled = value;
     }
 
     void UpdateActiveObjects()
@@ -185,6 +191,7 @@ public class WeaponSwitcher : MonoBehaviour
         bool isSword = currentClass == PlayerClass.Sword;
         bool isRiflemen = currentClass == PlayerClass.Riflemen;
         bool isBladeMaster = currentClass == PlayerClass.BladeMaster;
+        bool isDemon = currentClass == PlayerClass.Demon;
         bool rifleActive = isRiflemen && riflemenWeaponIndex == 0;
         bool pistolActive = isRiflemen && riflemenWeaponIndex == 1;
         bool grenadeActive = isRiflemen && riflemenWeaponIndex == 2;
@@ -195,6 +202,7 @@ public class WeaponSwitcher : MonoBehaviour
         if (pistolObject != null) pistolObject.SetActive(pistolActive);
         if (grenadeObject != null) grenadeObject.SetActive(grenadeActive);
         if (bladeMasterObject != null) bladeMasterObject.SetActive(isBladeMaster);
+        if (demonObject != null) demonObject.SetActive(isDemon);
 
         //blademaster is melee too, so it hides the crosshair like the sword does - its E ability
         //shows its own separate enhanced crosshair when that's active

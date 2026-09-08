@@ -10,6 +10,17 @@ public class MasterArcher : MonoBehaviour
     public Camera playerCamera;
     public Transform firePoint;
 
+    [Tooltip("Needed for the over-the-shoulder camera. Assign the Player's PlayerController.")]
+    public PlayerController playerMovement;
+
+    [Header("Camera - Over the Shoulder")]
+    [Tooltip("He aims down a crosshair, so the camera sits off to one side instead of dead " +
+             "behind him. X = right of the player, Y = up. Negative X for the left shoulder.")]
+    public Vector2 shoulderOffset = new Vector2(0.7f, 0.25f);
+
+    [Tooltip("How much closer than the default third-person distance. Negative pulls in.")]
+    public float cameraCloseness = -0.9f;
+
     [Header("Weapon")]
     public float arrowRange = 500f;
     public float arrowDamage = 50f;
@@ -92,6 +103,14 @@ public class MasterArcher : MonoBehaviour
         if (Mouse.current == null) return;
 
         isAiming = Mouse.current.rightButton.isPressed;
+
+        //asserted every frame rather than set once on selection, so a pause or anything else
+        //that resets the camera rig can't leave him shooting from the default third-person view
+        if (playerMovement != null)
+        {
+            playerMovement.cameraShoulderOffset = shoulderOffset;
+            playerMovement.extraCameraDistance = cameraCloseness;
+        }
 
         if (isRapidFireActive && Time.time >= rapidFireEndTime)
             isRapidFireActive = false;
@@ -282,6 +301,13 @@ public class MasterArcher : MonoBehaviour
     void OnDisable()
     {
         isDrawing = false;
+
+        //hand the camera rig back, or his shoulder view follows the next class around
+        if (playerMovement != null)
+        {
+            playerMovement.cameraShoulderOffset = Vector2.zero;
+            playerMovement.extraCameraDistance = 0f;
+        }
 
         if (playerCamera != null)
             playerCamera.fieldOfView = defaultFOV;

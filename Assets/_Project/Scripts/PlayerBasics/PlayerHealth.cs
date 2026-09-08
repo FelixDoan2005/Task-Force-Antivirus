@@ -36,6 +36,16 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         }
     }
 
+    //used by lifesteal and any future healing. clamped, and refuses to revive the dead -
+    //coming back is Respawn's job, not a heal's
+    public void Heal(float amount)
+    {
+        if (isDead || amount <= 0f) return;
+
+        currentHealth = Mathf.Clamp(currentHealth + amount, 0f, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+    }
+
     public void Respawn()
     {
         isDead = false;

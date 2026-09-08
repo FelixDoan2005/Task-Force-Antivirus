@@ -211,6 +211,11 @@ public class BladeMaster : MonoBehaviour
 
     float eReadyTime;
     bool isCasting; // blocks attacks/abilities for the length of the cast
+
+    //every shockwave effect currently in flight. coroutines die when this component is disabled,
+    //so without this the cleanup at the end of FireShockwave never runs and the effect is
+    //orphaned in the scene - and these are expensive prefabs.
+    readonly List<GameObject> activeWaveVfx = new List<GameObject>();
     float castStartTime; // used to work out which half of the cast we're in
 
     [Header("C - Charged Blast")]
@@ -477,6 +482,12 @@ public class BladeMaster : MonoBehaviour
             Destroy(activeDashVfx);
             activeDashVfx = null;
         }
+
+        //shockwave effects are spawned unparented and cleaned up at the end of their coroutine -
+        //which never arrives if we were disabled mid-flight
+        foreach (GameObject vfx in activeWaveVfx)
+            if (vfx != null) Destroy(vfx);
+        activeWaveVfx.Clear();
 
         if (playerHealth != null) playerHealth.damageTakenMultiplier = 1f;
         if (playerMovement != null)
@@ -938,8 +949,18 @@ public class BladeMaster : MonoBehaviour
         //see lines up with where the hitbox actually is
         GameObject vfx = SpawnVfx(vfxPrefab, origin + vfxOffset,
                                   waveRotation * Quaternion.Euler(vfxRotationOffset));
-        if (vfx != null && !Mathf.Approximately(vfxScale, 1f))
-            vfx.transform.localScale *= vfxScale;
+        if (vfx != null)
+        {
+            if (!Mathf.Approximately(vfxScale, 1f))
+                vfx.transform.localScale *= vfxScale;
+
+            activeWaveVfx.Add(vfx);
+
+            //hard backstop: even if this coroutine never finishes, the effect cleans itself up
+            //after the longest the wave could possibly live
+            float maxLife = (speed > 0.01f ? range / speed : 5f) + waveVfxLinger + 1f;
+            Destroy(vfx, maxLife);
+        }
 
         HashSet<VirusHealthBase> alreadyHit = new HashSet<VirusHealthBase>();
         float travelled = 0f;
@@ -973,6 +994,7 @@ public class BladeMaster : MonoBehaviour
         }
 
         //let it finish playing where it stopped rather than vanishing the instant the wave ends
+        activeWaveVfx.Remove(vfx);
         if (vfx != null) Destroy(vfx, waveVfxLinger);
     }
 

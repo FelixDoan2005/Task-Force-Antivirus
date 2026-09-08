@@ -160,3 +160,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieHealth
   maxHealth: 500
+  invulnerable: 0
