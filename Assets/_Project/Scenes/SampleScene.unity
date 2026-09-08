@@ -803,34 +803,43 @@ MonoBehaviour:
   waveWidth: 9
   waveHeight: 3
   waveCooldown: 1
-  waveVfx: {fileID: 0}
+  waveVfx: {fileID: 689667626583958020, guid: 1336648bc1d8baf46a4515860950c9d4, type: 3}
   waveVfxPositionOffset: {x: 0, y: 0, z: 0}
   waveVfxRotationOffset: {x: 0, y: 0, z: 0}
   waveVfxScale: 1
   drawWaveBounds: 1
   qCooldown: 16
-  bombDamage: 60
+  bombDamage: 300
   bombRadius: 5
+  bombSecondaryDelay: 1
+  bombSecondaryDamage: 320
+  bombSecondaryRadius: 18
   bombMaxRange: 32
   bombFlightTime: 0.9
   bombGravity: 30
-  bombPrefab: {fileID: 0}
+  bombPrefab: {fileID: 8145502431507700120, guid: 000832214335ffd4782827d2a4510f4a, type: 3}
   bombScale: 1.6
-  bombExplosionVfx: {fileID: 0}
-  bombExplosionVfxScale: 1
+  bombExplosionVfx: {fileID: 8378648546881499446, guid: 867c572a5be680d42a042d2349f10143, type: 3}
+  bombExplosionVfxScale: 6
+  bombSecondaryVfx: {fileID: 0}
+  bombSecondaryVfxScale: 3
   bombShake: 0.5
+  bombSecondaryShake: 0.7
   qLaunchDelay: 1
   eCooldown: 24
   takeoverRadius: 20
   takeoverDuration: 10
-  lowClassOnly: 1
-  takeoverVfx: {fileID: 0}
-  takeoverVfxScale: 1
+  takeoverFreezeDuration: 3
+  eLockDuration: 3.5333335
+  takeoverDelay: 1.2
+  lowClassOnly: 0
+  takeoverVfx: {fileID: 2300369305902588757, guid: 4e273c58acd2b614084a98035db3ba7c, type: 3}
+  takeoverVfxScale: 2
   takeoverVfxLifetime: 2
   ultimateCooldown: 70
   ultimateWindup: 2.3666668
   ultimateBeamDuration: 8
-  beamDamagePerSecond: 80
+  beamDamagePerSecond: 300
   beamRange: 120
   beamThickness: 0.6
   leftEyeOffset: {x: -0.35, y: 1.7, z: 0.45}
@@ -841,11 +850,16 @@ MonoBehaviour:
   ultimateCameraSpinSpeed: 18
   windupShake: 0.35
   beamShake: 0.15
-  windupVfx: {fileID: 0}
-  windupVfxScale: 1
-  beamVfx: {fileID: 0}
-  beamVfxRotationOffset: {x: 0, y: 0, z: 0}
-  beamVfxScale: 1
+  windupVfx: {fileID: 3632712385227303547, guid: 324fc9687c94a5f4585d7728801af43d, type: 3}
+  windupVfxPositionOffset: {x: 0, y: 0, z: 0}
+  windupVfxRotationOffset: {x: -90, y: 0, z: 0}
+  windupVfxScale: 10
+  windupVfxFollowsPlayer: 1
+  beamVfx: {fileID: 8666437574378794522, guid: 4a549654330263d4d8b4b80767c3683c, type: 3}
+  beamVfxPositionOffset: {x: 0, y: 0, z: -3}
+  beamVfxRotationOffset: {x: 0, y: -90, z: 0}
+  beamVfxScale: 6
+  loopBeamVfx: 1
   drawBeamDebug: 1
   beamTickInterval: 0.1
   shoulderOffset: {x: 0.7, y: 0.25}
@@ -853,8 +867,8 @@ MonoBehaviour:
   killsPerTier: 10
   cMaxTiers: 5
   cCooldown: 10
-  cLockDuration: 1
-  cDamageDelay: 0.4
+  cLockDuration: 3.266667
+  cDamageDelay: 1.5
   cRequiresSouls: 1
   cDamagePerTier:
   - 40
@@ -874,24 +888,24 @@ MonoBehaviour:
   - 0.4
   - 0.55
   - 0.75
-  cVfx: {fileID: 0}
+  cVfx: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
   cVfxPositionOffset: {x: 0, y: 0, z: 0}
   cVfxRotationOffset: {x: 0, y: 0, z: 0}
   cVfxScalePerTier:
-  - 1
-  - 1.4
-  - 1.8
-  - 2.3
+  - 2
   - 3
+  - 4
+  - 5
+  - 8
   cVfxLifetime: 2.5
-  cHitVfx: {fileID: 0}
-  cHitVfxScale: 1
+  cHitVfx: {fileID: 2715471840370901047, guid: df9374346b76e444dbbb2b019de4da25, type: 3}
+  cHitVfxScale: 3
   cHitVfxLifetime: 2
   showSoulHud: 1
   soulHudFontSize: 26
   soulHudTopMargin: 24
   logSouls: 0
-  startWithMaxSouls: 1
+  startWithMaxSouls: 0
   doubleTapWindow: 0.3
   flightVerticalSpeed: 9
 --- !u!1 &1203543133
@@ -1460,6 +1474,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1078895995377895456, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: demon
+      value: 
+      objectReference: {fileID: 1013941968}
+    - target: {fileID: 1078895995377895456, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: demonObject
+      value: 
+      objectReference: {fileID: 1013941966}
     - target: {fileID: 1342728444001443558, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1554,6 +1576,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7551336053151274639, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7929773008934501542, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8253350533965131917, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
