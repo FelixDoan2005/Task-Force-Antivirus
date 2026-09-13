@@ -46,6 +46,9 @@ public class PlayerController : MonoBehaviour
     [Header("Jump")]
     public float jumpHeight = 1.2f;
 
+    [Tooltip("Abilities can scale the jump. 1 = normal. Set every frame by whatever wants it, like speedMultiplier.")]
+    public float jumpHeightMultiplier = 1f;
+
     [Tooltip("Allows jumping for a short time after leaving the ground.")]
     public float coyoteTime = 0.12f;
 
@@ -368,7 +371,7 @@ public class PlayerController : MonoBehaviour
 
         if (jumpHeld && canCoyoteJump && velocity.y <= 0.01f)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            velocity.y = Mathf.Sqrt(jumpHeight * jumpHeightMultiplier * -2f * gravity);
         }
 
         // Gravity (faster fall feels more responsive)

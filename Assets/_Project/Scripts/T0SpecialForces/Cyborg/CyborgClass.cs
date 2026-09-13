@@ -4,8 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 
 //single-target destruction, the opposite of the Demon. a heavy gun and augmented reflexes:
-//the rifle locks on and does not spread, Q scans an area and paints everything in it, E blinks
-//behind one target for an execute, and his perk pays him for fighting alone.
+//the rifle fires where he aims, Q scans an area and paints everything in it, E pushes his
+//augments into overdrive, and his perk pays him for fighting alone.
 public class CyborgClass : MonoBehaviour
 {
     [Header("Setup")]
@@ -52,6 +52,14 @@ public class CyborgClass : MonoBehaviour
     public GameObject muzzleVfx;
     public float muzzleVfxScale = 1f;
 
+    [Tooltip("The tip of the gun model. Visual effects spawn here. The hitscan still fires from " +
+             "Fire Point, which is shared with other classes.")]
+    public Transform muzzlePoint;
+
+    [Tooltip("How long each shot's flash stays up. Keep it under the fire interval so full-auto " +
+             "flickers per shot instead of blurring into one constant flash.")]
+    public float muzzleVfxLifetime = 0.08f;
+
     [Tooltip("Spawned where the shot lands.")]
     public GameObject impactVfx;
     public float impactVfxScale = 1f;
@@ -63,9 +71,53 @@ public class CyborgClass : MonoBehaviour
     [Tooltip("How long the tracer line stays drawn.")]
     public float tracerDuration = 0.05f;
 
+    [Tooltip("Draws the tracer in the game view, not just the scene view.")]
+    public bool showTracerInGame = true;
+    public Color tracerColour = new Color(1f, 0.85f, 0.3f);
+    public float tracerWidth = 0.03f;
+
+    [Tooltip("Optional. Left empty, tracers use a plain unlit material.")]
+    public Material tracerMaterial;
+
+    Material runtimeTracerMaterial;
+
     float nextShotTime;
+    GameObject activeMuzzleFx;
     VirusHealthBase lockedTarget;
     public VirusHealthBase LockedTarget => lockedTarget;
+
+    //---------------------------------------------------------------- ammo
+    [Header("Ammo")]
+    public int magazineSize = 60;
+
+    [Tooltip("Full spare magazines he spawns with, on top of the loaded one.")]
+    public int startingSpareMags = 6;
+
+    [Tooltip("Seconds a reload takes. R reloads by hand; an empty mag reloads on its own.")]
+    public float reloadTime = 2f;
+
+    [Tooltip("Kills needed to earn one spare magazine. 0 turns it off.")]
+    public int killsPerBonusMag = 5;
+
+    [Tooltip("Spare magazines added when the ultimate goes off.")]
+    public int ultimateBonusMags = 6;
+
+    int currentAmmo;
+    int reserveAmmo;
+    bool isReloading;
+    float reloadEndTime;
+    float currentReloadDuration;
+    int killsTowardMag;
+
+    public int CurrentAmmo => currentAmmo;
+    public int ReserveAmmo => reserveAmmo;
+    public int SpareMags => magazineSize > 0 ? reserveAmmo / magazineSize : 0;
+    public bool IsReloading => isReloading;
+
+    //how long the reload in progress takes. fixed when it starts, so overdrive ending partway
+    //through doesn't change the animation's speed mid-reload
+    public float CurrentReloadDuration => isReloading ? currentReloadDuration : EffectiveReloadTime;
+    public event System.Action OnReloadStarted;
 
     //---------------------------------------------------------------- Q: area scan
     [Header("Q - Area Scan")]
@@ -97,44 +149,59 @@ public class CyborgClass : MonoBehaviour
 
     public float scanShake = 0.2f;
 
+    [Tooltip("Draws the scan ring and the lines to each painted target in the game view, not just the scene view.")]
+    public bool showScanInGame = true;
+    public Color scanLineColour = Color.cyan;
+    public float scanLineWidth = 0.06f;
+    public float scanVisualDuration = 1.5f;
+
+    [Tooltip("Height the target lines are drawn at, so they run chest to chest rather than along the floor.")]
+    public float scanLineHeight = 1f;
+
+    [Tooltip("Optional. Left empty, the lines use a plain unlit material that fades cleanly.")]
+    public Material scanLineMaterial;
+
     float qReadyTime;
 
-    //---------------------------------------------------------------- E: blink execute
-    [Header("E - Blink Execute")]
+    //---------------------------------------------------------------- E: overdrive
+    [Header("E - Overdrive")]
     public float eCooldown = 18f;
 
-    [Tooltip("How long he waits for a confirm before the ability cancels itself.")]
-    public float confirmTimeout = 5f;
+    [Tooltip("How long his augments stay pushed past their limits.")]
+    public float overdriveDuration = 6f;
 
-    [Tooltip("How far behind the target he lands.")]
-    public float blinkBehindDistance = 2.2f;
+    [Tooltip("Move speed multiplier. 1.4 = 40% faster.")]
+    public float overdriveMoveSpeedMultiplier = 1.4f;
 
-    [Tooltip("Damage of the knife. A single heavy hit rather than a flurry.")]
-    public float knifeDamage = 180f;
+    [Tooltip("Jump height multiplier. 1.5 = jumps 50% higher.")]
+    public float overdriveJumpMultiplier = 1.5f;
 
-    [Tooltip("Multiplier applied on top, because it lands from behind.")]
-    public float knifeCritMultiplier = 2f;
+    [Tooltip("Fire rate multiplier. Stacks with the ultimate's.")]
+    public float overdriveFireRateMultiplier = 1.5f;
 
-    [Tooltip("Delay from the blink to the knife landing - line this up with the animation.")]
-    public float knifeDelay = 0.35f;
+    [Tooltip("Reload speed multiplier. 2 = reloads take half as long.")]
+    public float overdriveReloadSpeedMultiplier = 2f;
 
-    [Tooltip("How long he is rooted for the execute - line this up with the animation.")]
-    public float blinkLockDuration = 1.4f;
-
-    public GameObject blinkVfx;
-    public float blinkVfxScale = 1f;
-    public GameObject knifeHitVfx;
-    public float knifeHitVfxScale = 1f;
-    public float blinkShake = 0.45f;
+    [Tooltip("Played on him when overdrive kicks in, and follows him for the duration.")]
+    public GameObject overdriveVfx;
+    public float overdriveVfxScale = 1f;
+    public float overdriveShake = 0.25f;
 
     float eReadyTime;
-    bool awaitingConfirm;
-    VirusHealthBase confirmTarget;
-    float confirmExpiry;
-    bool isBlinking;
+    float overdriveUntil;
+    GameObject activeOverdriveFx;
 
-    public bool AwaitingConfirm => awaitingConfirm;
-    public bool IsBlinking => isBlinking;
+    //true once this class has pushed its buffs onto the shared PlayerController, so switching
+    //away hands the movement back exactly once instead of fighting other classes every frame
+    bool movementBuffApplied;
+
+    public bool IsOverdriveActive => Time.time < overdriveUntil;
+    public float OverdriveRemaining => Mathf.Max(0f, overdriveUntil - Time.time);
+    public event System.Action OnOverdriveStarted;
+
+    float EffectiveReloadTime => IsOverdriveActive
+        ? reloadTime / Mathf.Max(0.01f, overdriveReloadSpeedMultiplier)
+        : reloadTime;
 
     //---------------------------------------------------------------- X: triple lock
     [Header("X - Targeting Override")]
@@ -150,6 +217,12 @@ public class CyborgClass : MonoBehaviour
     public float ultimateDamageMultiplier = 1f;
 
     public float ultimateShake = 0.3f;
+
+    [Tooltip("Fire rate multiplier while the ultimate is up. 2 = twice as fast.")]
+    public float ultimateFireRateMultiplier = 2f;
+
+    [Tooltip("No ammo is spent and no reloads happen while the ultimate is up.")]
+    public bool ultimateInfiniteAmmo = true;
 
     float ultimateReadyTime;
     float ultimateUntil;
@@ -214,7 +287,6 @@ public class CyborgClass : MonoBehaviour
     //---------------------------------------------------------------- events for the animator
     public event System.Action OnShotFired;
     public event System.Action OnScan;
-    public event System.Action OnBlinkExecute;
     public event System.Action OnUltimateStarted;
     public event System.Action OnOverload;
 
@@ -227,6 +299,10 @@ public class CyborgClass : MonoBehaviour
     void Awake()
     {
         if (playerCamera == null) playerCamera = Camera.main;
+
+        //in Awake rather than OnEnable, so ammo survives switching classes and back
+        currentAmmo = magazineSize;
+        reserveAmmo = startingSpareMags * magazineSize;
     }
 
     //coroutines die when this is disabled, so anything they were going to clear has to be
@@ -234,17 +310,18 @@ public class CyborgClass : MonoBehaviour
     void OnDisable()
     {
         isCAbilityActive = false;
-        isBlinking = false;
-        awaitingConfirm = false;
-        confirmTarget = null;
         ultimateUntil = 0f;
+        overdriveUntil = 0f;
         IsFiring = false;
+        isReloading = false;
 
         ClearAllMarkers();
+        ClearOverdriveFx();
 
         if (playerMovement != null)
         {
             playerMovement.speedMultiplier = 1f;
+            playerMovement.jumpHeightMultiplier = 1f;
             playerMovement.suspendJump = false;
             playerMovement.suspendDash = false;
             playerMovement.suspendSprint = false;
@@ -252,6 +329,9 @@ public class CyborgClass : MonoBehaviour
             playerMovement.cameraShoulderOffset = Vector2.zero;
             playerMovement.extraCameraDistance = 0f;
         }
+        movementBuffApplied = false;
+
+        ClearMuzzleFx();
     }
 
     void Update()
@@ -261,14 +341,23 @@ public class CyborgClass : MonoBehaviour
 
         if (!isCyborg)
         {
-            if (awaitingConfirm) CancelConfirm();
             IsFiring = false;
+            isReloading = false;
+            ClearMuzzleFx();
 
             //another class is up - give the camera rig and the sprint back so nothing lingers
             if (playerMovement != null)
             {
                 playerMovement.suspendSprint = false;
                 playerMovement.allowCrouch = false;
+
+                //overdrive's speed and jump would otherwise carry over onto the next class
+                if (movementBuffApplied)
+                {
+                    playerMovement.speedMultiplier = 1f;
+                    playerMovement.jumpHeightMultiplier = 1f;
+                    movementBuffApplied = false;
+                }
 
                 if (playerMovement.cameraShoulderOffset != Vector2.zero)
                 {
@@ -293,12 +382,16 @@ public class CyborgClass : MonoBehaviour
 
         HandleFireInput();
 
-        //rooted for the execute and the overload, asserted every frame so a pause can't
-        //leave him stuck
+        //asserted every frame so a pause can't leave him stuck or permanently buffed
         if (playerMovement != null)
         {
-            bool rooted = isCAbilityActive || isBlinking;
-            playerMovement.speedMultiplier = rooted ? 0f : 1f;
+            bool rooted = isCAbilityActive;
+            bool overdrive = IsOverdriveActive;
+
+            playerMovement.speedMultiplier = rooted ? 0f : (overdrive ? overdriveMoveSpeedMultiplier : 1f);
+            playerMovement.jumpHeightMultiplier = overdrive ? overdriveJumpMultiplier : 1f;
+            movementBuffApplied = true;
+
             playerMovement.suspendJump = rooted;
             playerMovement.suspendDash = rooted;
 
@@ -376,16 +469,33 @@ public class CyborgClass : MonoBehaviour
     //---------------------------------------------------------------- the rifle
     void HandleFireInput()
     {
-        if (isCAbilityActive || isBlinking) { IsFiring = false; return; }
+        //before the early-out below, so a reload keeps ticking through an overload
+        TickReload();
 
-        //while waiting on a confirm the mouse buttons mean yes and no, not fire
-        if (awaitingConfirm) { IsFiring = false; HandleConfirmInput(); return; }
+        if (isCAbilityActive) { IsFiring = false; return; }
 
         bool held = Mouse.current != null && Mouse.current.leftButton.isPressed;
-        IsFiring = held;
+        bool infinite = IsUltimateActive && ultimateInfiniteAmmo;
 
-        if (!held || Time.time < nextShotTime) return;
-        nextShotTime = Time.time + fireInterval;
+        if (!infinite)
+        {
+            bool reloadPressed = Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame;
+            if (reloadPressed || currentAmmo <= 0) TryReload();
+        }
+
+        //not firing while reloading or dry, so the animator doesn't hold the firing pose
+        bool canShoot = infinite || (!isReloading && currentAmmo > 0);
+        IsFiring = held && canShoot;
+
+        if (!IsFiring || Time.time < nextShotTime) return;
+
+        //the ultimate and overdrive both speed the gun up, and stack if both are running
+        float rate = 1f;
+        if (IsUltimateActive) rate *= Mathf.Max(0.01f, ultimateFireRateMultiplier);
+        if (IsOverdriveActive) rate *= Mathf.Max(0.01f, overdriveFireRateMultiplier);
+        nextShotTime = Time.time + fireInterval / rate;
+
+        if (!infinite) currentAmmo--;
 
         if (IsUltimateActive)
         {
@@ -395,7 +505,9 @@ public class CyborgClass : MonoBehaviour
         }
         else
         {
-            Shoot(lockedTarget, bulletDamage);
+            //regular fire is free aim. the lock still runs for the abilities that use it (the
+            //overload picks its target from it), it just no longer steers normal shots.
+            Shoot(null, bulletDamage);
         }
 
         OnShotFired?.Invoke();
@@ -410,10 +522,22 @@ public class CyborgClass : MonoBehaviour
 
         if (muzzleVfx != null)
         {
-            GameObject fx = Instantiate(muzzleVfx, origin, Quaternion.LookRotation(Forward),
-                                        firePoint != null ? firePoint : transform);
-            PlayAll(fx, muzzleVfxScale);
-            Destroy(fx, 1f);
+            Transform tip = muzzlePoint != null ? muzzlePoint : (firePoint != null ? firePoint : transform);
+
+            //one flash at a time - a new shot replaces the last rather than stacking on it
+            ClearMuzzleFx();
+            activeMuzzleFx = Instantiate(muzzleVfx, tip.position, Quaternion.LookRotation(Forward), tip);
+
+            //WarFX flashes are authored to loop, so left alone each one keeps burning for its
+            //full duration after the shot. forcing a single play is what makes it a flash.
+            foreach (ParticleSystem ps in activeMuzzleFx.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.loop = false;
+            }
+
+            PlayAll(activeMuzzleFx, muzzleVfxScale);
+            Destroy(activeMuzzleFx, muzzleVfxLifetime);
         }
 
         Vector3 aimPoint;
@@ -422,13 +546,12 @@ public class CyborgClass : MonoBehaviour
         {
             //aim assist blends between the crosshair and the locked target's centre of mass
             Vector3 locked = AimPointOf(target);
-            Vector3 crosshair = origin + Forward * lockRange;
-            aimPoint = Vector3.Lerp(crosshair, locked, aimAssist);
+            aimPoint = Vector3.Lerp(CrosshairPoint(), locked, aimAssist);
         }
         else
         {
-            //nothing locked - he still fires, it just goes where he is pointing
-            aimPoint = origin + Forward * lockRange;
+            //free aim - he fires at whatever is under the crosshair
+            aimPoint = CrosshairPoint();
         }
 
         Vector3 dir = (aimPoint - origin).normalized;
@@ -452,6 +575,10 @@ public class CyborgClass : MonoBehaviour
 
         Debug.DrawLine(origin, endPoint, new Color(1f, 0.85f, 0.3f), tracerDuration);
 
+        //the same line as real geometry, starting at the gun tip when there is one
+        if (showTracerInGame)
+            SpawnTracer(muzzlePoint != null ? muzzlePoint.position : origin, endPoint);
+
         if (hitVirus == null) return;
 
         if (impactVfx != null)
@@ -464,6 +591,23 @@ public class CyborgClass : MonoBehaviour
         BulletHit(hitVirus, damage);
     }
 
+    //what the crosshair is actually on. the camera sits over his shoulder, so a shot fired from
+    //the gun parallel to the camera would land beside the crosshair - find the point along the
+    //camera's view first, then the shot flies from the gun to that point.
+    Vector3 CrosshairPoint()
+    {
+        if (playerCamera == null) return Origin + Forward * lockRange;
+
+        Transform cam = playerCamera.transform;
+        int mask = ~LayerMask.GetMask("Player");   // the camera looks past his own body
+
+        if (Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, lockRange + 10f,
+                            mask, QueryTriggerInteraction.Ignore))
+            return hit.point;
+
+        return cam.position + cam.forward * lockRange;
+    }
+
     Vector3 AimPointOf(VirusHealthBase v)
     {
         Collider col = v.GetComponentInChildren<Collider>();
@@ -474,7 +618,7 @@ public class CyborgClass : MonoBehaviour
     void TryActivateQ()
     {
         if (Time.time < qReadyTime) return;
-        if (isCAbilityActive || isBlinking) return;
+        if (isCAbilityActive) return;
 
         qReadyTime = Time.time + qCooldown;
 
@@ -491,6 +635,7 @@ public class CyborgClass : MonoBehaviour
         if (cameraShake != null && scanShake > 0f) cameraShake.AddTrauma(scanShake);
 
         var seen = new List<VirusHealthBase>();
+        var paintedTransforms = new List<Transform>();
         foreach (Collider c in Physics.OverlapSphere(centre, scanRadius))
         {
             VirusHealthBase v = c.GetComponentInParent<VirusHealthBase>();
@@ -508,11 +653,17 @@ public class CyborgClass : MonoBehaviour
             }
 
             Debug.DrawLine(centre, v.transform.position, Color.cyan, 1.5f);
+            paintedTransforms.Add(v.transform);
             painted++;
         }
 
         //ring so the scan radius is readable while tuning
         DrawRing(centre, scanRadius, Color.cyan, 1.5f);
+
+        //the same ring and lines, as real geometry the game camera renders
+        if (showScanInGame)
+            ScanPulseVisual.Spawn(centre, scanRadius, paintedTransforms, scanLineColour,
+                                  scanLineWidth, scanVisualDuration, scanLineHeight, scanLineMaterial);
 
         OnScan?.Invoke();
         Debug.Log($"Cyborg scan: painted {painted} target(s) for {markDuration}s");
@@ -524,102 +675,46 @@ public class CyborgClass : MonoBehaviour
             v.TickMark(markRampPerSecond, markMaxBonus);
     }
 
-    //---------------------------------------------------------------- E: blink execute
+    //---------------------------------------------------------------- E: overdrive
+    //a timed buff rather than a coroutine - every effect reads IsOverdriveActive each frame, so
+    //there's nothing to clean up if he's interrupted, paused or swapped out mid-buff
     void TryActivateE()
     {
         if (Time.time < eReadyTime) return;
-        if (isCAbilityActive || isBlinking) return;
+        if (isCAbilityActive) return;
 
-        //already choosing - a second E press cancels, same as left click
-        if (awaitingConfirm) { CancelConfirm(); return; }
+        eReadyTime = Time.time + eCooldown;
+        overdriveUntil = Time.time + overdriveDuration;
 
-        var nearest = FindNearest(1, lockRange);
-        if (nearest.Count == 0) return;
-
-        confirmTarget = nearest[0];
-        awaitingConfirm = true;
-        confirmExpiry = Time.time + confirmTimeout;
-    }
-
-    void HandleConfirmInput()
-    {
-        if (confirmTarget == null || Time.time >= confirmExpiry) { CancelConfirm(); return; }
-        if (Mouse.current == null) return;
-
-        if (Mouse.current.leftButton.wasPressedThisFrame) { CancelConfirm(); return; }
-
-        if (Mouse.current.rightButton.wasPressedThisFrame)
+        if (overdriveVfx != null)
         {
-            awaitingConfirm = false;
-            eReadyTime = Time.time + eCooldown;   // only spent on a confirm, not on opening the prompt
-            StartCoroutine(BlinkExecute(confirmTarget));
-            confirmTarget = null;
-        }
-    }
-
-    void CancelConfirm()
-    {
-        awaitingConfirm = false;
-        confirmTarget = null;
-    }
-
-    IEnumerator BlinkExecute(VirusHealthBase target)
-    {
-        isBlinking = true;
-        OnBlinkExecute?.Invoke();
-
-        if (target != null)
-        {
-            //behind them relative to how they are facing
-            Vector3 behind = target.transform.position - target.transform.forward * blinkBehindDistance;
-
-            if (Physics.Raycast(behind + Vector3.up * 5f, Vector3.down, out RaycastHit ground,
-                                20f, ~0, QueryTriggerInteraction.Ignore))
-                behind = ground.point;
-
-            TeleportTo(behind);
-            FaceTarget(target.transform.position);
-
-            if (blinkVfx != null)
-            {
-                GameObject fx = Instantiate(blinkVfx, Body.position, Body.rotation);
-                PlayAll(fx, blinkVfxScale);
-                Destroy(fx, 3f);
-            }
-
-            if (cameraShake != null && blinkShake > 0f) cameraShake.AddTrauma(blinkShake);
+            ClearOverdriveFx();
+            activeOverdriveFx = Instantiate(overdriveVfx, Body.position, Body.rotation, Body);
+            PlayAll(activeOverdriveFx, overdriveVfxScale);
+            Destroy(activeOverdriveFx, overdriveDuration);
         }
 
-        //the knife lands partway through the animation, not the instant he arrives
-        if (knifeDelay > 0f) yield return new WaitForSeconds(knifeDelay);
+        if (cameraShake != null && overdriveShake > 0f) cameraShake.AddTrauma(overdriveShake);
 
-        if (target != null)
-        {
-            if (knifeHitVfx != null)
-            {
-                GameObject fx = Instantiate(knifeHitVfx, AimPointOf(target), Quaternion.identity);
-                PlayAll(fx, knifeHitVfxScale);
-                Destroy(fx, 2f);
-            }
+        OnOverdriveStarted?.Invoke();
+    }
 
-            //from behind, so it crits - and it still takes the stacks and the paint
-            DealDamage(target, knifeDamage * knifeCritMultiplier, true);
-        }
-
-        float remaining = blinkLockDuration - knifeDelay;
-        if (remaining > 0f) yield return new WaitForSeconds(remaining);
-
-        isBlinking = false;
+    void ClearOverdriveFx()
+    {
+        if (activeOverdriveFx != null) Destroy(activeOverdriveFx);
+        activeOverdriveFx = null;
     }
 
     //---------------------------------------------------------------- X
     void TryActivateUltimate()
     {
         if (Time.time < ultimateReadyTime) return;
-        if (isCAbilityActive || isBlinking) return;
+        if (isCAbilityActive) return;
 
         ultimateReadyTime = Time.time + ultimateCooldown;
         ultimateUntil = Time.time + ultimateDuration;
+
+        reserveAmmo += ultimateBonusMags * magazineSize;
 
         if (cameraShake != null && ultimateShake > 0f) cameraShake.AddTrauma(ultimateShake);
 
@@ -630,7 +725,7 @@ public class CyborgClass : MonoBehaviour
     void TryActivateC()
     {
         if (Time.time < cReadyTime) return;
-        if (isCAbilityActive || isBlinking) return;
+        if (isCAbilityActive) return;
         if (lockedTarget == null) return;
 
         VirusVulnerability v = lockedTarget.GetComponent<VirusVulnerability>();
@@ -673,6 +768,40 @@ public class CyborgClass : MonoBehaviour
         isCAbilityActive = false;
     }
 
+    //---------------------------------------------------------------- reload
+    //the magazine refills when the reload finishes rather than when it starts, so switching away
+    //mid-reload can't hand out a free mag
+    void TryReload()
+    {
+        if (isReloading || currentAmmo >= magazineSize || reserveAmmo <= 0) return;
+
+        isReloading = true;
+        currentReloadDuration = EffectiveReloadTime;
+        reloadEndTime = Time.time + currentReloadDuration;
+        OnReloadStarted?.Invoke();
+    }
+
+    void TickReload()
+    {
+        if (!isReloading || Time.time < reloadEndTime) return;
+
+        int taken = Mathf.Min(magazineSize - currentAmmo, reserveAmmo);
+        currentAmmo += taken;
+        reserveAmmo -= taken;
+        isReloading = false;
+    }
+
+    void RegisterKill()
+    {
+        if (killsPerBonusMag <= 0) return;
+
+        killsTowardMag++;
+        if (killsTowardMag < killsPerBonusMag) return;
+
+        killsTowardMag = 0;
+        reserveAmmo += magazineSize;
+    }
+
     //---------------------------------------------------------------- damage
     //every shot routes through here, so the stack, the paint and the perk are applied once and
     //can never be forgotten on a new ability
@@ -700,7 +829,12 @@ public class CyborgClass : MonoBehaviour
         }
 
         float final = amount * mult;
+
+        //checked on both sides of the hit so a target already on its way out (destroyed at the
+        //end of the frame) can't be counted twice by a second bullet
+        bool wasAlive = target.CurrentHealth > 0f;
         target.TakeDamage(final);
+        if (wasAlive && target.CurrentHealth <= 0f) RegisterKill();
 
         if (drawHitMarkers) DrawHitMarker(target, mult);
 
@@ -730,6 +864,35 @@ public class CyborgClass : MonoBehaviour
     }
 
     //---------------------------------------------------------------- effects helper
+    //ported from RifleWeapon. one material shared by every tracer - making a new one per shot
+    //at this fire rate would leak hundreds of materials a minute
+    void SpawnTracer(Vector3 start, Vector3 end)
+    {
+        if (runtimeTracerMaterial == null)
+            runtimeTracerMaterial = tracerMaterial != null ? tracerMaterial : new Material(Shader.Find("Sprites/Default"));
+
+        GameObject tracer = new GameObject("CyborgTracer");
+        LineRenderer lr = tracer.AddComponent<LineRenderer>();
+        lr.sharedMaterial = runtimeTracerMaterial;
+        lr.startColor = tracerColour;
+        lr.endColor = tracerColour;
+        lr.startWidth = tracerWidth;
+        lr.endWidth = tracerWidth;
+        lr.positionCount = 2;
+        lr.SetPosition(0, start);
+        lr.SetPosition(1, end);
+        lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lr.receiveShadows = false;
+
+        Destroy(tracer, tracerDuration);
+    }
+
+    void ClearMuzzleFx()
+    {
+        if (activeMuzzleFx != null) Destroy(activeMuzzleFx);
+        activeMuzzleFx = null;
+    }
+
     void PlayAll(GameObject fx, float scale)
     {
         foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>(true))
@@ -831,24 +994,6 @@ public class CyborgClass : MonoBehaviour
         }
     }
 
-    //---------------------------------------------------------------- helpers
-    void TeleportTo(Vector3 position)
-    {
-        //the CharacterController fights direct position changes unless briefly disabled
-        if (playerController == null) { Body.position = position; return; }
-
-        playerController.enabled = false;
-        playerController.transform.position = position;
-        playerController.enabled = true;
-    }
-
-    void FaceTarget(Vector3 target)
-    {
-        Vector3 dir = target - Body.position;
-        dir.y = 0f;
-        if (dir.sqrMagnitude > 0.001f) Body.rotation = Quaternion.LookRotation(dir);
-    }
-
     //---------------------------------------------------------------- scene-view feedback
     void LateUpdate()
     {
@@ -857,12 +1002,6 @@ public class CyborgClass : MonoBehaviour
 
         if (lockedTarget != null)
             DrawRing(lockedTarget.transform.position, 1.1f, Color.yellow);
-
-        if (awaitingConfirm && confirmTarget != null)
-        {
-            DrawRing(confirmTarget.transform.position, 1.6f, Color.cyan);
-            DrawRing(confirmTarget.transform.position, 1.9f, Color.cyan);
-        }
 
         if (IsUltimateActive)
             foreach (var v in FindNearest(ultimateTargets, lockRange))
@@ -886,11 +1025,7 @@ public class CyborgClass : MonoBehaviour
 
         string label;
 
-        if (awaitingConfirm)
-        {
-            label = "RIGHT CLICK to execute   ·   LEFT CLICK to cancel";
-        }
-        else if (lockedTarget != null)
+        if (lockedTarget != null)
         {
             VirusVulnerability v = lockedTarget.GetComponent<VirusVulnerability>();
             int stacks = v != null ? v.cardHits : 0;
@@ -904,6 +1039,7 @@ public class CyborgClass : MonoBehaviour
             label = $"no lock   ·   solo x{SoloMultiplier():F2}";
         }
 
+        if (IsOverdriveActive) label += $"   [OVERDRIVE {OverdriveRemaining:F1}s]";
         if (IsUltimateActive) label += "   [OVERRIDE]";
 
         Rect rect = new Rect(0f, hudTopMargin, Screen.width, hudFontSize * 2f);
@@ -911,8 +1047,28 @@ public class CyborgClass : MonoBehaviour
         GUI.color = new Color(0f, 0f, 0f, 0.65f);
         GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), label, hudStyle);
 
-        GUI.color = awaitingConfirm ? Color.cyan : Color.white;
+        GUI.color = IsOverdriveActive ? new Color(0.4f, 1f, 1f) : Color.white;
         GUI.Label(rect, label, hudStyle);
+
+        //ammo, one line under the lock readout
+        bool infiniteNow = IsUltimateActive && ultimateInfiniteAmmo;
+        string ammo;
+        if (infiniteNow) ammo = "AMMO  INFINITE";
+        else if (isReloading) ammo = $"RELOADING...   {reserveAmmo} spare";
+        else ammo = $"AMMO  {currentAmmo} / {magazineSize}   ·   {reserveAmmo} spare ({SpareMags} mags)";
+
+        if (killsPerBonusMag > 0) ammo += $"   ·   +1 mag in {killsPerBonusMag - killsTowardMag} kills";
+
+        Rect ammoRect = new Rect(0f, hudTopMargin + hudFontSize * 1.6f, Screen.width, hudFontSize * 2f);
+
+        GUI.color = new Color(0f, 0f, 0f, 0.65f);
+        GUI.Label(new Rect(ammoRect.x + 2f, ammoRect.y + 2f, ammoRect.width, ammoRect.height), ammo, hudStyle);
+
+        bool dry = !infiniteNow && currentAmmo <= 0 && reserveAmmo <= 0;
+        GUI.color = dry ? new Color(1f, 0.35f, 0.35f)
+                  : infiniteNow ? new Color(1f, 0.6f, 0.1f)
+                  : Color.white;
+        GUI.Label(ammoRect, ammo, hudStyle);
 
         GUI.color = Color.white; // GUI.color is global state, leave it as we found it
     }

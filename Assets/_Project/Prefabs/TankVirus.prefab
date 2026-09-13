@@ -144,7 +144,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d2c927c8115174a8b6818f7c7080da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieMovement
-  speed: 0
+  speed: 1
   stopDistance: 1.5
   detectionRange: 50
 --- !u!114 &6602947818543475581

@@ -19,6 +19,13 @@ public class CyborgAnimatorDriver : MonoBehaviour
     [Tooltip("How far out sprinting pushes the blend. Must match the sprint clips' position.")]
     public float sprintBlendDistance = 2f;
 
+    [Header("Reload")]
+    [Tooltip("Clip lengths in seconds, filled in on import. The reload animation is sped up or " +
+             "slowed so it always finishes exactly when the magazine refills.")]
+    public float idleReloadClipLength = 2f;
+    public float runReloadClipLength = 2f;
+    public float crouchReloadClipLength = 2f;
+
     Animator animator;
 
     void Awake()
@@ -37,7 +44,10 @@ public class CyborgAnimatorDriver : MonoBehaviour
         //driven from state every frame rather than from events, so it survives a pause and
         //can't get stuck on if an ability is interrupted
         if (cyborg != null)
+        {
             animator.SetBool("IsFiring", cyborg.IsFiring);
+            animator.SetBool("IsReloading", cyborg.IsReloading);
+        }
 
         if (playerMovement == null) return;
 
@@ -48,5 +58,21 @@ public class CyborgAnimatorDriver : MonoBehaviour
 
         animator.SetFloat("MoveX", input.x, blendDampTime, Time.deltaTime);
         animator.SetFloat("MoveZ", input.y, blendDampTime, Time.deltaTime);
+
+        //0 standing still, 1 moving - picks between the standing reload and the running one
+        float moveAmount = Mathf.Clamp01(playerMovement.MoveInput.magnitude);
+        animator.SetFloat("MoveAmount", moveAmount, blendDampTime, Time.deltaTime);
+
+        //the length of the reload actually in progress, which overdrive shortens
+        float reloadDuration = cyborg != null ? cyborg.CurrentReloadDuration : 0f;
+        if (reloadDuration > 0f)
+        {
+            //a blend tree plays at the weighted length of its clips, so match that
+            float standLength = Mathf.Lerp(idleReloadClipLength, runReloadClipLength,
+                                           animator.GetFloat("MoveAmount"));
+
+            animator.SetFloat("ReloadSpeed", standLength / reloadDuration);
+            animator.SetFloat("CrouchReloadSpeed", crouchReloadClipLength / reloadDuration);
+        }
     }
 }

@@ -1294,7 +1294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JesterClass
   playerCamera: {fileID: 1449151897}
-  firePoint: {fileID: 1315208993}
+  firePoint: {fileID: 2132604114}
   playerController: {fileID: 733618517}
   playerMovement: {fileID: 733618516}
   playerHealth: {fileID: 733618515}
@@ -1309,13 +1309,24 @@ MonoBehaviour:
   lockRange: 45
   lockAngle: 35
   aimAssist: 1
-  muzzleVfx: {fileID: 0}
+  muzzleVfx: {fileID: 100000, guid: 8eaaa4f553116f44b8459bc24201c514, type: 3}
   muzzleVfxScale: 1
-  impactVfx: {fileID: 0}
+  muzzlePoint: {fileID: 0}
+  muzzleVfxLifetime: 0.08
+  impactVfx: {fileID: 100006, guid: 9e95c7b2183a4f345aaf86846f8f1918, type: 3}
   impactVfxScale: 1
   impactVfxLifetime: 1.5
   fireShake: 0.05
   tracerDuration: 0.05
+  showTracerInGame: 1
+  tracerColour: {r: 1, g: 0.85, b: 0.3, a: 1}
+  tracerWidth: 0.03
+  tracerMaterial: {fileID: 0}
+  magazineSize: 60
+  startingSpareMags: 6
+  reloadTime: 2
+  killsPerBonusMag: 5
+  ultimateBonusMags: 6
   qCooldown: 12
   scanRadius: 25
   markDuration: 8
@@ -1328,6 +1339,12 @@ MonoBehaviour:
   markVfx: {fileID: 0}
   markVfxScale: 1
   scanShake: 0.2
+  showScanInGame: 1
+  scanLineColour: {r: 0, g: 1, b: 1, a: 1}
+  scanLineWidth: 0.06
+  scanVisualDuration: 1.5
+  scanLineHeight: 1
+  scanLineMaterial: {fileID: 0}
   eCooldown: 18
   confirmTimeout: 5
   blinkBehindDistance: 2.2
@@ -1345,6 +1362,8 @@ MonoBehaviour:
   ultimateTargets: 3
   ultimateDamageMultiplier: 1
   ultimateShake: 0.3
+  ultimateFireRateMultiplier: 2
+  ultimateInfiniteAmmo: 1
   cCooldown: 20
   cLockDuration: 1.2
   cDamageDelay: 0.5
@@ -1816,6 +1835,11 @@ MonoBehaviour:
   startWithMaxSouls: 0
   doubleTapWindow: 0.3
   flightVerticalSpeed: 9
+--- !u!4 &1131274910 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7779917245399844102, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+  m_PrefabInstance: {fileID: 463312889362139753}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1203543133
 GameObject:
   m_ObjectHideFlags: 0
@@ -2068,6 +2092,9 @@ MonoBehaviour:
   playerHealth: {fileID: 733618515}
   blendDampTime: 0.12
   sprintBlendDistance: 2
+  idleReloadClipLength: 3.3000002
+  runReloadClipLength: 4.1000004
+  crouchReloadClipLength: 6.866667
 --- !u!95 &1446650006
 Animator:
   serializedVersion: 7
@@ -2505,6 +2532,37 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1403384784}
   m_SourcePrefab: {fileID: 100100000, guid: a1db201987255e14ebc8e3c4476a247f, type: 3}
+--- !u!1 &2132604113
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2132604114}
+  m_Layer: 3
+  m_Name: CyborgFirePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2132604114
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2132604113}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.3, y: 2.175, z: 1.308}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1131274910}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &463312889362139753
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2736,6 +2794,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 7779917245399844102, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      insertIndex: 4
+      addedObject: {fileID: 2132604114}
     - targetCorrespondingSourceObject: {fileID: 7608627758400398230, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 990181449}
