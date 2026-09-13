@@ -108,7 +108,7 @@ public class PauseMenuUI : MonoBehaviour
             case 0: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Bow); break; // MasterArcher
             case 1: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.BladeMaster); break; // BladeMaster
             case 2: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Demon); break; // Demon
-            case 3: NotImplementedYet("Jester"); break;
+            case 3: SelectViaWeaponSwitcher((int)WeaponSwitcher.PlayerClass.Cyborg); break; // Cyborg
         }
     }
 
