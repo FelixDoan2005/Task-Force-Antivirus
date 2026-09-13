@@ -20,8 +20,34 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Abilities can set this to block the double-tap dash. Read by DashAbility.")]
     public bool suspendDash;
 
+    [Tooltip("Classes can set this to drop the player out of a sprint without blocking movement - " +
+             "e.g. a shooter that can't fire at a full sprint. Holding shift simply stops counting.")]
+    public bool suspendSprint;
+
+    [Header("Crouch")]
+    [Tooltip("Classes opt in to crouching. Off by default so the melee classes are untouched.")]
+    public bool allowCrouch;
+
+    [Tooltip("Controller height while crouched. Standing height is read once on Awake.")]
+    public float crouchHeight = 1.2f;
+
+    [Tooltip("Fraction of normal speed while crouched.")]
+    public float crouchSpeedMultiplier = 0.5f;
+
+    [Tooltip("How fast the collider eases between standing and crouched.")]
+    public float crouchLerpSpeed = 10f;
+
+    //true while actually crouched. read by the active class's animator driver.
+    public bool IsCrouching { get; private set; }
+
+    float standingHeight;
+    Vector3 standingCenter;
+
     [Header("Jump")]
     public float jumpHeight = 1.2f;
+
+    [Tooltip("Abilities can scale the jump. 1 = normal. Set every frame by whatever wants it, like speedMultiplier.")]
+    public float jumpHeightMultiplier = 1f;
 
     [Tooltip("Allows jumping for a short time after leaving the ground.")]
     public float coyoteTime = 0.12f;
@@ -116,6 +142,8 @@ public class PlayerController : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<CharacterController>();
+        standingHeight = controller.height;
+        standingCenter = controller.center;
         velocity.y = -2f;
         groundMask &= ~LayerMask.GetMask("Player");
         cameraCollisionMask = ~LayerMask.GetMask("Player");
@@ -226,6 +254,50 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    //hold Left Ctrl to crouch. the collider shrinks from the top, so his feet stay put, and
+    //standing back up is refused if there's something overhead - otherwise you'd pop through
+    //a ceiling and get shoved out of the level.
+    void HandleCrouch()
+    {
+        if (!allowCrouch || flightMode)
+        {
+            //flight already owns Left Ctrl for descending
+            if (IsCrouching) IsCrouching = false;
+            RestoreStandingCollider();
+            return;
+        }
+
+        bool wants = Keyboard.current != null && Keyboard.current.leftCtrlKey.isPressed;
+
+        if (!wants && IsCrouching && BlockedAbove())
+            wants = true;   // stuck under something, stay down
+
+        IsCrouching = wants;
+
+        float targetHeight = IsCrouching ? crouchHeight : standingHeight;
+        float targetCenterY = standingCenter.y - (standingHeight - targetHeight) * 0.5f;
+
+        controller.height = Mathf.Lerp(controller.height, targetHeight, crouchLerpSpeed * Time.deltaTime);
+        controller.center = Vector3.Lerp(controller.center,
+                                         new Vector3(standingCenter.x, targetCenterY, standingCenter.z),
+                                         crouchLerpSpeed * Time.deltaTime);
+    }
+
+    void RestoreStandingCollider()
+    {
+        if (Mathf.Approximately(controller.height, standingHeight)) return;
+        controller.height = Mathf.Lerp(controller.height, standingHeight, crouchLerpSpeed * Time.deltaTime);
+        controller.center = Vector3.Lerp(controller.center, standingCenter, crouchLerpSpeed * Time.deltaTime);
+    }
+
+    bool BlockedAbove()
+    {
+        Vector3 origin = transform.position + controller.center;
+        float castDist = (standingHeight - controller.height) + 0.05f;
+        return Physics.SphereCast(origin, controller.radius * 0.95f, Vector3.up,
+                                  out _, castDist, groundMask, QueryTriggerInteraction.Ignore);
+    }
+
     void MoveAndJump()
     {
         if (suspendGravity)
@@ -251,18 +323,22 @@ public class PlayerController : MonoBehaviour
 
         MoveInput = input; // exposed so each class's model can drive its own locomotion blend tree
 
+        HandleCrouch();
+
         Vector3 move = transform.right * input.x + transform.forward * input.y;
         if (move.sqrMagnitude > 1f) move.Normalize();
 
-        // Sprint
-        bool sprintHeld = Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        // Sprint - you can't sprint from a crouch, you stand up first
+        bool sprintHeld = !suspendSprint && !IsCrouching
+                          && Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
         float speed = sprintHeld ? sprintSpeed : moveSpeed;
 
         //only counts as sprinting if we're actually moving, otherwise holding shift while
         //standing still would push the blend tree into the sprint clip
         IsSprinting = sprintHeld && input.sqrMagnitude > 0.01f;
 
-        controller.Move(speed * speedMultiplier * Time.deltaTime * move);
+        float crouchScale = IsCrouching ? crouchSpeedMultiplier : 1f;
+        controller.Move(speed * speedMultiplier * crouchScale * Time.deltaTime * move);
 
         //flight replaces gravity and jumping entirely - Space climbs, Left Ctrl drops, and
         //you hang where you leave off. handled before grounding so none of the jump logic runs.
@@ -295,7 +371,7 @@ public class PlayerController : MonoBehaviour
 
         if (jumpHeld && canCoyoteJump && velocity.y <= 0.01f)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            velocity.y = Mathf.Sqrt(jumpHeight * jumpHeightMultiplier * -2f * gravity);
         }
 
         // Gravity (faster fall feels more responsive)
