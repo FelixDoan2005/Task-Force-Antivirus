@@ -110,9 +110,6 @@ public class MasterArcher : MonoBehaviour
         {
             playerMovement.cameraShoulderOffset = shoulderOffset;
             playerMovement.extraCameraDistance = cameraCloseness;
-
-            //she has crouch animations, so she opts into the crouch the Cyborg uses
-            playerMovement.allowCrouch = true;
         }
 
         if (isRapidFireActive && Time.time >= rapidFireEndTime)
@@ -310,6 +307,8 @@ public class MasterArcher : MonoBehaviour
         {
             playerMovement.cameraShoulderOffset = Vector2.zero;
             playerMovement.extraCameraDistance = 0f;
+
+            //nothing here switches crouch on, but hand it back in case something else did
             playerMovement.allowCrouch = false;
         }
 
