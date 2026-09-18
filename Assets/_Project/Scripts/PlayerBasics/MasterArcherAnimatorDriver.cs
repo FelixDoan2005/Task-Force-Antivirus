@@ -10,6 +10,9 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
     public PlayerController playerMovement;
     public MasterArcher archer;
 
+    [Tooltip("Drives the death animation. Assign the Player's PlayerHealth.")]
+    public PlayerHealth playerHealth;
+
     [Header("Blend")]
     [Tooltip("Seconds to ease between stand, run and sprint.")]
     public float blendDampTime = 0.12f;
@@ -17,23 +20,49 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
     [Tooltip("How far out sprinting pushes the blend. Must match the sprint clips' position.")]
     public float sprintBlendDistance = 2f;
 
+    [Header("Bow")]
+    [Tooltip("The masked layer holding the draw animation.")]
+    public string bowLayerName = "Bow";
+
+    [Tooltip("The state on that layer holding the draw clip.")]
+    public string drawStateName = "Draw";
+
+    [Tooltip("Where in the draw clip the arrow is nocked and the pull actually starts. The first " +
+             "half of the clip is her reaching for an arrow, which shouldn't play while charging - " +
+             "charge maps onto the stretch from here to the end instead.")]
+    [Range(0f, 1f)] public float drawPullStart = 0.55f;
+
     Animator animator;
+    int bowLayer = -1;
+    int drawStateHash;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        bowLayer = animator.GetLayerIndex(bowLayerName);
+        drawStateHash = Animator.StringToHash(drawStateName);
     }
 
     void Update()
     {
         //driven from state every frame rather than from events, so it survives a pause and
         //can't get stuck on if something is interrupted
+        if (playerHealth != null)
+            animator.SetBool("IsDead", playerHealth.isDead);
+
         if (archer != null)
         {
-            //not used by any state yet - there are no bow clips - but wired so draw and aim
-            //animations only need adding to the controller
             animator.SetBool("IsAiming", archer.IsAiming);
-            animator.SetBool("IsDrawing", archer.IsDrawing());
+
+            bool drawing = archer.IsDrawing();
+            animator.SetBool("IsDrawing", drawing);
+
+            //scrub the draw by how charged the shot is rather than letting the clip play at its
+            //own pace. the pose then always matches the arrow: a flick of the mouse barely bends
+            //the bow and fires a weak arrow, holding to full power reaches full draw.
+            if (drawing && bowLayer >= 0)
+                animator.Play(drawStateHash, bowLayer,
+                              Mathf.Lerp(drawPullStart, 1f, archer.DrawProgress01));
         }
 
         if (playerMovement == null) return;

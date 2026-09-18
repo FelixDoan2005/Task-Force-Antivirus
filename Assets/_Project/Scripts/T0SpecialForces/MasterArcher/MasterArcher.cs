@@ -81,6 +81,12 @@ public class MasterArcher : MonoBehaviour
     bool isAiming;
 
     public bool IsAiming => isAiming;
+
+    //how far through the draw she is: 0 the instant the string starts moving, 1 at full power.
+    //this is the same curve the arrow's speed uses, so the pose and the shot always agree
+    public float DrawProgress01 => isDrawing && maxDrawTime > 0f
+        ? Mathf.Clamp01((Time.time - drawStartTime) / maxDrawTime)
+        : 0f;
     float EffectiveFireCooldown => isRapidFireActive ? rapidFireActiveCooldown : fireCooldown;
 
     void Awake()
@@ -110,6 +116,13 @@ public class MasterArcher : MonoBehaviour
         {
             playerMovement.cameraShoulderOffset = shoulderOffset;
             playerMovement.extraCameraDistance = cameraCloseness;
+
+            //she has crouch animations again, so she opts into the crouch the Cyborg uses
+            playerMovement.allowCrouch = true;
+
+            //no sprinting with an arrow on the string - drawing drops her to a walk, which is
+            //also the pace the aim-walk animations are built for
+            playerMovement.suspendSprint = isDrawing;
         }
 
         if (isRapidFireActive && Time.time >= rapidFireEndTime)
@@ -308,8 +321,8 @@ public class MasterArcher : MonoBehaviour
             playerMovement.cameraShoulderOffset = Vector2.zero;
             playerMovement.extraCameraDistance = 0f;
 
-            //nothing here switches crouch on, but hand it back in case something else did
             playerMovement.allowCrouch = false;
+            playerMovement.suspendSprint = false;
         }
 
         if (playerCamera != null)
