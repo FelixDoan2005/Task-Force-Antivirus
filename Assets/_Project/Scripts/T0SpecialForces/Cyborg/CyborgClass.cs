@@ -11,6 +11,10 @@ public class CyborgClass : MonoBehaviour
     [Header("Setup")]
     public Camera playerCamera;
     public Transform firePoint;
+
+    [Tooltip("Where his shots leave the gun while he is crouched, since the standing point sits " +
+             "up at shoulder height. Falls back to the standing one if this is empty.")]
+    public Transform crouchedFirePoint;
     public CharacterController playerController;
     public PlayerController playerMovement;
     public PlayerHealth playerHealth;
@@ -278,6 +282,42 @@ public class CyborgClass : MonoBehaviour
     [Tooltip("How much closer than the default third-person distance. Negative pulls in.")]
     public float cameraCloseness = -0.9f;
 
+    //---------------------------------------------------------------- aim down sights
+    [Header("Aim Down Sights")]
+    public bool allowAds = true;
+
+    [Tooltip("Field of view while aiming. The hip-fire value is read off the camera on start, " +
+             "so it follows whatever the camera is already set to.")]
+    public float adsFieldOfView = 40f;
+
+    [Tooltip("How quickly it zooms in and back out.")]
+    public float adsZoomSpeed = 12f;
+
+    [Tooltip("Where the camera sits while aiming - usually tighter in than the hip-fire offset.")]
+    public Vector2 adsShoulderOffset = new Vector2(0.45f, 0.15f);
+
+    [Tooltip("How much closer again the camera pulls while aiming.")]
+    public float adsCameraCloseness = -1.4f;
+
+    [Tooltip("How much of his speed he keeps while aiming. He also can't sprint while aimed in.")]
+    [Range(0.1f, 1f)] public float adsMoveSpeedMultiplier = 0.6f;
+
+    //---------------------------------------------------------------- crouched framing
+    [Header("Camera - Crouched")]
+    [Tooltip("Nudges the camera up or down on top of the pivot already dropping with him. The " +
+             "pivot follow in PlayerController is what keeps the view at his shoulder - leave " +
+             "this at 0 unless the framing needs a tweak. It moves the camera without tilting " +
+             "it, so the crosshair keeps pointing where it did standing up.")]
+    public float crouchCameraLift = 0f;
+
+    [Tooltip("How far the camera backs off while crouched. Positive pushes it out.")]
+    public float crouchCameraPullback = 0.25f;
+
+    public bool IsAiming { get; private set; }
+
+    //the unzoomed FOV, taken from the camera rather than hard coded
+    float hipFieldOfView;
+
     //---------------------------------------------------------------- HUD
     [Header("HUD (temporary)")]
     public bool showCyborgHud = true;
@@ -290,7 +330,14 @@ public class CyborgClass : MonoBehaviour
     public event System.Action OnUltimateStarted;
     public event System.Action OnOverload;
 
-    Vector3 Origin => firePoint != null ? firePoint.position : transform.position;
+    //crouching drops the gun over a metre, so the shot has to leave from down there too -
+    //otherwise he fires from where his shoulder would have been and clips the cover he is behind
+    Transform ActiveFirePoint =>
+        crouchedFirePoint != null && playerMovement != null && playerMovement.IsCrouching
+            ? crouchedFirePoint
+            : firePoint;
+
+    Vector3 Origin => ActiveFirePoint != null ? ActiveFirePoint.position : transform.position;
     Vector3 Forward => playerCamera != null ? playerCamera.transform.forward : transform.forward;
     Transform Body => playerController != null ? playerController.transform : transform;
 
@@ -299,6 +346,7 @@ public class CyborgClass : MonoBehaviour
     void Awake()
     {
         if (playerCamera == null) playerCamera = Camera.main;
+        if (playerCamera != null) hipFieldOfView = playerCamera.fieldOfView;
 
         //in Awake rather than OnEnable, so ammo survives switching classes and back
         currentAmmo = magazineSize;
@@ -330,6 +378,10 @@ public class CyborgClass : MonoBehaviour
             playerMovement.extraCameraDistance = 0f;
         }
         movementBuffApplied = false;
+        IsAiming = false;
+
+        if (playerCamera != null && hipFieldOfView > 0f)
+            playerCamera.fieldOfView = hipFieldOfView;
 
         ClearMuzzleFx();
     }
@@ -343,7 +395,13 @@ public class CyborgClass : MonoBehaviour
         {
             IsFiring = false;
             isReloading = false;
+            IsAiming = false;
             ClearMuzzleFx();
+
+            //the next class inherits this camera, so the zoom can't be left applied
+            if (playerCamera != null && hipFieldOfView > 0f)
+                playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, hipFieldOfView,
+                                                      Time.deltaTime * adsZoomSpeed);
 
             //another class is up - give the camera rig and the sprint back so nothing lingers
             if (playerMovement != null)
@@ -380,6 +438,10 @@ public class CyborgClass : MonoBehaviour
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
         }
 
+        //held rather than toggled, and dropped while he is rooted by the C ability
+        IsAiming = allowAds && !isCAbilityActive &&
+                   Mouse.current != null && Mouse.current.rightButton.isPressed;
+
         HandleFireInput();
 
         //asserted every frame so a pause can't leave him stuck or permanently buffed
@@ -388,7 +450,9 @@ public class CyborgClass : MonoBehaviour
             bool rooted = isCAbilityActive;
             bool overdrive = IsOverdriveActive;
 
-            playerMovement.speedMultiplier = rooted ? 0f : (overdrive ? overdriveMoveSpeedMultiplier : 1f);
+            float speed = rooted ? 0f : (overdrive ? overdriveMoveSpeedMultiplier : 1f);
+            if (IsAiming) speed *= adsMoveSpeedMultiplier;
+            playerMovement.speedMultiplier = speed;
             playerMovement.jumpHeightMultiplier = overdrive ? overdriveJumpMultiplier : 1f;
             movementBuffApplied = true;
 
@@ -397,16 +461,33 @@ public class CyborgClass : MonoBehaviour
 
             //he can't shoot straight at a dead sprint - opening fire drops him back to a run,
             //so the Firing tree lands on the shoot-while-running clip instead of the sprint
-            playerMovement.suspendSprint = IsFiring;
+            playerMovement.suspendSprint = IsFiring || IsAiming;
 
             //a soldier with a rifle can take a knee; the melee classes leave this off
             playerMovement.allowCrouch = !rooted;
 
             //asserted every frame rather than set once on class switch, so it survives a pause
             //or anything else that resets the camera rig
-            playerMovement.cameraShoulderOffset = shoulderOffset;
-            playerMovement.extraCameraDistance = cameraCloseness;
+            Vector2 shoulder = IsAiming ? adsShoulderOffset : shoulderOffset;
+            float closeness = IsAiming ? adsCameraCloseness : cameraCloseness;
+
+            //stacked on top of whichever of those is in play, so crouching reframes him the same
+            //way whether he is hip firing or aimed in
+            if (playerMovement.IsCrouching)
+            {
+                shoulder.y += crouchCameraLift;
+                closeness += crouchCameraPullback;
+            }
+
+            playerMovement.cameraShoulderOffset = shoulder;
+            playerMovement.extraCameraDistance = closeness;
         }
+
+        //eased rather than snapped, so it reads as the gun coming up
+        if (playerCamera != null)
+            playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView,
+                                                  IsAiming ? adsFieldOfView : hipFieldOfView,
+                                                  Time.deltaTime * adsZoomSpeed);
     }
 
     //---------------------------------------------------------------- target lock
@@ -522,7 +603,9 @@ public class CyborgClass : MonoBehaviour
 
         if (muzzleVfx != null)
         {
-            Transform tip = muzzlePoint != null ? muzzlePoint : (firePoint != null ? firePoint : transform);
+            Transform tip = muzzlePoint != null
+                ? muzzlePoint
+                : (ActiveFirePoint != null ? ActiveFirePoint : transform);
 
             //one flash at a time - a new shot replaces the last rather than stacking on it
             ClearMuzzleFx();
