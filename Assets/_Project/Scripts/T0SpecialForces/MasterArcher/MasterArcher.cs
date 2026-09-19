@@ -6,6 +6,12 @@ public class MasterArcher : MonoBehaviour
 
 {
     public GameObject arrowPrefab;
+
+    [Tooltip("The arrow the E volley rains down. Falls back to arrowPrefab if left empty.")]
+    public GameObject supportArrowPrefab;
+
+    [Tooltip("The arrow the ultimate rains down. Falls back to arrowPrefab if left empty.")]
+    public GameObject rainArrowPrefab;
     [Header("Setup")]
     public Camera playerCamera;
     public Transform firePoint;
@@ -57,17 +63,54 @@ public class MasterArcher : MonoBehaviour
     public float explosiveCooldown = 8f;
     public float explosiveArrowRadius = 5f;
     public float explosiveArrowDamage = 100f;
+
+    [Tooltip("Plays on the bow while the shot is armed, and goes away when she looses it.")]
+    public GameObject explosiveArmedVfx;
+
+    [Tooltip("Rides along with the armed arrow in flight.")]
+    public GameObject explosiveArrowVfx;
+
+    [Tooltip("Plays where the arrow detonates.")]
+    public GameObject explosiveExplosionVfx;
+
+    [Tooltip("How long the detonation effect is given before it is cleaned up.")]
+    public float explosiveVfxLifetime = 3f;
+
     float explosiveReadyTime;
     bool nextShotExplosive;
+    GameObject armedVfxInstance;
 
-    [Header("E - Rapid Fire")]
-    public float rapidFireCooldown = 12f;
-    public float rapidFireDuration = 5f;
-    public float rapidFireActiveCooldown = 0.1f;
-    public float rapidFireSpeedMultiplier = 5f;
-    float rapidFireReadyTime;
-    float rapidFireEndTime;
-    bool isRapidFireActive;
+    [Header("E - Covering Fire")]
+    public float coveringFireCooldown = 20f;
+
+    [Tooltip("How long she keeps the archer line behind her.")]
+    public float coveringFireDuration = 8f;
+
+    [Tooltip("How many arrows come down on each shot she lands while this is up.")]
+    public int supportArrowCount = 50;
+
+    [Tooltip("How far back the imaginary archers stand. Bigger values flatten the incoming arc.")]
+    public float supportOriginDistance = 22f;
+
+    [Tooltip("How high above the target they are firing from - the cliff.")]
+    public float supportOriginHeight = 18f;
+
+    [Tooltip("How wide the line of archers is, side to side.")]
+    public float supportOriginSpread = 8f;
+
+    [Tooltip("How far the volley scatters around the spot her arrow landed.")]
+    public float supportSpreadRadius = 4f;
+
+    [Tooltip("Seconds the arrows take to arrive, so they land as a wave rather than all at once.")]
+    public float supportSpawnDuration = 1.2f;
+
+    public float supportArrowDamage = 25f;
+    public float supportArrowSpeed = 45f;
+
+    float coveringFireReadyTime;
+    float coveringFireEndTime;
+    bool isCoveringFireActive;
+    public bool IsCoveringFireActive => isCoveringFireActive;
 
     [Header("V - Melee")]
     [Tooltip("Damage of the melee hit. It only ever lands on one enemy.")]
@@ -103,6 +146,22 @@ public class MasterArcher : MonoBehaviour
     public float rainSpawnDuration = 1.5f;
     public float rainArrowDamage = 50f;
     public float rainArrowSpeed = 40f;
+
+    [Tooltip("Volleys like the E one, but ringed all the way around the target and firing inward " +
+             "while the rain comes straight down. 0 turns the ring off.")]
+    public int ultVolleyDirections = 8;
+
+    public int ultVolleyArrowsPerDirection = 25;
+
+    [Tooltip("How far out the ring of archers stands. This is the massive circle.")]
+    public float ultVolleyRingRadius = 45f;
+
+    public float ultVolleyHeight = 25f;
+
+    [Tooltip("How wide each of the ring's firing lines is.")]
+    public float ultVolleySpread = 12f;
+
+    public float ultVolleyArrowDamage = 50f;
     float ultimateReadyTime;
     bool nextShotUltimate;
 
@@ -116,7 +175,7 @@ public class MasterArcher : MonoBehaviour
     public float DrawProgress01 => isDrawing && maxDrawTime > 0f
         ? Mathf.Clamp01((Time.time - drawStartTime) / maxDrawTime)
         : 0f;
-    float EffectiveFireCooldown => isRapidFireActive ? rapidFireActiveCooldown : fireCooldown;
+    float EffectiveFireCooldown => fireCooldown;
 
     void Awake()
     {
@@ -154,13 +213,13 @@ public class MasterArcher : MonoBehaviour
             playerMovement.suspendSprint = isDrawing;
         }
 
-        if (isRapidFireActive && Time.time >= rapidFireEndTime)
-            isRapidFireActive = false;
+        if (isCoveringFireActive && Time.time >= coveringFireEndTime)
+            isCoveringFireActive = false;
 
         if (Keyboard.current != null)
         {
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateExplosive();
-            if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateRapidFire();
+            if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateCoveringFire();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
             if (Keyboard.current.vKey.wasPressedThisFrame) TryMelee();
         }
@@ -178,21 +237,7 @@ public class MasterArcher : MonoBehaviour
         //     CombatDebugHUD.Instance.SetLine("Bow: Drawing");
         // }
 
-        if (isRapidFireActive && !isMeleeing && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
-        {
-            Shoot(maxDrawTime);
-            nextFireTime = Time.time + EffectiveFireCooldown;
-        }
-
-        if (!isRapidFireActive && Mouse.current.leftButton.wasReleasedThisFrame && isDrawing && Time.time >= nextFireTime)
-        {
-            float drawTime = Time.time - drawStartTime;
-            Shoot(drawTime);
-            nextFireTime = Time.time + EffectiveFireCooldown;
-            isDrawing = false;
-        }
-
-        if (!isRapidFireActive && Mouse.current.leftButton.wasReleasedThisFrame && isDrawing && Time.time >= nextFireTime)
+        if (Mouse.current.leftButton.wasReleasedThisFrame && isDrawing && Time.time >= nextFireTime)
         {
             float drawTime = Time.time - drawStartTime;
             Shoot(drawTime);
@@ -243,13 +288,15 @@ public class MasterArcher : MonoBehaviour
 
         float t = Mathf.Clamp01(drawTime / maxDrawTime);
         float speed = Mathf.Lerp(minArrowSpeed, maxArrowSpeed, t);
-        if (isRapidFireActive)
-            speed *= rapidFireSpeedMultiplier;
 
         if (nextShotUltimate)
         {
             FireUltimate(baseDir, speed);
             nextShotUltimate = false;
+        }
+        else if (isCoveringFireActive)
+        {
+            FireCoveringShot(baseDir, speed);
         }
         else if (isAiming)
         {
@@ -260,6 +307,7 @@ public class MasterArcher : MonoBehaviour
             FireSpread(baseDir, speed);
         }
 
+        if (nextShotExplosive) ClearArmedVfx();
         nextShotExplosive = false;
     }
 
@@ -300,29 +348,143 @@ public class MasterArcher : MonoBehaviour
             ap.OnImpact += HandleUltimateImpact;
     }
 
+    //one arrow out, like the ultimate's opener - wherever it lands is the spot the line behind
+    //her is told to hit. the flat direction of the shot is captured here rather than read at
+    //impact, so turning around mid-flight doesn't move the archers.
+    void FireCoveringShot(Vector3 baseDir, float speed)
+    {
+        ArrowProjectile ap = SpawnArrow(firePoint.position, baseDir, speed);
+        if (ap == null) return;
+
+        Vector3 flat = new Vector3(baseDir.x, 0f, baseDir.z);
+        Vector3 shotDir = flat.sqrMagnitude > 0.0001f ? flat.normalized : transform.forward;
+
+        ap.OnImpact += landingPoint => StartCoroutine(SupportVolley(landingPoint, shotDir));
+    }
+
+    //E's volley: one line of archers on the cliff behind her, all aiming at the one spot
+    IEnumerator SupportVolley(Vector3 center, Vector3 shotDir)
+    {
+        return VolleyFrom(center, shotDir, supportArrowCount, supportOriginDistance,
+                          supportOriginHeight, supportOriginSpread, supportSpawnDuration,
+                          supportArrowDamage, supportSpreadRadius, -1f);
+    }
+
+    //a line of archers standing back along 'fromDir', loosing at the one spot. arrows arrive on a
+    //steep diagonal and converge, which is what makes it read as massed fire rather than rain.
+    //targetRadius is the footprint on the ground they are covering. phase below zero scatters
+    //at random inside it; a phase of zero or more lays the hits out evenly instead, offset by
+    //that much, so several lines firing together carpet the circle rather than overlap.
+    IEnumerator VolleyFrom(Vector3 center, Vector3 fromDir, int count, float distance,
+                           float height, float lineSpread, float duration, float damage,
+                           float targetRadius, float phase)
+    {
+        //back along the shot, up on the cliff
+        Vector3 origin = center - fromDir * distance + Vector3.up * height;
+
+        //the line of archers runs across their firing direction
+        Vector3 across = Vector3.Cross(Vector3.up, fromDir).normalized;
+
+        return SpawnOverTime(count, duration, i =>
+        {
+            Vector3 spawnPos = origin
+                             + across * Random.Range(-lineSpread, lineSpread)
+                             + Vector3.up * Random.Range(-1f, 1f);
+
+            Vector2 scatter;
+            if (phase < 0f)
+            {
+                scatter = Random.insideUnitCircle * targetRadius;
+            }
+            else
+            {
+                //sunflower spacing - the golden angle keeps successive points from lining up, and
+                //the square root spreads them by equal area instead of bunching at the middle
+                float a = phase + i * 2.39996323f;
+                float r = targetRadius * Mathf.Sqrt((i + 0.5f) / Mathf.Max(1, count));
+                scatter = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+            }
+
+            Vector3 target = center + new Vector3(scatter.x, 0f, scatter.y);
+
+            //the arrows have gravity on, so firing straight at the spot lands them short and the
+            //volley misses. aiming high by the drop over the flight puts them back on it, and
+            //the sag on the way in is what gives the shot its arc.
+            float flight = Vector3.Distance(spawnPos, target) / Mathf.Max(0.01f, supportArrowSpeed);
+            float drop = 0.5f * Mathf.Abs(Physics.gravity.y) * flight * flight;
+
+            SpawnArrow(spawnPos, (target + Vector3.up * drop - spawnPos).normalized,
+                       supportArrowSpeed, damage, supportArrowPrefab);
+        });
+    }
+
     void HandleUltimateImpact(Vector3 landingPoint)
     {
+        //the vertical rain is the centrepiece; the ring closes in on it from every side at once
         StartCoroutine(RainArrows(landingPoint));
+
+        for (int i = 0; i < ultVolleyDirections; i++)
+        {
+            float angle = i * Mathf.PI * 2f / ultVolleyDirections;
+
+            //the direction this line is firing ALONG, so the maths puts them out on the ring
+            Vector3 fromDir = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+
+            //every line covers the whole rain footprint, each starting its pattern at a different
+            //angle so eight lines interleave into one even carpet instead of eight copies.
+            //the window is the rain's, so the ring runs for exactly as long as the ultimate does.
+            StartCoroutine(VolleyFrom(landingPoint, fromDir, ultVolleyArrowsPerDirection,
+                                      ultVolleyRingRadius, ultVolleyHeight, ultVolleySpread,
+                                      rainSpawnDuration, ultVolleyArrowDamage,
+                                      rainSpreadRadius, angle));
+        }
     }
 
     IEnumerator RainArrows(Vector3 center)
     {
-        float interval = rainArrowCount > 0 ? rainSpawnDuration / rainArrowCount : 0f;
-
-        for (int i = 0; i < rainArrowCount; i++)
+        return SpawnOverTime(rainArrowCount, rainSpawnDuration, i =>
         {
             Vector2 randomOffset = Random.insideUnitCircle * rainSpreadRadius;
             Vector3 spawnPos = center + new Vector3(randomOffset.x, rainSpawnHeight, randomOffset.y);
 
-            SpawnArrow(spawnPos, Vector3.down, rainArrowSpeed, rainArrowDamage);
+            SpawnArrow(spawnPos, Vector3.down, rainArrowSpeed, rainArrowDamage, rainArrowPrefab);
+        });
+    }
 
-            yield return new WaitForSeconds(interval);
+    //spreads 'count' spawns across 'duration' by the clock rather than by waiting between each
+    //one. WaitForSeconds can never wait less than a frame, so asking for 1000 arrows in 2s used
+    //to hand out one per frame and quietly stretch to 17s at 60fps - and to half that on a 144Hz
+    //machine. going by elapsed time makes the length the same everywhere.
+    IEnumerator SpawnOverTime(int count, float duration, System.Action<int> spawn)
+    {
+        if (count <= 0) yield break;
+
+        if (duration <= 0f)
+        {
+            for (int i = 0; i < count; i++) spawn(i);
+            yield break;
+        }
+
+        int spawned = 0;
+        float elapsed = 0f;
+
+        while (spawned < count)
+        {
+            elapsed += Time.deltaTime;
+
+            //however many the schedule says are due by now, even if that is several this frame
+            int due = Mathf.Min(count, Mathf.CeilToInt(count * (elapsed / duration)));
+            while (spawned < due) spawn(spawned++);
+
+            if (spawned < count) yield return null;
         }
     }
 
-    ArrowProjectile SpawnArrow(Vector3 spawnPos, Vector3 shootDir, float speed, float damageOverride = -1f)
+    ArrowProjectile SpawnArrow(Vector3 spawnPos, Vector3 shootDir, float speed, float damageOverride = -1f,
+                               GameObject prefabOverride = null)
     {
-        GameObject arrow = Instantiate(arrowPrefab, spawnPos, Quaternion.LookRotation(shootDir, Vector3.up));
+        GameObject prefab = prefabOverride != null ? prefabOverride : arrowPrefab;
+        GameObject arrow = Instantiate(prefab, spawnPos, Quaternion.LookRotation(shootDir, Vector3.up));
         ArrowProjectile ap = arrow.GetComponent<ArrowProjectile>();
         if (ap != null)
         {
@@ -334,6 +496,12 @@ public class MasterArcher : MonoBehaviour
                 ap.isExplosive = true;
                 ap.explosionRadius = explosiveArrowRadius;
                 ap.explosionDamage = explosiveArrowDamage;
+                ap.explosionVfx = explosiveExplosionVfx;
+                ap.explosionVfxLifetime = explosiveVfxLifetime;
+
+                //parented, so it follows the arrow and dies with it
+                VfxSpawner.Spawn(explosiveArrowVfx, arrow.transform.position,
+                                 arrow.transform.rotation, arrow.transform);
             }
         }
 
@@ -345,6 +513,8 @@ public class MasterArcher : MonoBehaviour
     {
         isDrawing = false;
         isMeleeing = false;
+        isCoveringFireActive = false;
+        ClearArmedVfx();
 
         //hand the camera rig back, or his shoulder view follows the next class around
         if (playerMovement != null)
@@ -377,12 +547,6 @@ public class MasterArcher : MonoBehaviour
 
     public void ReleaseDraw()
     {
-        if (isRapidFireActive)
-        {
-            isDrawing = false;
-            return;
-        }
-
         if (!isDrawing || Time.time < nextFireTime) return;
 
         float drawTime = Time.time - drawStartTime;
@@ -468,15 +632,29 @@ public class MasterArcher : MonoBehaviour
 
         explosiveReadyTime = Time.time + explosiveCooldown;
         nextShotExplosive = true;
+
+        //parented to the bow so it tracks her while she lines the shot up
+        if (firePoint != null)
+        {
+            ClearArmedVfx();
+            armedVfxInstance = VfxSpawner.Spawn(explosiveArmedVfx, firePoint.position,
+                                                firePoint.rotation, firePoint);
+        }
     }
 
-    void TryActivateRapidFire()
+    void ClearArmedVfx()
     {
-        if (Time.time < rapidFireReadyTime) return;
+        if (armedVfxInstance != null) Destroy(armedVfxInstance);
+        armedVfxInstance = null;
+    }
 
-        rapidFireReadyTime = Time.time + rapidFireCooldown;
-        isRapidFireActive = true;
-        rapidFireEndTime = Time.time + rapidFireDuration;
+    void TryActivateCoveringFire()
+    {
+        if (Time.time < coveringFireReadyTime) return;
+
+        coveringFireReadyTime = Time.time + coveringFireCooldown;
+        isCoveringFireActive = true;
+        coveringFireEndTime = Time.time + coveringFireDuration;
     }
 
     void TryActivateUltimate()
