@@ -13,6 +13,9 @@ public class MasterArcher : MonoBehaviour
     [Tooltip("Needed for the over-the-shoulder camera. Assign the Player's PlayerController.")]
     public PlayerController playerMovement;
 
+    [Tooltip("Optional. Kicks the camera on a melee hit, like the other classes do.")]
+    public CameraShake cameraShake;
+
     [Header("Camera - Over the Shoulder")]
     [Tooltip("He aims down a crosshair, so the camera sits off to one side instead of dead " +
              "behind him. X = right of the player, Y = up. Negative X for the left shoulder.")]
@@ -65,6 +68,32 @@ public class MasterArcher : MonoBehaviour
     float rapidFireReadyTime;
     float rapidFireEndTime;
     bool isRapidFireActive;
+
+    [Header("V - Melee")]
+    [Tooltip("Damage of the melee hit. It only ever lands on one enemy.")]
+    public float meleeDamage = 100f;
+
+    [Tooltip("How far in front of her the hit reaches.")]
+    public float meleeRange = 2.5f;
+
+    [Tooltip("Width of the arc in front of her, in degrees. 90 means 45 either side of straight ahead.")]
+    public float meleeArc = 90f;
+
+    public float meleeCooldown = 1.5f;
+
+    [Tooltip("Delay from the keypress to the damage landing - line this up with the swing.")]
+    public float meleeHitDelay = 0.3f;
+
+    [Tooltip("How long she is locked out of shooting - line this up with the animation.")]
+    public float meleeLockDuration = 0.9f;
+
+    public GameObject meleeHitVfx;
+    public float meleeShake = 0.25f;
+
+    float meleeReadyTime;
+    bool isMeleeing;
+    public bool IsMeleeing => isMeleeing;
+    public event System.Action OnMelee;
 
     [Header("X - The Heavens Open (Ultimate)")]
     public float ultimateCooldown = 60f;
@@ -133,6 +162,7 @@ public class MasterArcher : MonoBehaviour
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateExplosive();
             if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateRapidFire();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
+            if (Keyboard.current.vKey.wasPressedThisFrame) TryMelee();
         }
 
         if (playerCamera != null)
@@ -148,7 +178,7 @@ public class MasterArcher : MonoBehaviour
         //     CombatDebugHUD.Instance.SetLine("Bow: Drawing");
         // }
 
-        if (isRapidFireActive && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
+        if (isRapidFireActive && !isMeleeing && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
         {
             Shoot(maxDrawTime);
             nextFireTime = Time.time + EffectiveFireCooldown;
@@ -314,6 +344,7 @@ public class MasterArcher : MonoBehaviour
     void OnDisable()
     {
         isDrawing = false;
+        isMeleeing = false;
 
         //hand the camera rig back, or his shoulder view follows the next class around
         if (playerMovement != null)
@@ -337,6 +368,9 @@ public class MasterArcher : MonoBehaviour
 
     public void StartDraw()
     {
+        //no nocking an arrow mid-swing - the melee owns her arms until it finishes
+        if (isMeleeing) return;
+
         isDrawing = true;
         drawStartTime = Time.time;
     }
@@ -360,6 +394,72 @@ public class MasterArcher : MonoBehaviour
     public bool IsDrawing()
     {
         return isDrawing;
+    }
+
+    //a quick shove for anything that gets too close. one target only, so it never turns into a
+    //crowd clear - that is what the ultimate is for
+    void TryMelee()
+    {
+        if (Time.time < meleeReadyTime || isMeleeing) return;
+
+        meleeReadyTime = Time.time + meleeCooldown;
+        StartCoroutine(MeleeSwing());
+    }
+
+    IEnumerator MeleeSwing()
+    {
+        isMeleeing = true;
+        isDrawing = false;          // cancels any draw in progress
+        OnMelee?.Invoke();
+
+        //the hit lands partway through the swing, not on the keypress
+        if (meleeHitDelay > 0f) yield return new WaitForSeconds(meleeHitDelay);
+
+        VirusHealthBase target = FindMeleeTarget();
+        if (target != null)
+        {
+            target.TakeDamage(meleeDamage);
+
+            if (meleeHitVfx != null)
+            {
+                Collider col = target.GetComponentInChildren<Collider>();
+                Vector3 at = col != null ? col.bounds.center : target.transform.position + Vector3.up;
+                GameObject fx = Instantiate(meleeHitVfx, at, Quaternion.identity);
+                Destroy(fx, 2f);
+            }
+
+            if (cameraShake != null && meleeShake > 0f) cameraShake.AddTrauma(meleeShake);
+        }
+
+        float rest = meleeLockDuration - meleeHitDelay;
+        if (rest > 0f) yield return new WaitForSeconds(rest);
+
+        isMeleeing = false;
+    }
+
+    //nearest thing inside the arc in front of her - one target, never a sweep
+    VirusHealthBase FindMeleeTarget()
+    {
+        Transform body = playerMovement != null ? playerMovement.transform : transform;
+        Vector3 centre = body.position + Vector3.up;
+
+        VirusHealthBase best = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (Collider c in Physics.OverlapSphere(centre, meleeRange))
+        {
+            VirusHealthBase v = c.GetComponentInParent<VirusHealthBase>();
+            if (v == null || v.CurrentHealth <= 0f) continue;
+
+            Vector3 to = v.transform.position - centre;
+            to.y = 0f;
+            if (Vector3.Angle(body.forward, to) > meleeArc * 0.5f) continue;
+
+            float d = to.sqrMagnitude;
+            if (d < bestDistance) { bestDistance = d; best = v; }
+        }
+
+        return best;
     }
 
     void TryActivateExplosive()

@@ -32,15 +32,36 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
              "charge maps onto the stretch from here to the end instead.")]
     [Range(0f, 1f)] public float drawPullStart = 0.55f;
 
+    [Tooltip("The state on the bow layer holding the melee swing.")]
+    public string meleeStateName = "Melee";
+
     Animator animator;
     int bowLayer = -1;
     int drawStateHash;
+    int meleeStateHash;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
         bowLayer = animator.GetLayerIndex(bowLayerName);
         drawStateHash = Animator.StringToHash(drawStateName);
+        meleeStateHash = Animator.StringToHash(meleeStateName);
+    }
+
+    //the swing is a one-off, so it is played on the event rather than polled from state
+    void OnEnable()
+    {
+        if (archer != null) archer.OnMelee += PlayMelee;
+    }
+
+    void OnDisable()
+    {
+        if (archer != null) archer.OnMelee -= PlayMelee;
+    }
+
+    void PlayMelee()
+    {
+        if (bowLayer >= 0) animator.Play(meleeStateHash, bowLayer, 0f);
     }
 
     void Update()
