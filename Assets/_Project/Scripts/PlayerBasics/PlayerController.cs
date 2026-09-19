@@ -37,6 +37,10 @@ public class PlayerController : MonoBehaviour
     [Tooltip("How fast the collider eases between standing and crouched.")]
     public float crouchLerpSpeed = 10f;
 
+    [Tooltip("How much of the crouch the camera follows down. 1 keeps the view at his shoulder " +
+             "as he drops, 0 leaves it hanging at standing height looking down on him.")]
+    [Range(0f, 1f)] public float crouchCameraFollow = 1f;
+
     //true while actually crouched. read by the active class's animator driver.
     public bool IsCrouching { get; private set; }
 
@@ -207,8 +211,12 @@ public class PlayerController : MonoBehaviour
             float t = Mathf.InverseLerp(-80f, 60f, pitch); // 0..1
             float yOffset = Mathf.Lerp(0f, 0.4f, t);  // down when looking down, up when looking up
 
+            //the collider is already easing between the two heights, so measuring it keeps the
+            //camera exactly in step with the body rather than running a second timer of its own
+            float crouchDrop = (standingHeight - controller.height) * crouchCameraFollow;
+
             Vector3 p = cameraPivot.localPosition;
-            p.y = basePivotY + yOffset;
+            p.y = basePivotY + yOffset - crouchDrop;
             cameraPivot.localPosition = p;
         }
 
