@@ -2858,6 +2858,34 @@ PrefabInstance:
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 733618516}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainArrowCount
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainArrowSpeed
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainArrowDamage
+      value: 200
+      objectReference: {fileID: 0}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainArrowPrefab
+      value: 
+      objectReference: {fileID: 5079712205898985585, guid: d01046bbfa7bfee48bd057f4186d549b, type: 3}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainSpreadRadius
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: rainSpawnDuration
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4352445991421631570, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
+      propertyPath: supportArrowPrefab
+      value: 
+      objectReference: {fileID: 7599599681866320202, guid: 3208bb1e543e16e46b2d29697c33866d, type: 3}
     - target: {fileID: 4425733791079633025, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
