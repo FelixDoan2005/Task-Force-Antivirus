@@ -8,6 +8,7 @@ public class CharacterAnimatorDriver : MonoBehaviour
     [Header("Setup")]
     public PlayerController playerMovement;
     public BladeMaster bladeMaster; // optional - only assign on the BladeMaster model
+    public SwordWeapon swordWeapon; // optional - only assign on the T3 swordsman model
     public PlayerHealth playerHealth; // drives the death state
 
     [Header("Blend")]
@@ -37,6 +38,8 @@ public class CharacterAnimatorDriver : MonoBehaviour
 
     void OnEnable()
     {
+        if (swordWeapon != null) swordWeapon.OnAttack += HandleSwordSwing;
+
         if (bladeMaster == null) return;
         bladeMaster.OnDash += HandleDash;
         bladeMaster.OnUltimateStarted += HandleUltimateStarted;
@@ -49,6 +52,8 @@ public class CharacterAnimatorDriver : MonoBehaviour
 
     void OnDisable()
     {
+        if (swordWeapon != null) swordWeapon.OnAttack -= HandleSwordSwing;
+
         if (bladeMaster == null) return;
         bladeMaster.OnDash -= HandleDash;
         bladeMaster.OnUltimateStarted -= HandleUltimateStarted;
@@ -57,6 +62,14 @@ public class CharacterAnimatorDriver : MonoBehaviour
         bladeMaster.OnComboAttack -= HandleComboAttack;
         bladeMaster.OnEnhancedActivated -= HandleEnhancedActivated;
         bladeMaster.OnCAbility -= HandleCAbility;
+    }
+
+    //the T3 sword's swings. same trick as the combo below: the blend tree's thresholds are
+    //whole numbers, so this lands on one clip outright instead of blending two together
+    void HandleSwordSwing(int step)
+    {
+        animator.SetFloat("ComboStep", step);
+        animator.SetTrigger("Attack");
     }
 
     void HandleEnhancedActivated()

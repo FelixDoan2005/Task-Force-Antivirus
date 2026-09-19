@@ -511,8 +511,23 @@ public class MasterArcher : MonoBehaviour
 
     void OnDisable()
     {
+        //two different things disable this. the pause menu switches the COMPONENT off to stop it
+        //reading input, while the object stays active; switching class deactivates the OBJECT.
+        //only the swap should throw away what she is holding - a pause that ate an ability you
+        //had just spent a 20 second cooldown on would be losing the player's progress.
+        bool switchedAway = !gameObject.activeInHierarchy;
+
+        //a half-drawn bow is dropped either way: the release comes through WeaponSwitcher, which
+        //a pause also disables, so holding one across a pause would miss its release and stick
         isDrawing = false;
+
+        //the swing is run by a coroutine that clears this on its way out. that exit is not
+        //guaranteed to arrive, so the flag is dropped here too rather than risking it sticking
+        //true and blocking every future melee and draw
         isMeleeing = false;
+
+        if (!switchedAway) return;
+
         isCoveringFireActive = false;
         ClearArmedVfx();
 
