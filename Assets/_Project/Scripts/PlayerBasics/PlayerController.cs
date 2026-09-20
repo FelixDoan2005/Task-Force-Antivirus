@@ -110,6 +110,11 @@ public class PlayerController : MonoBehaviour
 
     public bool suspendGravity;
 
+    //lets an ability hand the player vertical motion directly - the grapple uses it to carry
+    //her over a ledge as the hook lets go, and to make sure a cancelled pull starts from zero
+    public void SetVerticalVelocity(float value) => velocity.y = value;
+    public float VerticalVelocity => velocity.y;
+
     [Header("Flight")]
     [Tooltip("Set by a class that can fly. Gravity is replaced by direct vertical control.")]
     public bool flightMode;
