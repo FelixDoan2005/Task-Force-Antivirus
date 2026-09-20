@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ArrowProjectile : MonoBehaviour
@@ -23,7 +24,22 @@ public class ArrowProjectile : MonoBehaviour
     [Tooltip("How long that effect is given to finish before it is cleaned up.")]
     public float explosionVfxLifetime = 3f;
 
+    [Header("Pass-through damage (optional)")]
+    [Tooltip("Dealt to anything the arrow flies past on its way, once each. 0 turns it off.")]
+    public float passThroughDamage = 0f;
+
+    [Tooltip("How close it has to pass to catch them.")]
+    public float passThroughRadius = 1.5f;
+
+    //one graze per virus - without this a slow arrow would tick the same target every step
+    readonly HashSet<VirusHealthBase> grazed = new HashSet<VirusHealthBase>();
+    Vector3 lastSweepPoint;
+
     public event Action<Vector3> OnImpact;
+
+    //raised when this arrow lodges in something alive, so whoever fired it can keep track of
+    //which targets are currently carrying one
+    public event Action<VirusHealthBase> OnStuckIn;
 
     Rigidbody rb;
     bool hasHit = false;
@@ -37,6 +53,7 @@ public class ArrowProjectile : MonoBehaviour
     void Start()
     {
         rb.linearVelocity = transform.forward * speed;
+        lastSweepPoint = transform.position;
         Destroy(gameObject, lifeTime);
     }
     void FixedUpdate()
@@ -44,6 +61,31 @@ public class ArrowProjectile : MonoBehaviour
         Vector3 v = rb.linearVelocity;
         if (v.sqrMagnitude > 0.01f)
             transform.forward = v.normalized;
+
+        SweepPassThrough();
+    }
+
+    //an arrow moves metres per physics step, so checking only where it happens to be each step
+    //would let it skip straight over anything between two positions. this sweeps the whole
+    //segment it actually covered instead, which is what makes the graze reliable at speed.
+    void SweepPassThrough()
+    {
+        if (hasHit || passThroughDamage <= 0f || passThroughRadius <= 0f) return;
+
+        Vector3 now = transform.position;
+        if (Vector3.Distance(lastSweepPoint, now) > 0.0001f)
+        {
+            foreach (Collider c in Physics.OverlapCapsule(lastSweepPoint, now, passThroughRadius))
+            {
+                VirusHealthBase vh = c.GetComponentInParent<VirusHealthBase>();
+                if (vh == null || grazed.Contains(vh)) continue;
+
+                grazed.Add(vh);
+                vh.TakeDamage(passThroughDamage);
+            }
+        }
+
+        lastSweepPoint = now;
     }
 
     void OnCollisionEnter(Collision collision)
@@ -62,7 +104,10 @@ public class ArrowProjectile : MonoBehaviour
 
         VirusHealthBase zh = collision.collider.GetComponentInParent<VirusHealthBase>();
         if (zh != null)
+        {
             zh.TakeDamage(damage);
+            OnStuckIn?.Invoke(zh);
+        }
 
         rb.linearVelocity = Vector3.zero;
         rb.isKinematic = true;
