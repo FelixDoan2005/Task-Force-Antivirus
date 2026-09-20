@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 35f613021d83b604bbea3ea00328c67f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Prefab/Virus_green.prefab
+  uploadId: 638611

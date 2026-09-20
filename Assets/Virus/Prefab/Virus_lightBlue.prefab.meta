@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 534cbe85fe2898f4d8b36f1b4004a113
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Prefab/Virus_lightBlue.prefab
+  uploadId: 638611

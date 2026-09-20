@@ -31,6 +31,16 @@ public class ArrowProjectile : MonoBehaviour
     [Tooltip("How close it has to pass to catch them.")]
     public float passThroughRadius = 1.5f;
 
+    [Header("Sticking")]
+    [Tooltip("Snap onto the target's actual animated mesh rather than wherever its collider " +
+             "happened to stop the arrow. Big creatures have crude colliders, so without this " +
+             "arrows hang in the air beside them.")]
+    public bool snapToMeshSurface = true;
+
+    [Tooltip("How far past the surface the arrowhead is pushed, so it reads as buried in the " +
+             "body rather than balanced on the skin.")]
+    public float embedDepth = 0.12f;
+
     //one graze per virus - without this a slow arrow would tick the same target every step
     readonly HashSet<VirusHealthBase> grazed = new HashSet<VirusHealthBase>();
     Vector3 lastSweepPoint;
@@ -129,7 +139,22 @@ public class ArrowProjectile : MonoBehaviour
             c.enabled = false;
 
         if (zh != null)
-            transform.SetParent(collision.transform);
+        {
+            Transform ride = collision.transform;
+
+            //the collider only decides THAT it hit; where it looks like it hit comes from the
+            //mesh, which is the only thing the player can actually see
+            if (snapToMeshSurface &&
+                MeshSurfaceSnap.TryFindSurface(zh.gameObject, transform.position,
+                                               out Vector3 surface, out Transform bone))
+            {
+                transform.position = surface + transform.forward * embedDepth;
+                if (bone != null) ride = bone;
+            }
+
+            //worldPositionStays, or a bone scaled several times over would blow the arrow up
+            transform.SetParent(ride, true);
+        }
 
         Destroy(gameObject, stickDuration);
     }

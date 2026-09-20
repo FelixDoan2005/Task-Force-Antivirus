@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d5513a2a64c35de49a7abee2ded402c0
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Materials/green/cube.mat
+  uploadId: 638611

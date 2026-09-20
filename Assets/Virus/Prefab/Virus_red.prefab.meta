@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2e29db1e8596bd6498e4440e5d55b6ac
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Prefab/Virus_red.prefab
+  uploadId: 638611

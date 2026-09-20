@@ -3,8 +3,26 @@ using UnityEngine;
 public class TankVirusMovement : MonoBehaviour
 {
     public float speed = 1.5f;
+
+    [Tooltip("How much clear space to leave between its body and its target's. Measured between " +
+             "their colliders, not their centres, so it holds up when the virus is scaled.")]
+    public float contactBuffer = 0.3f;
+
+    [Tooltip("Fallback gap when neither side has a collider to measure.")]
     public float stopDistance = 1.5f;
+
     public float detectionRange = 20f;
+
+    [Tooltip("It keeps turning to face its target after it stops, so it attacks what it is " +
+             "looking at rather than shuffling past.")]
+    public float turnSpeed = 360f;
+
+    Collider ownCollider;
+
+    void Awake()
+    {
+        ownCollider = GetComponent<Collider>();
+    }
 
     void Update()
     {
@@ -19,14 +37,39 @@ public class TankVirusMovement : MonoBehaviour
         toTarget.y = 0f;
 
         float dist = toTarget.magnitude;
-        if (dist <= stopDistance) return;
-
         Vector3 dir = toTarget.normalized;
 
-        transform.position += speed * Time.deltaTime * dir;
-
+        //facing is updated whether or not it closes the gap, so a virus standing in contact
+        //still turns to follow the player rather than attacking thin air
         if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                          Quaternion.LookRotation(dir),
+                                                          turnSpeed * Time.deltaTime);
+
+        //the gap that matters is between the two bodies, not their origins: comparing centres
+        //meant a big virus kept walking long after it was already touching the player, shoving
+        //them backwards for as long as it lived.
+        if (SurfaceGap(targetTransform) <= contactBuffer) return;
+
+        transform.position += speed * Time.deltaTime * dir;
+    }
+
+    //the flat distance between the nearest points of the two bodies. worked out from the actual
+    //shapes rather than a radius, because a radius is meaningless for a wall - half the width of
+    //a 40m wall would have this thing stopping twenty metres out and never swinging at it.
+    float SurfaceGap(Transform target)
+    {
+        Collider targetCol = target.GetComponentInChildren<Collider>();
+
+        Vector3 me = transform.position;
+
+        Vector3 theirPoint = targetCol != null ? targetCol.bounds.ClosestPoint(me) : target.position;
+        Vector3 myPoint = ownCollider != null ? ownCollider.bounds.ClosestPoint(theirPoint) : me;
+
+        Vector3 between = theirPoint - myPoint;
+        between.y = 0f;
+
+        return between.magnitude;
     }
 
     IDamageable FindNearestTarget()

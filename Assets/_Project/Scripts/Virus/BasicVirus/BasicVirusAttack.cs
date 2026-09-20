@@ -1,12 +1,15 @@
 using UnityEngine;
 
-public class BasicVirusAttack : MonoBehaviour
+public class BasicVirusAttack : MonoBehaviour, IVirusAttack
 {
     public float damagePerHit = 5f;
     public float hitsPerSecond = 1f;
     public float attackRange = 1.6f;
 
     float timer;
+
+    //so a model can swing when it lands a blow
+    public event System.Action<int> OnAttack;
 
     void Update()
     {
@@ -22,6 +25,7 @@ public class BasicVirusAttack : MonoBehaviour
         {
             timer = 0f;
             target.TakeDamage(damagePerHit);
+            OnAttack?.Invoke(0);
         }
     }
 
