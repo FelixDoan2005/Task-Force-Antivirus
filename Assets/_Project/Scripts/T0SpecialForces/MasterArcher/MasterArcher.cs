@@ -142,6 +142,10 @@ public class MasterArcher : MonoBehaviour
     [Tooltip("Arrows rained on each marked target, on top of the single aimed shot.")]
     public int focusVolleyArrowsPerTarget = 5;
 
+    [Tooltip("She draws for this long before the volley leaves. Without it the arrows appear on " +
+             "the same frame the draw starts, so the shot is over before it reads.")]
+    public float focusFireWindup = 0.35f;
+
     public float focusArrowDamage = 60f;
     public float focusArrowSpeed = 55f;
 
@@ -176,6 +180,10 @@ public class MasterArcher : MonoBehaviour
     public int MarkedCount => markBuffer.Count;
 
     public event System.Action OnFocusFire;
+
+    //set for the length of the draw, so a second press cannot stack two volleys
+    bool isFocusFiring;
+    public bool IsFocusFiring => isFocusFiring;
 
     [Header("V - Melee")]
     [Tooltip("Damage of the melee hit. It only ever lands on one enemy.")]
@@ -727,6 +735,7 @@ public class MasterArcher : MonoBehaviour
         isDrawing = false;
         isMeleeing = false;
         isCoveringFireActive = false;
+        isFocusFiring = false;
         armingThisShot = false;
         autoAttackCharge = 0;
         pendingAutoShot = null;
@@ -910,18 +919,32 @@ public class MasterArcher : MonoBehaviour
     //time. the charge is only spent when there is actually something marked to spend it on.
     void TryActivateFocusFire()
     {
-        if (!IsFocusFireReady) return;
-
-        List<VirusHealthBase> targets = CollectMarked();
-        if (targets.Count == 0) return;
+        if (!IsFocusFireReady || isFocusFiring) return;
+        if (CollectMarked().Count == 0) return;   //nothing to shoot at, so the charge is kept
 
         autoAttackCharge = 0;
+
+        //she draws first and the arrows leave when the draw finishes, so the shot is seen
         OnFocusFire?.Invoke();
+        StartCoroutine(FocusFireVolley());
+    }
+
+    IEnumerator FocusFireVolley()
+    {
+        isFocusFiring = true;
+
+        if (focusFireWindup > 0f) yield return new WaitForSeconds(focusFireWindup);
+
+        //re-checked after the draw rather than reused from the keypress, so anything that died
+        //in the meantime is not shot at, and anything newly marked is
+        List<VirusHealthBase> targets = CollectMarked();
 
         Vector3 facing = playerMovement != null ? playerMovement.transform.forward : transform.forward;
 
         foreach (VirusHealthBase target in targets)
         {
+            if (target == null) continue;
+
             Vector3 aimAt = target.transform.position + Vector3.up;
 
             //the straight shot, led for the drop over the distance it has to cover
@@ -939,6 +962,8 @@ public class MasterArcher : MonoBehaviour
                                       focusVolleyDuration, focusArrowDamage,
                                       focusVolleySpread, -1f, focusArrowPrefab));
         }
+
+        isFocusFiring = false;
     }
 
     void TryActivateUltimate()
