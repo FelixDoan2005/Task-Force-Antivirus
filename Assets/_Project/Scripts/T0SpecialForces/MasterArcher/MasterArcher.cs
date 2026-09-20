@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,6 +10,9 @@ public class MasterArcher : MonoBehaviour
 
     [Tooltip("The arrow the E volley rains down. Falls back to arrowPrefab if left empty.")]
     public GameObject supportArrowPrefab;
+
+    [Tooltip("The blue-trailed arrow the C ability fires. Falls back to arrowPrefab if empty.")]
+    public GameObject focusArrowPrefab;
 
     [Tooltip("The arrow the ultimate rains down. Falls back to arrowPrefab if left empty.")]
     public GameObject rainArrowPrefab;
@@ -70,6 +74,13 @@ public class MasterArcher : MonoBehaviour
     [Tooltip("Rides along with the armed arrow in flight.")]
     public GameObject explosiveArrowVfx;
 
+    [Tooltip("Damage the armed arrow deals to anything it flies past on the way, once each. " +
+             "This is on top of the blast when it finally lands.")]
+    public float explosiveFlyByDamage = 40f;
+
+    [Tooltip("How close it has to pass to catch them.")]
+    public float explosiveFlyByRadius = 1.5f;
+
     [Tooltip("Plays where the arrow detonates.")]
     public GameObject explosiveExplosionVfx;
 
@@ -111,6 +122,55 @@ public class MasterArcher : MonoBehaviour
     float coveringFireEndTime;
     bool isCoveringFireActive;
     public bool IsCoveringFireActive => isCoveringFireActive;
+
+    //---------------------------------------------------------------- C - Focus Fire
+    //she has been putting arrows into things; this calls in everything she has marked at once.
+    [Header("C - Focus Fire")]
+    [Tooltip("How many ordinary shots it takes to charge this. One per shot, not per arrow.")]
+    public int autoAttacksToCharge = 10;
+
+    [Tooltip("How long a virus counts as carrying one of her arrows. The arrow itself is cleaned " +
+             "up about a second after it lands, so this is what actually decides who gets hit - " +
+             "treat it as how long the mark lasts rather than how long the arrow is visible.")]
+    public float markDuration = 8f;
+
+    [Tooltip("Arrows rained on each marked target, on top of the single aimed shot.")]
+    public int focusVolleyArrowsPerTarget = 5;
+
+    public float focusArrowDamage = 60f;
+    public float focusArrowSpeed = 55f;
+
+    [Tooltip("How wide the rain lands around each target.")]
+    public float focusVolleySpread = 1.5f;
+
+    [Tooltip("Seconds the volley on each target takes to arrive.")]
+    public float focusVolleyDuration = 0.6f;
+
+    [Tooltip("How high above the target its volley is loosed from.")]
+    public float focusVolleyHeight = 14f;
+
+    [Tooltip("How far back along her own facing the volley comes from. 0 drops it straight down.")]
+    public float focusVolleyDistance = 6f;
+
+    //shared by all the arrows of a single shot, so the first one to land banks the charge and
+    //the rest of that volley cannot bank it again
+    class AutoShot { public bool counted; }
+    AutoShot pendingAutoShot;
+
+    int autoAttackCharge;
+    public int AutoAttackCharge => autoAttackCharge;
+    public bool IsFocusFireReady => autoAttackCharge >= autoAttacksToCharge;
+
+    //every virus currently carrying one of her arrows, and when that stops being true
+    readonly Dictionary<VirusHealthBase, float> markedUntil = new Dictionary<VirusHealthBase, float>();
+
+    //reused rather than allocated, because this is pruned every frame for the HUD
+    readonly List<VirusHealthBase> markBuffer = new List<VirusHealthBase>();
+    readonly List<VirusHealthBase> markExpired = new List<VirusHealthBase>();
+
+    public int MarkedCount => markBuffer.Count;
+
+    public event System.Action OnFocusFire;
 
     [Header("V - Melee")]
     [Tooltip("Damage of the melee hit. It only ever lands on one enemy.")]
@@ -213,6 +273,9 @@ public class MasterArcher : MonoBehaviour
             playerMovement.suspendSprint = isDrawing;
         }
 
+        //pruned every frame so the marked count on the HUD is what C would actually hit
+        CollectMarked();
+
         if (isCoveringFireActive && Time.time >= coveringFireEndTime)
             isCoveringFireActive = false;
 
@@ -221,6 +284,7 @@ public class MasterArcher : MonoBehaviour
             if (Keyboard.current.qKey.wasPressedThisFrame) TryActivateExplosive();
             if (Keyboard.current.eKey.wasPressedThisFrame) TryActivateCoveringFire();
             if (Keyboard.current.xKey.wasPressedThisFrame) TryActivateUltimate();
+            if (Keyboard.current.cKey.wasPressedThisFrame) TryActivateFocusFire();
             if (Keyboard.current.vKey.wasPressedThisFrame) TryMelee();
         }
 
@@ -289,6 +353,11 @@ public class MasterArcher : MonoBehaviour
         float t = Mathf.Clamp01(drawTime / maxDrawTime);
         float speed = Mathf.Lerp(minArrowSpeed, maxArrowSpeed, t);
 
+        //a shot only earns its charge once one of its arrows actually lands in something, so
+        //missing costs her the stack. the token below is shared by every arrow in this one shot,
+        //which is what stops a five-arrow volley banking five charges off a single enemy.
+        pendingAutoShot = nextShotUltimate ? null : new AutoShot();
+
         if (nextShotUltimate)
         {
             FireUltimate(baseDir, speed);
@@ -309,6 +378,9 @@ public class MasterArcher : MonoBehaviour
 
         if (nextShotExplosive) ClearArmedVfx();
         nextShotExplosive = false;
+
+        //arrows already carry a reference to it; this just stops later volleys picking it up
+        pendingAutoShot = null;
     }
 
     void FireSpread(Vector3 baseDir, float speed)
@@ -377,7 +449,7 @@ public class MasterArcher : MonoBehaviour
     //that much, so several lines firing together carpet the circle rather than overlap.
     IEnumerator VolleyFrom(Vector3 center, Vector3 fromDir, int count, float distance,
                            float height, float lineSpread, float duration, float damage,
-                           float targetRadius, float phase)
+                           float targetRadius, float phase, GameObject prefabOverride = null)
     {
         //back along the shot, up on the cliff
         Vector3 origin = center - fromDir * distance + Vector3.up * height;
@@ -414,7 +486,8 @@ public class MasterArcher : MonoBehaviour
             float drop = 0.5f * Mathf.Abs(Physics.gravity.y) * flight * flight;
 
             SpawnArrow(spawnPos, (target + Vector3.up * drop - spawnPos).normalized,
-                       supportArrowSpeed, damage, supportArrowPrefab);
+                       supportArrowSpeed, damage,
+                       prefabOverride != null ? prefabOverride : supportArrowPrefab);
         });
     }
 
@@ -491,6 +564,16 @@ public class MasterArcher : MonoBehaviour
             ap.damage = damageOverride >= 0f ? damageOverride : arrowDamage;
             ap.speed = speed;
 
+            //whatever this arrow lodges in counts as marked from then on
+            ap.OnStuckIn += MarkTarget;
+
+            //and if it came from one of her ordinary shots, landing it earns the charge
+            if (pendingAutoShot != null)
+            {
+                AutoShot shot = pendingAutoShot;
+                ap.OnStuckIn += _ => CountAutoHit(shot);
+            }
+
             if (nextShotExplosive)
             {
                 ap.isExplosive = true;
@@ -498,6 +581,10 @@ public class MasterArcher : MonoBehaviour
                 ap.explosionDamage = explosiveArrowDamage;
                 ap.explosionVfx = explosiveExplosionVfx;
                 ap.explosionVfxLifetime = explosiveVfxLifetime;
+
+                //it now cuts through whatever it passes, not just what it lands on
+                ap.passThroughDamage = explosiveFlyByDamage;
+                ap.passThroughRadius = explosiveFlyByRadius;
 
                 //parented, so it follows the arrow and dies with it
                 VfxSpawner.Spawn(explosiveArrowVfx, arrow.transform.position,
@@ -509,11 +596,54 @@ public class MasterArcher : MonoBehaviour
         return ap;
     }
 
+    //---------------------------------------------------------------- HUD
+    [Header("HUD")]
+    public bool showArcherHud = true;
+    public int hudFontSize = 22;
+    public float hudTopMargin = 24f;
+
+    GUIStyle archerHudStyle;
+
+    //only runs while she is the selected class - the object is switched off otherwise
+    void OnGUI()
+    {
+        if (!showArcherHud) return;
+
+        archerHudStyle ??= new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperCenter,
+            fontStyle = FontStyle.Bold
+        };
+        archerHudStyle.fontSize = hudFontSize;
+
+        bool ready = IsFocusFireReady;
+
+        string label = ready
+            ? $"C READY   ·   {MarkedCount} marked"
+            : $"AUTOS  {autoAttackCharge} / {autoAttacksToCharge}";
+
+        if (ready && MarkedCount == 0) label += "   (nothing marked)";
+
+        Rect rect = new Rect(0f, hudTopMargin, Screen.width, hudFontSize * 2f);
+
+        //drawn twice, dark underneath, so it stays readable against a bright floor
+        GUI.color = new Color(0f, 0f, 0f, 0.65f);
+        GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), label, archerHudStyle);
+
+        GUI.color = ready ? new Color(0.35f, 0.7f, 1f) : Color.white;
+        GUI.Label(rect, label, archerHudStyle);
+
+        GUI.color = Color.white;
+    }
+
     void OnDisable()
     {
         isDrawing = false;
         isMeleeing = false;
         isCoveringFireActive = false;
+        autoAttackCharge = 0;
+        pendingAutoShot = null;
+        markedUntil.Clear();
         ClearArmedVfx();
 
         //hand the camera rig back, or his shoulder view follows the next class around
@@ -655,6 +785,73 @@ public class MasterArcher : MonoBehaviour
         coveringFireReadyTime = Time.time + coveringFireCooldown;
         isCoveringFireActive = true;
         coveringFireEndTime = Time.time + coveringFireDuration;
+    }
+
+    void CountAutoHit(AutoShot shot)
+    {
+        if (shot == null || shot.counted) return;
+
+        shot.counted = true;
+        autoAttackCharge = Mathf.Min(autoAttackCharge + 1, autoAttacksToCharge);
+    }
+
+    void MarkTarget(VirusHealthBase virus)
+    {
+        if (virus == null) return;
+        markedUntil[virus] = Time.time + markDuration;
+    }
+
+    //drops anything that died or whose mark ran out, and hands back what is left
+    List<VirusHealthBase> CollectMarked()
+    {
+        markBuffer.Clear();
+        markExpired.Clear();
+
+        foreach (var pair in markedUntil)
+        {
+            if (pair.Key == null || pair.Key.CurrentHealth <= 0f || Time.time > pair.Value)
+                markExpired.Add(pair.Key);
+            else
+                markBuffer.Add(pair.Key);
+        }
+
+        foreach (var dead in markExpired) markedUntil.Remove(dead);
+        return markBuffer;
+    }
+
+    //fires one aimed arrow at every marked virus and rains a small volley on each at the same
+    //time. the charge is only spent when there is actually something marked to spend it on.
+    void TryActivateFocusFire()
+    {
+        if (!IsFocusFireReady) return;
+
+        List<VirusHealthBase> targets = CollectMarked();
+        if (targets.Count == 0) return;
+
+        autoAttackCharge = 0;
+        OnFocusFire?.Invoke();
+
+        Vector3 facing = playerMovement != null ? playerMovement.transform.forward : transform.forward;
+
+        foreach (VirusHealthBase target in targets)
+        {
+            Vector3 aimAt = target.transform.position + Vector3.up;
+
+            //the straight shot, led for the drop over the distance it has to cover
+            Vector3 from = firePoint != null ? firePoint.position : transform.position;
+            float flight = Vector3.Distance(from, aimAt) / Mathf.Max(0.01f, focusArrowSpeed);
+            float drop = 0.5f * Mathf.Abs(Physics.gravity.y) * flight * flight;
+
+            SpawnArrow(from, (aimAt + Vector3.up * drop - from).normalized,
+                       focusArrowSpeed, focusArrowDamage, focusArrowPrefab);
+
+            //and the rain, tight around that same target
+            StartCoroutine(VolleyFrom(target.transform.position, facing,
+                                      focusVolleyArrowsPerTarget, focusVolleyDistance,
+                                      focusVolleyHeight, focusVolleySpread * 2f,
+                                      focusVolleyDuration, focusArrowDamage,
+                                      focusVolleySpread, -1f, focusArrowPrefab));
+        }
     }
 
     void TryActivateUltimate()
