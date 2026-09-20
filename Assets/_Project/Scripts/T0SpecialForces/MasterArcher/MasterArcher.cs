@@ -89,6 +89,11 @@ public class MasterArcher : MonoBehaviour
 
     float explosiveReadyTime;
     bool nextShotExplosive;
+
+    //true only while the arrows of ONE shot are being spawned. the armed flag above survives
+    //until she next fires, and every volley and rain coroutine goes through the same spawner,
+    //so without this an ultimate fired with Q armed turned its whole downpour explosive.
+    bool armingThisShot;
     GameObject armedVfxInstance;
 
     [Header("E - Covering Fire")]
@@ -206,6 +211,22 @@ public class MasterArcher : MonoBehaviour
     public float rainSpawnDuration = 1.5f;
     public float rainArrowDamage = 50f;
     public float rainArrowSpeed = 40f;
+
+    [Tooltip("Plays where the ultimate's arrow lands, as the sky opens. Spawned unparented so " +
+             "it survives the arrow being cleaned up, and removed after the lifetime below.")]
+    public GameObject ultimateImpactVfx;
+
+    [Tooltip("How long that effect is given before it is cleaned up. The rain itself runs for " +
+             "rainSpawnDuration, so this usually wants to be at least that long.")]
+    public float ultimateVfxLifetime = 10f;
+
+    [Tooltip("Scales the effect up or down without editing the prefab.")]
+    public float ultimateVfxScale = 1f;
+
+    [Tooltip("How far down to look for the floor under the impact. The effect is a ring meant " +
+             "to lie on the ground, so hitting a virus in the chest would otherwise leave it " +
+             "hanging in the air at that height.")]
+    public float ultimateVfxGroundSearch = 40f;
 
     [Tooltip("Volleys like the E one, but ringed all the way around the target and firing inward " +
              "while the rain comes straight down. 0 turns the ring off.")]
@@ -353,6 +374,10 @@ public class MasterArcher : MonoBehaviour
         float t = Mathf.Clamp01(drawTime / maxDrawTime);
         float speed = Mathf.Lerp(minArrowSpeed, maxArrowSpeed, t);
 
+        //the armed shot is this one and only this one - anything a coroutine spawns afterwards
+        //is a different shot and must not inherit it
+        armingThisShot = nextShotExplosive;
+
         //a shot only earns its charge once one of its arrows actually lands in something, so
         //missing costs her the stack. the token below is shared by every arrow in this one shot,
         //which is what stops a five-arrow volley banking five charges off a single enemy.
@@ -378,6 +403,7 @@ public class MasterArcher : MonoBehaviour
 
         if (nextShotExplosive) ClearArmedVfx();
         nextShotExplosive = false;
+        armingThisShot = false;
 
         //arrows already carry a reference to it; this just stops later volleys picking it up
         pendingAutoShot = null;
@@ -417,7 +443,12 @@ public class MasterArcher : MonoBehaviour
     {
         ArrowProjectile ap = SpawnArrow(firePoint.position, baseDir, speed);
         if (ap != null)
-            ap.OnImpact += HandleUltimateImpact;
+        {
+            //the arrow is captured so the handler can also read which way the surface faced
+            ArrowProjectile arrow = ap;
+            arrow.OnImpact += (point, struck) =>
+                HandleUltimateImpact(point, struck, arrow.LastImpactNormal);
+        }
     }
 
     //one arrow out, like the ultimate's opener - wherever it lands is the spot the line behind
@@ -431,7 +462,7 @@ public class MasterArcher : MonoBehaviour
         Vector3 flat = new Vector3(baseDir.x, 0f, baseDir.z);
         Vector3 shotDir = flat.sqrMagnitude > 0.0001f ? flat.normalized : transform.forward;
 
-        ap.OnImpact += landingPoint => StartCoroutine(SupportVolley(landingPoint, shotDir));
+        ap.OnImpact += (landingPoint, struck) => StartCoroutine(SupportVolley(landingPoint, shotDir));
     }
 
     //E's volley: one line of archers on the cliff behind her, all aiming at the one spot
@@ -491,8 +522,16 @@ public class MasterArcher : MonoBehaviour
         });
     }
 
-    void HandleUltimateImpact(Vector3 landingPoint)
+    void HandleUltimateImpact(Vector3 landingPoint, VirusHealthBase struck, Vector3 surfaceNormal)
     {
+        //marks the spot the whole barrage is about to come down on, dropped to the floor rather
+        //than left at whatever height the arrow happened to strike
+        GameObject fx = VfxSpawner.Spawn(ultimateImpactVfx,
+                                         GroundUnder(landingPoint, struck, surfaceNormal),
+                                         Quaternion.identity, null, ultimateVfxLifetime);
+        if (fx != null && !Mathf.Approximately(ultimateVfxScale, 1f))
+            fx.transform.localScale *= ultimateVfxScale;
+
         //the vertical rain is the centrepiece; the ring closes in on it from every side at once
         StartCoroutine(RainArrows(landingPoint));
 
@@ -511,6 +550,53 @@ public class MasterArcher : MonoBehaviour
                                       rainSpawnDuration, ultVolleyArrowDamage,
                                       rainSpreadRadius, angle));
         }
+    }
+
+    //the floor beneath a point, so the ring lies on the ground instead of hanging at whatever
+    //height the arrow stopped at.
+    Vector3 GroundUnder(Vector3 point, VirusHealthBase struck, Vector3 surfaceNormal)
+    {
+        //if it buried itself in a virus, that virus is already standing on the floor - the
+        //bottom of its collider IS the floor height, and no raycast can be fooled by cover,
+        //a slope or the virus's own body getting in the way
+        if (struck != null)
+        {
+            Collider body = struck.GetComponentInChildren<Collider>();
+            if (body != null)
+                return new Vector3(point.x, body.bounds.min.y, point.z);
+
+            return new Vector3(point.x, struck.transform.position.y, point.z);
+        }
+
+        //a surface facing mostly upward is already the floor, so leave it where it landed
+        if (surfaceNormal.y > 0.7f) return point;
+
+        //otherwise it struck a wall or something steep. stepping out along the surface normal
+        //first matters: a cast straight down from a point ON a wall runs along the face and
+        //either grazes it or misses everything, which is what left the circle up in the air.
+        Vector3 from = point + surfaceNormal * 0.3f + Vector3.up * 0.5f;
+
+        RaycastHit[] hits = Physics.RaycastAll(from, Vector3.down, ultimateVfxGroundSearch,
+                                               ~0, QueryTriggerInteraction.Ignore);
+
+        //RaycastAll comes back unsorted, so the nearest valid hit has to be picked out
+        bool found = false;
+        float nearest = float.MaxValue;
+        Vector3 ground = point;
+
+        foreach (RaycastHit h in hits)
+        {
+            if (h.collider.GetComponentInParent<VirusHealthBase>() != null) continue;
+
+            if (h.distance < nearest)
+            {
+                nearest = h.distance;
+                ground = h.point;
+                found = true;
+            }
+        }
+
+        return found ? ground : point;
     }
 
     IEnumerator RainArrows(Vector3 center)
@@ -574,7 +660,7 @@ public class MasterArcher : MonoBehaviour
                 ap.OnStuckIn += _ => CountAutoHit(shot);
             }
 
-            if (nextShotExplosive)
+            if (armingThisShot)
             {
                 ap.isExplosive = true;
                 ap.explosionRadius = explosiveArrowRadius;
@@ -641,6 +727,7 @@ public class MasterArcher : MonoBehaviour
         isDrawing = false;
         isMeleeing = false;
         isCoveringFireActive = false;
+        armingThisShot = false;
         autoAttackCharge = 0;
         pendingAutoShot = null;
         markedUntil.Clear();

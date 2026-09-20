@@ -35,7 +35,13 @@ public class ArrowProjectile : MonoBehaviour
     readonly HashSet<VirusHealthBase> grazed = new HashSet<VirusHealthBase>();
     Vector3 lastSweepPoint;
 
-    public event Action<Vector3> OnImpact;
+    //the virus is passed along too - whoever fired it often needs to know what was struck,
+    //not just the point in space where the arrow stopped
+    public event Action<Vector3, VirusHealthBase> OnImpact;
+
+    //which way the surface it struck was facing. a wall faces sideways and a floor faces up,
+    //and that is the difference between a decal lying flat and one stuck to a wall.
+    public Vector3 LastImpactNormal { get; private set; } = Vector3.up;
 
     //raised when this arrow lodges in something alive, so whoever fired it can keep track of
     //which targets are currently carrying one
@@ -93,7 +99,12 @@ public class ArrowProjectile : MonoBehaviour
         if (hasHit) return;
         hasHit = true;
 
-        OnImpact?.Invoke(transform.position);
+        //worked out before the event so subscribers are told what was hit in the same call
+        VirusHealthBase struck = collision.collider.GetComponentInParent<VirusHealthBase>();
+
+        if (collision.contactCount > 0) LastImpactNormal = collision.GetContact(0).normal;
+
+        OnImpact?.Invoke(transform.position, struck);
 
         if (isExplosive)
         {
@@ -102,7 +113,7 @@ public class ArrowProjectile : MonoBehaviour
             return;
         }
 
-        VirusHealthBase zh = collision.collider.GetComponentInParent<VirusHealthBase>();
+        VirusHealthBase zh = struck;
         if (zh != null)
         {
             zh.TakeDamage(damage);
