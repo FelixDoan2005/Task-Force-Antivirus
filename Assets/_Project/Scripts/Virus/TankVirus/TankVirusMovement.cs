@@ -18,15 +18,20 @@ public class TankVirusMovement : MonoBehaviour
     public float turnSpeed = 360f;
 
     Collider ownCollider;
+    VirusLedgeJump traversal;
 
     void Awake()
     {
         ownCollider = GetComponent<Collider>();
+        traversal = GetComponent<VirusLedgeJump>();
     }
 
     void Update()
     {
         if (BladeMaster.UltimateFreeze) return;
+
+        //mid-hop the jump owns where it is, or the two fight over the same transform
+        if (traversal != null && traversal.IsBusy) return;
         
         IDamageable target = FindNearestTarget();
         if (target == null) return;
@@ -50,6 +55,9 @@ public class TankVirusMovement : MonoBehaviour
         //meant a big virus kept walking long after it was already touching the player, shoving
         //them backwards for as long as it lived.
         if (SurfaceGap(targetTransform) <= contactBuffer) return;
+
+        //something climbable in the way is hopped onto instead of walked through
+        if (traversal != null && traversal.TryClimb(dir)) return;
 
         transform.position += speed * Time.deltaTime * dir;
     }
