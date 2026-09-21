@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: 7334733448345556808}
   - component: {fileID: 1466477616271819477}
   - component: {fileID: -9216518268357686974}
+  - component: {fileID: 2960239152086055137}
   m_Layer: 0
   m_Name: BasicVirus
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbc2ce68cf3565b468ae69ad6a88cc76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieMover
-  speed: 0
+  speed: 3
   stopDistance: 1.2
   detectionRange: 50
 --- !u!114 &1466477616271819477
@@ -192,9 +193,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aeb15cc577e92ca419a0ff8fea7a43c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieHealth
-  maxHealth: 10
+  maxHealth: 150
   invulnerable: 0
   deathDelay: 3.2
+--- !u!114 &2960239152086055137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3802212209892273281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6001fc7740a05fa43a7273787f4fd4d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VirusLedgeJump
+  maxJumpHeight: 2
+  stepHeight: 0.3
+  lookAhead: 1
+  jumpDuration: 0.6
+  arcHeight: 0.7
+  landingInset: 0.50000006
+  jumpCooldown: 0.8
+  applyGravity: 1
+  gravity: 20
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1001 &3104878073926807739
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -174,6 +174,7 @@ GameObject:
   - component: {fileID: -1825398537022352083}
   - component: {fileID: 8461258155537545170}
   - component: {fileID: 6602947818543475581}
+  - component: {fileID: 2938431782240443320}
   m_Layer: 0
   m_Name: TankVirus
   m_TagString: Untagged
@@ -305,7 +306,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d2c927c8115174a8b6818f7c7080da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieMovement
-  speed: 0
+  speed: 1
   contactBuffer: 0.3
   stopDistance: 1.5
   detectionRange: 50
@@ -322,9 +323,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: feb43ad1cab689b44bc55873a3e3e3ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieHealth
-  maxHealth: 5000
+  maxHealth: 2500
   invulnerable: 0
   deathDelay: 3.2
+--- !u!114 &2938431782240443320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3802212209892273281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6001fc7740a05fa43a7273787f4fd4d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VirusLedgeJump
+  maxJumpHeight: 3
+  stepHeight: 0.5
+  lookAhead: 1.1880004
+  jumpDuration: 0.6
+  arcHeight: 1.05
+  landingInset: 0.66000026
+  jumpCooldown: 0.8
+  applyGravity: 1
+  gravity: 20
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &5971209196058412109
 GameObject:
   m_ObjectHideFlags: 0

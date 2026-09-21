@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: -1861056658019991672}
   - component: {fileID: -673617458893606403}
   - component: {fileID: 3517235908189157260}
+  - component: {fileID: 7724802260243780598}
   m_Layer: 0
   m_Name: SpeedVirus
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7df654b9e47c8b44a9b198349de3b05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieHealth
-  maxHealth: 5
+  maxHealth: 100
   invulnerable: 0
   deathDelay: 3.2
 --- !u!114 &-673617458893606403
@@ -177,7 +178,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64970281a1b12f9408639f4ad792bf06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieMovement
-  speed: 0
+  speed: 7
   stopDistance: 1.2
   detectionRange: 40
 --- !u!114 &3517235908189157260
@@ -195,6 +196,30 @@ MonoBehaviour:
   damagePerHit: 3
   hitsPerSecond: 2
   attackRange: 1.6
+--- !u!114 &7724802260243780598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3802212209892273281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6001fc7740a05fa43a7273787f4fd4d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VirusLedgeJump
+  maxJumpHeight: 2.2
+  stepHeight: 0.3
+  lookAhead: 1
+  jumpDuration: 0.45
+  arcHeight: 0.77
+  landingInset: 0.5
+  jumpCooldown: 0.8
+  applyGravity: 1
+  gravity: 20
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1001 &495549692212307826
 PrefabInstance:
   m_ObjectHideFlags: 0

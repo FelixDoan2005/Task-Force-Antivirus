@@ -6,9 +6,19 @@ public class BasicVirusMovement : MonoBehaviour
     public float stopDistance = 1.2f;
     public float detectionRange = 20f;
 
+    VirusLedgeJump traversal;
+
+    void Awake()
+    {
+        traversal = GetComponent<VirusLedgeJump>();
+    }
+
     void Update()
     {
-        if (BladeMaster.UltimateFreeze) return; // frozen for the length of the BladeMaster's ultimate
+        if (BladeMaster.UltimateFreeze) return;
+
+        //mid-hop the jump owns where it is, or the two fight over the same transform
+        if (traversal != null && traversal.IsBusy) return; // frozen for the length of the BladeMaster's ultimate
 
         IDamageable target = FindNearestTarget();
         if (target == null) return;
@@ -22,6 +32,9 @@ public class BasicVirusMovement : MonoBehaviour
         if (dist <= stopDistance) return;
 
         Vector3 dir = toTarget.normalized;
+
+        //something climbable in the way is hopped onto instead of walked through
+        if (traversal != null && traversal.TryClimb(dir)) return;
 
         transform.position += speed * Time.deltaTime * dir;
 

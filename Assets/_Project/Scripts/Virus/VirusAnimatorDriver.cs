@@ -27,8 +27,13 @@ public class VirusAnimatorDriver : MonoBehaviour
     [Tooltip("Seconds to ease the speed reading, so a stutter in position doesn't flicker the blend.")]
     public float speedDamp = 0.15f;
 
+    [Tooltip("Length of the jump clip. The hop is usually shorter, so the clip is sped up to " +
+             "fit it - otherwise the creature lands before the animation has left the ground.")]
+    public float jumpClipLength = 1.1f;
+
     //found rather than assigned, so this one driver serves every virus type
     IVirusAttack attack;
+    VirusLedgeJump traversal;
 
     Animator animator;
     Vector3 lastPosition;
@@ -40,6 +45,7 @@ public class VirusAnimatorDriver : MonoBehaviour
         if (movementRoot == null) movementRoot = transform.parent != null ? transform.parent : transform;
         if (health == null) health = GetComponentInParent<VirusHealthBase>();
         attack = GetComponentInParent<IVirusAttack>();
+        traversal = GetComponentInParent<VirusLedgeJump>();
 
         animator.speed = animationSpeed;
 
@@ -50,12 +56,14 @@ public class VirusAnimatorDriver : MonoBehaviour
     {
         if (attack != null) attack.OnAttack += PlayAttack;
         if (health != null) health.OnDied += PlayDeath;
+        if (traversal != null) traversal.OnJump += PlayJump;
     }
 
     void OnDisable()
     {
         if (attack != null) attack.OnAttack -= PlayAttack;
         if (health != null) health.OnDied -= PlayDeath;
+        if (traversal != null) traversal.OnJump -= PlayJump;
     }
 
     void PlayAttack(int swing)
@@ -65,6 +73,18 @@ public class VirusAnimatorDriver : MonoBehaviour
         //whole numbers, so the blend tree lands on one clip outright rather than mixing two
         animator.SetFloat("AttackIndex", swing);
         animator.SetTrigger("Attack");
+    }
+
+    void PlayJump()
+    {
+        if (health != null && health.IsDead) return;
+
+        //played at whatever rate covers the hop, so take-off, peak and landing line up with
+        //where the creature actually is
+        if (traversal != null && traversal.JumpDuration > 0.01f)
+            animator.SetFloat("JumpSpeed", jumpClipLength / traversal.JumpDuration);
+
+        animator.SetTrigger("Jump");
     }
 
     void PlayDeath()
