@@ -70,9 +70,18 @@ public class VirusLedgeJump : MonoBehaviour
         body = GetComponent<Collider>();
         radius = Mathf.Max(body.bounds.size.x, body.bounds.size.z) * 0.5f;
 
-        //measured from what you can SEE, not from the collider. a hitbox is a rough box around
-        //a creature and its bottom is often nowhere near the creature's feet - standing the
-        //collider on the floor is what left the big one hanging in the air.
+        MeasureFeet();
+
+        //it has to clear the edge by more than its own half-width, or it lands still hanging over
+        //the drop, sees the same ledge in front of it, and hops again
+        landingInset = Mathf.Max(landingInset, radius + 0.35f);
+    }
+
+    //measured from what you can SEE, not from the collider. a hitbox is a rough box around a
+    //creature and its bottom is often nowhere near its feet - standing the collider on the floor
+    //is what left the big one hanging in the air.
+    void MeasureFeet()
+    {
         float lowest = float.MaxValue;
         foreach (SkinnedMeshRenderer smr in GetComponentsInChildren<SkinnedMeshRenderer>())
             if (smr.gameObject.activeInHierarchy) lowest = Mathf.Min(lowest, smr.bounds.min.y);
@@ -80,14 +89,21 @@ public class VirusLedgeJump : MonoBehaviour
         feetOffset = lowest < float.MaxValue
             ? transform.position.y - lowest
             : transform.position.y - body.bounds.min.y;
-
-        //it has to clear the edge by more than its own half-width, or it lands still hanging over
-        //the drop, sees the same ledge in front of it, and hops again
-        landingInset = Mathf.Max(landingInset, radius + 0.35f);
     }
+
+    int framesAlive;
 
     void Update()
     {
+        //BoneProportions re-shapes the skeleton in LateUpdate, so a creature whose legs have
+        //been shortened - or removed - is not the shape Awake measured. one re-measure after a
+        //frame has gone by catches that, rather than leaving it standing on legs it no longer has.
+        if (framesAlive < 3)
+        {
+            framesAlive++;
+            if (framesAlive == 2) MeasureFeet();
+        }
+
         if (jumping) { Arc(); return; }
 
         if (applyGravity) Fall();
