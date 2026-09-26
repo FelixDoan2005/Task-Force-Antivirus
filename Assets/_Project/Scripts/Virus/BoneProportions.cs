@@ -27,6 +27,9 @@ public class BoneProportions : MonoBehaviour
     readonly List<Transform> bones = new List<Transform>();
     readonly List<Vector3> baseScales = new List<Vector3>();
 
+    //what the creature draws with, so the pinning can be skipped while none of it is on screen
+    Renderer[] renderers;
+
     void Awake()
     {
         foreach (Transform t in GetComponentsInChildren<Transform>(true))
@@ -48,11 +51,29 @@ public class BoneProportions : MonoBehaviour
             bones.Add(t);
             baseScales.Add(t.localScale * factor);
         }
+
+        renderers = GetComponentsInChildren<Renderer>(true);
     }
 
     void LateUpdate()
     {
+        //off screen there is nothing to hold the shape against: the Animator is culled, so it is
+        //not writing bone scales either, and whatever was pinned last frame is still pinned.
+        //this matters because the bloom carries 2,916 bones - that is 2,916 transform writes a
+        //frame, each one dirtying the hierarchy, for something nobody is looking at.
+        if (!AnythingVisible()) return;
+
         for (int i = 0; i < bones.Count; i++)
             if (bones[i] != null) bones[i].localScale = baseScales[i];
+    }
+
+    bool AnythingVisible()
+    {
+        if (renderers == null || renderers.Length == 0) return true;
+
+        for (int i = 0; i < renderers.Length; i++)
+            if (renderers[i] != null && renderers[i].isVisible) return true;
+
+        return false;
     }
 }

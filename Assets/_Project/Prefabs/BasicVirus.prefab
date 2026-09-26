@@ -281,9 +281,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -3359897152448748412, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
+      propertyPath: m_Quality
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -3359897152448748412, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: ef51ad0f085bae546b13133269f26759, type: 2}
+    - target: {fileID: -1206874426333947015, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
+      propertyPath: m_Quality
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: -1206874426333947015, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -293,9 +301,21 @@ PrefabInstance:
       value: Virus_green
       objectReference: {fileID: 0}
     - target: {fileID: 4164330123687681244, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
+      propertyPath: m_Quality
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4164330123687681244, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: d5513a2a64c35de49a7abee2ded402c0, type: 2}
+    - target: {fileID: 8357180562765976541, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
+      propertyPath: m_Quality
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8357180562765976541, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
+      propertyPath: m_CastShadows
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8357180562765976541, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -330,7 +350,7 @@ Animator:
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: 8bd1b1d9be836dd4b8c69f35bdb75936, type: 2}
-  m_CullingMode: 0
+  m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0

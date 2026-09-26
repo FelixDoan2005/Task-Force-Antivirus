@@ -31,31 +31,9 @@ public class BasicVirusAttack : MonoBehaviour, IVirusAttack
 
     IDamageable FindNearestTarget()
     {
-        Collider[] nearbyColliders = Physics.OverlapSphere(transform.position, attackRange);
-
-        IDamageable closest = null;
-        float closestDist = Mathf.Infinity;
-
-        foreach (var collider in nearbyColliders)
-        {
-            // ignore self
-            if (collider.transform.root == transform.root) continue;
-
-            // IMPORTANT: parent search
-            IDamageable damageable = collider.GetComponentInParent<IDamageable>();
-            if (damageable == null || !damageable.IsTargetable) continue;
-
-            Vector3 closestPoint = collider.ClosestPoint(transform.position);
-            float dist = (closestPoint - transform.position).sqrMagnitude;
-
-            if (dist < closestDist)
-            {
-                closestDist = dist;
-                closest = damageable;
-            }
-        }
-
-        return closest;
+        //one shared scan for the whole virus set: no array allocated per call, and each
+        //collider's owner is worked out once instead of every frame
+        return TargetScan.NearestDamageable(transform, attackRange);
     }
 
     //for debugging and seeing range

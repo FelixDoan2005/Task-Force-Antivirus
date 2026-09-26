@@ -60,17 +60,86 @@ public class ArrowProjectile : MonoBehaviour
     Rigidbody rb;
     bool hasHit = false;
 
+    //when this arrow is due back in the pool. replaces the Destroy(gameObject, t) calls, which
+    //cannot be used on something that is going to be reused.
+    float releaseAt = -1f;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         Physics.IgnoreLayerCollision(gameObject.layer, gameObject.layer, true);
     }
 
-    void Start()
+    //everything a reused arrow has to forget. called before whoever fired it configures the
+    //shot, so their damage values and their event subscriptions survive it.
+    //
+    //the tunables are copied back from the prefab rather than left alone, and that is not
+    //tidiness: the Q arms a shot by setting isExplosive on the arrow it just made. leave that
+    //set and the next arrow out of the pool explodes too, whoever fired it and whatever for.
+    public void ResetForReuse(ArrowProjectile defaults)
     {
+        hasHit = false;
+        releaseAt = -1f;
+
+        grazed.Clear();
+        lastSweepPoint = transform.position;
+        LastImpactNormal = Vector3.up;
+
+        //subscribers from the last flight would otherwise still be listening
+        OnImpact = null;
+        OnStuckIn = null;
+
+        if (defaults != null)
+        {
+            speed = defaults.speed;
+            lifeTime = defaults.lifeTime;
+            damage = defaults.damage;
+            stickDuration = defaults.stickDuration;
+
+            isExplosive = defaults.isExplosive;
+            explosionRadius = defaults.explosionRadius;
+            explosionDamage = defaults.explosionDamage;
+            explosionVfx = defaults.explosionVfx;
+            explosionVfxLifetime = defaults.explosionVfxLifetime;
+
+            passThroughDamage = defaults.passThroughDamage;
+            passThroughRadius = defaults.passThroughRadius;
+
+            snapToMeshSurface = defaults.snapToMeshSurface;
+            embedDepth = defaults.embedDepth;
+        }
+
+        //a landed arrow turns its colliders off and rides whatever it stuck into
+        foreach (Collider c in GetComponentsInChildren<Collider>(true)) c.enabled = true;
+
+        if (rb == null) rb = GetComponent<Rigidbody>();
+
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        //a trail remembers every point it has been through. without this the arrow arrives
+        //dragging a streak across the map from wherever it finished last time.
+        foreach (TrailRenderer t in GetComponentsInChildren<TrailRenderer>(true)) t.Clear();
+    }
+
+    //sent on its way, once the shot has been set up
+    public void Launch()
+    {
+        if (rb == null) rb = GetComponent<Rigidbody>();
+
         rb.linearVelocity = transform.forward * speed;
         lastSweepPoint = transform.position;
-        Destroy(gameObject, lifeTime);
+
+        releaseAt = Time.time + lifeTime;
+    }
+
+    void Update()
+    {
+        if (releaseAt < 0f || Time.time < releaseAt) return;
+
+        releaseAt = -1f;
+        ProjectilePool.Release(gameObject);
     }
     void FixedUpdate()
     {
@@ -119,7 +188,7 @@ public class ArrowProjectile : MonoBehaviour
         if (isExplosive)
         {
             Explode();
-            Destroy(gameObject);
+            ProjectilePool.Release(gameObject);
             return;
         }
 
@@ -156,7 +225,7 @@ public class ArrowProjectile : MonoBehaviour
             transform.SetParent(ride, true);
         }
 
-        Destroy(gameObject, stickDuration);
+        releaseAt = Time.time + stickDuration;
     }
 
     void Explode()
