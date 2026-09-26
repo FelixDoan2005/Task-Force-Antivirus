@@ -306,7 +306,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2d2c927c8115174a8b6818f7c7080da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TankZombieMovement
-  speed: 1
+  speed: 0
   contactBuffer: 0.3
   stopDistance: 1.5
   detectionRange: 50
@@ -593,6 +593,7 @@ MonoBehaviour:
   walkSpeed: 0.6
   runSpeed: 1
   speedDamp: 0.15
+  jumpClipLength: 1.1
 --- !u!4 &5617850571532958742 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -416782991630287052, guid: 6c7cd15cb9dedaf4481a33efa01479e7, type: 3}

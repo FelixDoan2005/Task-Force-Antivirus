@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 2625990095346404577}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.97419703, z: 0}
+  m_LocalPosition: {x: 0, y: -0.9700687, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbc2ce68cf3565b468ae69ad6a88cc76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieMover
-  speed: 3
+  speed: 0
   stopDistance: 1.2
   detectionRange: 50
 --- !u!114 &1466477616271819477
@@ -230,15 +230,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.4272401
+      value: 2.815599
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.4272401
+      value: 2.815599
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.4272401
+      value: 2.815599
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 2aa9065bef5a7004eb6f910d30ccfb08, type: 3}
       propertyPath: m_LocalPosition.x
@@ -359,6 +359,7 @@ MonoBehaviour:
   walkSpeed: 1.5
   runSpeed: 3
   speedDamp: 0.15
+  jumpClipLength: 1.1
 --- !u!114 &7220090899854711490
 MonoBehaviour:
   m_ObjectHideFlags: 0

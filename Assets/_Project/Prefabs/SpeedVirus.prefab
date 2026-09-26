@@ -178,7 +178,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64970281a1b12f9408639f4ad792bf06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpeedZombieMovement
-  speed: 7
+  speed: 0
   stopDistance: 1.2
   detectionRange: 40
 --- !u!114 &3517235908189157260
@@ -372,6 +372,7 @@ MonoBehaviour:
   walkSpeed: 3.5
   runSpeed: 7
   speedDamp: 0.15
+  jumpClipLength: 1.1
 --- !u!114 &4951407908372732577
 MonoBehaviour:
   m_ObjectHideFlags: 0
