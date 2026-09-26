@@ -651,10 +651,18 @@ public class MasterArcher : MonoBehaviour
                                GameObject prefabOverride = null)
     {
         GameObject prefab = prefabOverride != null ? prefabOverride : arrowPrefab;
-        GameObject arrow = Instantiate(prefab, spawnPos, Quaternion.LookRotation(shootDir, Vector3.up));
+
+        //reused rather than created. the ultimate puts hundreds of these up at once, and the
+        //allocation and the garbage that followed landed exactly when the screen was busiest.
+        GameObject arrow = ProjectilePool.Get(prefab, spawnPos, Quaternion.LookRotation(shootDir, Vector3.up));
+        if (arrow == null) { Debug.LogWarning("MasterArcher: no arrow prefab to fire"); return null; }
+
         ArrowProjectile ap = arrow.GetComponent<ArrowProjectile>();
         if (ap != null)
         {
+            //wiped back to the prefab's values before anything below configures this shot
+            ap.ResetForReuse(prefab.GetComponent<ArrowProjectile>());
+
             ap.damage = damageOverride >= 0f ? damageOverride : arrowDamage;
             ap.speed = speed;
 
@@ -684,6 +692,9 @@ public class MasterArcher : MonoBehaviour
                 VfxSpawner.Spawn(explosiveArrowVfx, arrow.transform.position,
                                  arrow.transform.rotation, arrow.transform);
             }
+
+            //last, so it leaves with the values this shot was given
+            ap.Launch();
         }
 
         Debug.DrawRay(spawnPos, shootDir * arrowRange, Color.red, 0.2f);

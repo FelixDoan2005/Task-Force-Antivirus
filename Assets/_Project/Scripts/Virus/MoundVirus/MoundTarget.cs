@@ -7,26 +7,7 @@ public static class MoundTarget
 {
     public static IDamageable NearestDamageable(Transform self, float range)
     {
-        Collider[] hits = Physics.OverlapSphere(self.position, range);
-
-        IDamageable closest = null;
-        float closestDistance = Mathf.Infinity;
-
-        foreach (Collider hit in hits)
-        {
-            if (hit.transform.root == self.root) continue;
-
-            IDamageable damageable = hit.GetComponentInParent<IDamageable>();
-            if (damageable == null || !damageable.IsTargetable) continue;
-
-            float d = (hit.ClosestPoint(self.position) - self.position).sqrMagnitude;
-            if (d >= closestDistance) continue;
-
-            closestDistance = d;
-            closest = damageable;
-        }
-
-        return closest;
+        return TargetScan.NearestDamageable(self, range);
     }
 
     //no range on this one: a moundling has already been thrown into the middle of the fight and

@@ -82,28 +82,8 @@ public class TankVirusMovement : MonoBehaviour
 
     IDamageable FindNearestTarget()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, detectionRange);
-
-        IDamageable closest = null;
-        float closestDist = Mathf.Infinity;
-
-        foreach (var hit in hits)
-        {
-            if (hit.transform.root == transform.root) continue;
-
-            IDamageable damageable = hit.GetComponentInParent<IDamageable>();
-            if (damageable == null || !damageable.IsTargetable) continue;
-
-            Vector3 closestPoint = hit.ClosestPoint(transform.position);
-            float dist = (closestPoint - transform.position).sqrMagnitude;
-
-            if (dist < closestDist)
-            {
-                closestDist = dist;
-                closest = damageable;
-            }
-        }
-
-        return closest;
+        //one shared scan for the whole virus set: no array allocated per call, and each
+        //collider's owner is worked out once instead of every frame
+        return TargetScan.NearestDamageable(transform, detectionRange);
     }
 }
