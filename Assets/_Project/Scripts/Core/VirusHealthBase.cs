@@ -25,9 +25,24 @@ public abstract class VirusHealthBase : MonoBehaviour
 
     public bool IsDead { get; private set; }
 
+    //how many shield totems are holding this one right now. a count, not the flag above: the
+    //Demon's takeover owns that flag and switches it on and off itself, so a totem letting go
+    //would strip the Demon's protection - and two totems holding the same virus would clear
+    //each other. a count lets any number of holders come and go without stepping on anyone.
+    int shieldedBy;
+
+    public bool IsShielded => shieldedBy > 0;
+
+    public void AddShield() => shieldedBy++;
+
+    public void RemoveShield()
+    {
+        if (shieldedBy > 0) shieldedBy--;
+    }
+
     public void TakeDamage(float amount)
     {
-        if (invulnerable) return;
+        if (invulnerable || shieldedBy > 0) return;
 
         currentHealth -= amount;
 
