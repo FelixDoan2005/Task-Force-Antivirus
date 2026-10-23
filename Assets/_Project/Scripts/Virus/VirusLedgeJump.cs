@@ -86,6 +86,13 @@ public class VirusLedgeJump : MonoBehaviour
         foreach (SkinnedMeshRenderer smr in GetComponentsInChildren<SkinnedMeshRenderer>())
             if (smr.gameObject.activeInHierarchy) lowest = Mathf.Min(lowest, smr.bounds.min.y);
 
+        //a creature whose decorative parts have been baked down to static meshes has no skinned
+        //renderer left to measure. without this it falls back to the collider, which is a box
+        //drawn around it rather than the thing you can see standing on the floor.
+        if (lowest == float.MaxValue)
+            foreach (MeshRenderer mr in GetComponentsInChildren<MeshRenderer>())
+                if (mr.gameObject.activeInHierarchy) lowest = Mathf.Min(lowest, mr.bounds.min.y);
+
         feetOffset = lowest < float.MaxValue
             ? transform.position.y - lowest
             : transform.position.y - body.bounds.min.y;
@@ -179,8 +186,17 @@ public class VirusLedgeJump : MonoBehaviour
     //---------------------------------------------------------------- falling
     void Fall()
     {
+        //the speed it will actually travel at this frame, worked out BEFORE the ray rather than
+        //after it. the two used to disagree: the ray was measured with the old speed and the move
+        //was taken with the new one, so every frame it stepped further than it had looked by
+        //gravity x dt squared. at 60fps that is five millimetres and nothing goes wrong; on a
+        //hitch it is metres, and the creature drops straight through the floor on the first frame
+        //and can never find it again, because from underneath the ray points away from it.
+        float nextSpeed = fallSpeed + gravity * Time.deltaTime;
+        float step = nextSpeed * Time.deltaTime;
+
         Vector3 from = transform.position + Vector3.up * 0.2f;
-        float reach = feetOffset + 0.4f + fallSpeed * Time.deltaTime;
+        float reach = feetOffset + 0.4f + step;
 
         if (Physics.Raycast(from, Vector3.down, out RaycastHit hit, reach + 0.2f,
                             groundMask, QueryTriggerInteraction.Ignore) &&
@@ -194,7 +210,7 @@ public class VirusLedgeJump : MonoBehaviour
             return;
         }
 
-        fallSpeed += gravity * Time.deltaTime;
-        transform.position += Vector3.down * (fallSpeed * Time.deltaTime);
+        fallSpeed = nextSpeed;
+        transform.position += Vector3.down * step;
     }
 }

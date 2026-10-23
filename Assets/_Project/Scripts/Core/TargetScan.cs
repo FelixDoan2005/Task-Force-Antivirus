@@ -31,7 +31,9 @@ public static class TargetScan
     const float ForgetAfter = 10f;
     static float forgetAt;
 
-    public static IDamageable NearestDamageable(Transform self, float range)
+    //includeWalls off finds people only - players, and allied soldiers once they exist - for
+    //anything that should go for a person in range before it settles for the wall
+    public static IDamageable NearestDamageable(Transform self, float range, bool includeWalls = true)
     {
         int count = Physics.OverlapSphereNonAlloc(self.position, range, buffer);
 
@@ -50,6 +52,7 @@ public static class TargetScan
 
             IDamageable damageable = OwnerOf(hit);
             if (damageable == null || !damageable.IsTargetable) continue;
+            if (!includeWalls && damageable is WallHealth) continue;
 
             //measured to the nearest point on the collider, not its centre: a wall is forty
             //metres wide and its centre is meaningless to something standing against it

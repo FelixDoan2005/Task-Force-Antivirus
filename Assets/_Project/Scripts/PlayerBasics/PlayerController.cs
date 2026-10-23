@@ -14,6 +14,10 @@ public class PlayerController : MonoBehaviour
     public float gravity = -20f;
     public float speedMultiplier = 1f; // e.g. 0.2f while blocking = moves at 20% speed
 
+    [Tooltip("Separate channel for slows put on you by enemies. 1 = normal. The class scripts " +
+             "own speedMultiplier and rewrite it every frame, so a debuff cannot live there.")]
+    public float debuffSpeedMultiplier = 1f;
+
     [Tooltip("Abilities can set this to block jumping without touching gravity, so you still fall normally.")]
     public bool suspendJump;
 
@@ -351,7 +355,7 @@ public class PlayerController : MonoBehaviour
         IsSprinting = sprintHeld && input.sqrMagnitude > 0.01f;
 
         float crouchScale = IsCrouching ? crouchSpeedMultiplier : 1f;
-        controller.Move(speed * speedMultiplier * crouchScale * Time.deltaTime * move);
+        controller.Move(speed * speedMultiplier * debuffSpeedMultiplier * crouchScale * Time.deltaTime * move);
 
         //flight replaces gravity and jumping entirely - Space climbs, Left Ctrl drops, and
         //you hang where you leave off. handled before grounding so none of the jump logic runs.
@@ -365,7 +369,7 @@ public class PlayerController : MonoBehaviour
             }
 
             velocity.y = 0f;
-            controller.Move(climb * flightVerticalSpeed * speedMultiplier * Time.deltaTime * Vector3.up);
+            controller.Move(climb * flightVerticalSpeed * speedMultiplier * debuffSpeedMultiplier * Time.deltaTime * Vector3.up);
             return;
         }
 

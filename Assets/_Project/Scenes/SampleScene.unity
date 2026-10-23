@@ -1004,6 +1004,54 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1446650005}
   m_SourcePrefab: {fileID: 100100000, guid: 639b6ce73b347e5429ac0526c9c29094, type: 3}
+--- !u!1 &243035541
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 243035542}
+  - component: {fileID: 243035543}
+  m_Layer: 0
+  m_Name: TotemVirusSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &243035542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243035541}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.3085299, y: 1, z: -18.48115}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &243035543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243035541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicVirusSpawner
+  virusPrefab: {fileID: 7742272580729136, guid: f77f2c1a85fb63842955ec109131c3cc, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 15
+  maxAlive: 1
 --- !u!1 &243182571
 GameObject:
   m_ObjectHideFlags: 0
@@ -1720,6 +1768,54 @@ MonoBehaviour:
   virusPrefab: {fileID: 2244778136319134661, guid: 607a12b46c0b602419a2ce59c38327dd, type: 3}
   wallTarget: {fileID: 1555323497}
   spawnInterval: 12
+  maxAlive: 1
+--- !u!1 &588129105
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 588129106}
+  - component: {fileID: 588129107}
+  m_Layer: 0
+  m_Name: ChainVirusSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &588129106
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 588129105}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 17.29147, y: 1, z: -14.98115}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &588129107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 588129105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicVirusSpawner
+  virusPrefab: {fileID: 5368538041076510825, guid: 567b61fa7c35b6b4e99a0391af4756f4, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 10
   maxAlive: 1
 --- !u!1 &607717604
 GameObject:
@@ -3582,6 +3678,54 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7779917245399844102, guid: 2d20d2484f327f749a747c8749d379b1, type: 3}
   m_PrefabInstance: {fileID: 463312889362139753}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1243853851
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1243853852}
+  - component: {fileID: 1243853853}
+  m_Layer: 0
+  m_Name: ObeliskVirusSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1243853852
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243853851}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 20.29147, y: 1, z: -10.08115}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1386654044}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1243853853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243853851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ee28e10631abb74b8d5ab6257c27e78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BasicVirusSpawner
+  virusPrefab: {fileID: 2505113126838914539, guid: b1669cf299224c640b1ae9040183da4e, type: 3}
+  wallTarget: {fileID: 1555323497}
+  spawnInterval: 14
+  maxAlive: 1
 --- !u!114 &1301813612
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3802,6 +3946,9 @@ Transform:
   - {fileID: 1546742439}
   - {fileID: 702343129}
   - {fileID: 573543485}
+  - {fileID: 1243853852}
+  - {fileID: 588129106}
+  - {fileID: 243035542}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1403384781 stripped
