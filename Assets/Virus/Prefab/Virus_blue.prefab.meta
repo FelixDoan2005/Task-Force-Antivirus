@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f9e30c58360d8bd42b144e4aa7509c32
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Prefab/Virus_blue.prefab
+  uploadId: 638611

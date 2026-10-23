@@ -769,8 +769,12 @@ public class CyborgClass : MonoBehaviour
 
     void TickMarks()
     {
-        foreach (var v in Object.FindObjectsByType<VirusVulnerability>(FindObjectsSortMode.None))
-            v.TickMark(markRampPerSecond, markMaxBonus);
+        //walked backwards off the shared list: anything that dies mid-loop removes itself from
+        //it, and going forwards would then skip whatever slid into the gap
+        List<VirusVulnerability> all = VirusVulnerability.Active;
+
+        for (int i = all.Count - 1; i >= 0; i--)
+            if (all[i] != null) all[i].TickMark(markRampPerSecond, markMaxBonus);
     }
 
     //---------------------------------------------------------------- E: overdrive
@@ -1013,9 +1017,14 @@ public class CyborgClass : MonoBehaviour
     //---------------------------------------------------------------- markers
     void UpdateMarkers()
     {
-        foreach (var v in Object.FindObjectsByType<VirusVulnerability>(FindObjectsSortMode.None))
+        List<VirusVulnerability> all = VirusVulnerability.Active;
+
+        for (int i = all.Count - 1; i >= 0; i--)
         {
-            VirusHealthBase health = v.GetComponent<VirusHealthBase>();
+            VirusVulnerability v = all[i];
+            if (v == null) continue;
+
+            VirusHealthBase health = v.Health;
             if (health == null) continue;
 
             bool wants = v.FullyStacked;
@@ -1034,11 +1043,17 @@ public class CyborgClass : MonoBehaviour
                             new Color(0.7f, 0.2f, 1f));
         }
 
-        var dead = new List<VirusHealthBase>();
+        //reused rather than rebuilt: this ran every frame and threw the list away each time
+        deadMarkers.Clear();
+
         foreach (var kv in activeMarkers)
-            if (kv.Key == null) dead.Add(kv.Key);
-        foreach (var k in dead) activeMarkers.Remove(k);
+            if (kv.Key == null) deadMarkers.Add(kv.Key);
+
+        foreach (var k in deadMarkers) activeMarkers.Remove(k);
     }
+
+    //scratch space for the sweep above, kept so it is not allocated sixty times a second
+    readonly List<VirusHealthBase> deadMarkers = new List<VirusHealthBase>();
 
     void ClearAllMarkers()
     {

@@ -35,10 +35,29 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
     [Tooltip("The state on the bow layer holding the melee swing.")]
     public string meleeStateName = "Melee";
 
+    [Header("Grapple")]
+    [Tooltip("Drives the throw and the hang. Assign the Player's GrapplingHook.")]
+    public GrapplingHook grapple;
+
+    [Tooltip("The state on the bow layer holding the throw.")]
+    public string throwStateName = "Throw";
+
+    [Tooltip("The state that plays a quick draw-and-loose, used when C looses its volley.")]
+    public string shootStateName = "Shoot";
+
+    [Tooltip("Where in the draw clip that shot starts. Later is a sharper, faster loose.")]
+    [Range(0f, 1f)] public float shootStartNormalized = 0.5f;
+
+    [Tooltip("Where in the throw clip to start. The first fifth of it is her standing still " +
+             "winding up, which just delays the throw the player asked for.")]
+    [Range(0f, 1f)] public float throwStartNormalized = 0.25f;
+
     Animator animator;
     int bowLayer = -1;
     int drawStateHash;
     int meleeStateHash;
+    int throwStateHash;
+    int shootStateHash;
 
     void Awake()
     {
@@ -46,17 +65,38 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
         bowLayer = animator.GetLayerIndex(bowLayerName);
         drawStateHash = Animator.StringToHash(drawStateName);
         meleeStateHash = Animator.StringToHash(meleeStateName);
+        throwStateHash = Animator.StringToHash(throwStateName);
+        shootStateHash = Animator.StringToHash(shootStateName);
     }
 
     //the swing is a one-off, so it is played on the event rather than polled from state
     void OnEnable()
     {
         if (archer != null) archer.OnMelee += PlayMelee;
+        if (grapple != null) grapple.OnGrappleThrown += PlayThrow;
+        if (archer != null) archer.OnFocusFire += PlayShot;
     }
 
     void OnDisable()
     {
         if (archer != null) archer.OnMelee -= PlayMelee;
+        if (grapple != null) grapple.OnGrappleThrown -= PlayThrow;
+        if (archer != null) archer.OnFocusFire -= PlayShot;
+    }
+
+    //C looses its arrows on its own rather than through the draw-and-release the player does,
+    //so it needs the shot played for it or she fires without moving
+    void PlayShot()
+    {
+        //started partway through the draw, so it reads as a sharp loose rather than a slow pull
+        if (bowLayer >= 0) animator.Play(shootStateHash, bowLayer, shootStartNormalized);
+    }
+
+    //the throw is a one-off on the arms, so the legs keep doing whatever they were doing
+    void PlayThrow()
+    {
+        //started partway in, at the point her arm actually begins to come over
+        if (bowLayer >= 0) animator.Play(throwStateHash, bowLayer, throwStartNormalized);
     }
 
     void PlayMelee()
@@ -85,6 +125,9 @@ public class MasterArcherAnimatorDriver : MonoBehaviour
                 animator.Play(drawStateHash, bowLayer,
                               Mathf.Lerp(drawPullStart, 1f, archer.DrawProgress01));
         }
+
+        //held for the whole pull, and it is a full-body pose rather than an arms-only one
+        if (grapple != null) animator.SetBool("IsGrappling", grapple.IsGrappling);
 
         if (playerMovement == null) return;
 

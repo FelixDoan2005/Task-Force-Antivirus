@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fa71bcb93cb2ccd4888101dd13189e51
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Materials/lightBlue/sphere.mat
+  uploadId: 638611

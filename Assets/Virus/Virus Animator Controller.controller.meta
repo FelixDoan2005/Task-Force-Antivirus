@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b69b7bc8e193d104f8f53d1836756c6b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Virus Animator Controller.controller
+  uploadId: 638611

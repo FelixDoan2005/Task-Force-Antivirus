@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ef51ad0f085bae546b13133269f26759
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Materials/green/sphere.mat
+  uploadId: 638611

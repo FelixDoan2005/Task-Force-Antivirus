@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: df738dc1267329847ab4b39ff7f914c5
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 274862
+  packageName: Virus
+  packageVersion: 1.0
+  assetPath: Assets/Virus/Materials/red/body.mat
+  uploadId: 638611
