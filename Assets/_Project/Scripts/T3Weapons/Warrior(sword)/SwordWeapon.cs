@@ -18,15 +18,39 @@ public class SwordWeapon : MonoBehaviour
 
     private bool swingLeftToRight = true;
 
+    [Tooltip("How many swing animations the model has. Each attack picks one at random.")]
+    public int attackVariants = 6;
+
+    //the last one played, so a random pick never repeats itself back to back - two identical
+    //swings in a row read as a stutter rather than as a second attack
+    int lastSwing = -1;
+
+    //the knight model listens to this - the weapon itself stays a plain hit-detector
+    public event System.Action<int> OnAttack;
+
     void Awake()
     {
         if (playerCamera == null)
             playerCamera = Camera.main;
     }
 
+    //a fresh swing each time, never the one just played
+    int PickSwing()
+    {
+        if (attackVariants <= 1) return 0;
+
+        int pick = Random.Range(0, attackVariants);
+        if (pick == lastSwing) pick = (pick + 1 + Random.Range(0, attackVariants - 1)) % attackVariants;
+
+        lastSwing = pick;
+        return pick;
+    }
+
     public void Attack()
     {
         if (attackPoint == null) return;
+
+        OnAttack?.Invoke(PickSwing());
 
         // visualise the swing sphere
         Vector3 p = attackPoint.position;

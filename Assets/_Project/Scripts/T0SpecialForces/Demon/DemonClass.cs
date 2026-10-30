@@ -336,13 +336,24 @@ public class DemonClass : MonoBehaviour
     //trap the BladeMaster hit
     void OnDisable()
     {
+        //a pause disables the component and leaves the object active; a class swap deactivates
+        //the object. only the swap should undo everything.
+        bool switchedAway = !gameObject.activeInHierarchy;
+
+        //all three of these are run by coroutines which clear them on the way out, and each one
+        //roots or freezes him while set. that exit is not guaranteed to arrive, so they are
+        //always dropped rather than risking a permanently stuck ability.
         isUltimateActive = false;
-        beamsFiring = false;
-        isFiring = false;
         isCAbilityActive = false;
         isEAbilityActive = false;
 
+        //re-derived from input every frame
+        beamsFiring = false;
+        isFiring = false;
+
         SetBeamsVisible(false);
+
+        if (!switchedAway) return;
 
         RestoreCameraOrbit();
 
@@ -356,6 +367,8 @@ public class DemonClass : MonoBehaviour
             playerMovement.flightMode = false;
         }
 
+        //flight is a plain toggle he holds, not something a coroutine owns, so pausing mid-air
+        //leaves him flying - it is only dropped when another class takes over
         isFlying = false;
     }
 

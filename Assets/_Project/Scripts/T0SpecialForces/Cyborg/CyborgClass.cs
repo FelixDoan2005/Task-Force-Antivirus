@@ -357,10 +357,25 @@ public class CyborgClass : MonoBehaviour
     //cleared here - the same trap the BladeMaster and Demon both hit
     void OnDisable()
     {
+        //the pause menu switches this component off while the object stays active; switching
+        //class deactivates the object. only the swap should take his abilities away - a pause
+        //that ate an ultimate would be throwing away a cooldown the player already spent.
+        bool switchedAway = !gameObject.activeInHierarchy;
+
+        //firing is re-derived from the mouse every frame, so it is never worth keeping
+        IsFiring = false;
+        ClearMuzzleFx();
+
+        //the overload is a coroutine, and it is what clears this on the way out. that exit is
+        //not guaranteed, and this flag roots him in place, so it is always dropped here.
         isCAbilityActive = false;
+
+        if (!switchedAway) return;
+
+        //these two are plain deadlines read as 'Time.time < until', so they simply carry on
+        //across a pause - Time.time does not advance while the game is frozen
         ultimateUntil = 0f;
         overdriveUntil = 0f;
-        IsFiring = false;
         isReloading = false;
 
         ClearAllMarkers();
