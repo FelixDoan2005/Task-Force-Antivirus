@@ -8,6 +8,7 @@ using UnityEngine;
 //it heads for the wall, however far away that is, and holds off it the same way it would a
 //person. it used to only see the wall once it was inside detection range, so from the spawn row
 //it just stood there.
+[RequireComponent(typeof(NpcNavigator))]
 public class RangedVirusMovement : MonoBehaviour
 {
     public float speed = 2f;
@@ -29,6 +30,7 @@ public class RangedVirusMovement : MonoBehaviour
     public float wallSearchInterval = 1f;
 
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     WallHealth wall;
     Collider wallCollider;
@@ -37,6 +39,7 @@ public class RangedVirusMovement : MonoBehaviour
     void Awake()
     {
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -54,19 +57,20 @@ public class RangedVirusMovement : MonoBehaviour
 
         Vector3 dir = toTarget.normalized;
 
-        //it faces its target whether or not it is moving, because it shoots from where it stands
-        transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                      Quaternion.LookRotation(dir),
-                                                      turnSpeed * Time.deltaTime);
+        //it faces its target while it holds its ground or backs off, because it shoots from where
+        //it stands. walking in, it looks the way it is going - the navigator turns it
+        if (dist <= preferredRange)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                          Quaternion.LookRotation(dir),
+                                                          turnSpeed * Time.deltaTime);
 
         //inside its comfortable band it holds position
         if (dist <= preferredRange && dist >= tooClose) return;
 
-        Vector3 move = dist < tooClose ? -dir : dir;
-
-        if (traversal != null && traversal.TryClimb(move)) return;
-
-        transform.position += speed * Time.deltaTime * move;
+        //backing off it keeps its eyes on whatever it is backing away from, so the navigator leaves
+        //its facing alone
+        if (dist < tooClose) navigator.MoveAwayFrom(targetPoint, speed, 0f);
+        else navigator.MoveTo(targetPoint, speed, turnSpeed);
     }
 
     bool FindTarget(out Vector3 point)

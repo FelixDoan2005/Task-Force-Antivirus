@@ -33,13 +33,14 @@ public class MoundlingLaunch : MonoBehaviour
             && hit.collider.GetComponentInParent<VirusHealthBase>() == null)
             to.y = hit.point.y;
 
-        //held still for the flight: its gravity and its chase would both be writing the same
-        //position this component is animating
+        //held still for the flight: its gravity, its chase and its navigator would all be writing
+        //the same position this component is animating
         grounded = new MonoBehaviour[]
         {
             GetComponent<MoundlingMovement>(),
             GetComponent<MoundlingAttack>(),
-            GetComponent<VirusLedgeJump>()
+            GetComponent<VirusLedgeJump>(),
+            GetComponent<NpcNavigator>()
         };
 
         foreach (MonoBehaviour m in grounded)

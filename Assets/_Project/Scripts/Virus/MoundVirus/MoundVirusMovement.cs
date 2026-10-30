@@ -1,6 +1,7 @@
 using UnityEngine;
 
 //lumbers at whatever is nearest, the same way the tank does, just far slower.
+[RequireComponent(typeof(NpcNavigator))]
 public class MoundVirusMovement : MonoBehaviour
 {
     [Tooltip("Metres per second. Very slow on purpose - the threat is what it leaves behind, " +
@@ -15,11 +16,13 @@ public class MoundVirusMovement : MonoBehaviour
 
     Collider ownCollider;
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     void Awake()
     {
         ownCollider = GetComponent<Collider>();
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -39,17 +42,18 @@ public class MoundVirusMovement : MonoBehaviour
 
         Vector3 dir = toTarget.normalized;
 
-        //it keeps turning after it stops, so it hits what it is looking at
-        if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                          Quaternion.LookRotation(dir),
-                                                          turnSpeed * Time.deltaTime);
+        if (MoundTarget.SurfaceGap(transform, ownCollider, targetTransform) <= contactBuffer)
+        {
+            //it keeps turning after it stops, so it hits what it is looking at. while it walks it
+            //faces the way it is going
+            if (dir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                              Quaternion.LookRotation(dir),
+                                                              turnSpeed * Time.deltaTime);
+            return;
+        }
 
-        if (MoundTarget.SurfaceGap(transform, ownCollider, targetTransform) <= contactBuffer) return;
-
-        //something climbable in the way is hopped onto rather than walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += speed * Time.deltaTime * dir;
+        //the way there, round whatever is in the way, is the navigator's - hops included
+        navigator.MoveTo(targetTransform, speed, turnSpeed);
     }
 }

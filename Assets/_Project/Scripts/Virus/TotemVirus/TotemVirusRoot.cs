@@ -60,6 +60,7 @@ public class TotemVirusRoot : MonoBehaviour
     RangedVirusMovement movement;
     TotemVirusShield shield;
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     Vector3 anchor;
     float stillSince;
@@ -77,6 +78,7 @@ public class TotemVirusRoot : MonoBehaviour
         movement = GetComponent<RangedVirusMovement>();
         shield = GetComponent<TotemVirusShield>();
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Start()
@@ -192,16 +194,8 @@ public class TotemVirusRoot : MonoBehaviour
             return;
         }
 
-        Vector3 dir = to / distance;
-
-        transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                      Quaternion.LookRotation(dir),
-                                                      movement.turnSpeed * Time.deltaTime);
-
-        //something climbable in the way is hopped onto rather than walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += movement.speed * Time.deltaTime * dir;
+        //the way there, round whatever is in the way, is the navigator's - hops included
+        navigator.MoveTo(seekTarget.transform, movement.speed, movement.turnSpeed);
     }
 
     //the nearest virus it would actually be willing to protect - asked through the shield, so the

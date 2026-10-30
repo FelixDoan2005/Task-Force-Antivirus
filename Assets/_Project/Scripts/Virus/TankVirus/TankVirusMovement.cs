@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(NpcNavigator))]
 public class TankVirusMovement : MonoBehaviour
 {
     public float speed = 1.5f;
@@ -19,11 +20,13 @@ public class TankVirusMovement : MonoBehaviour
 
     Collider ownCollider;
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     void Awake()
     {
         ownCollider = GetComponent<Collider>();
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -44,22 +47,24 @@ public class TankVirusMovement : MonoBehaviour
         float dist = toTarget.magnitude;
         Vector3 dir = toTarget.normalized;
 
-        //facing is updated whether or not it closes the gap, so a virus standing in contact
-        //still turns to follow the player rather than attacking thin air
-        if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                          Quaternion.LookRotation(dir),
-                                                          turnSpeed * Time.deltaTime);
-
         //the gap that matters is between the two bodies, not their origins: comparing centres
         //meant a big virus kept walking long after it was already touching the player, shoving
         //them backwards for as long as it lived.
-        if (SurfaceGap(targetTransform) <= contactBuffer) return;
+        if (SurfaceGap(targetTransform) <= contactBuffer)
+        {
+            //facing is kept up once it has stopped, so a virus standing in contact still turns to
+            //follow the player rather than attacking thin air. while it walks it faces the way it
+            //is going, which with nothing in the way is the same thing
+            if (dir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                              Quaternion.LookRotation(dir),
+                                                              turnSpeed * Time.deltaTime);
+            return;
+        }
 
-        //something climbable in the way is hopped onto instead of walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += speed * Time.deltaTime * dir;
+        //the way there - round whatever is in the way, and up onto it if that is where the target
+        //is - is the navigator's
+        navigator.MoveTo(targetTransform, speed, turnSpeed);
     }
 
     //the flat distance between the nearest points of the two bodies. worked out from the actual

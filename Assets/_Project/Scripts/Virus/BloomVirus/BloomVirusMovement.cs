@@ -3,6 +3,7 @@ using UnityEngine;
 //creeps at the wall and nothing else. it will not chase, will not turn aside for a player
 //standing in front of it, and has no detection range to fall outside of - it knows where the
 //wall is from the moment it spawns and walks until it is touching it.
+[RequireComponent(typeof(NpcNavigator))]
 public class BloomVirusMovement : MonoBehaviour
 {
     [Tooltip("Metres per second. Deliberately a crawl - this thing is meant to be something you " +
@@ -22,6 +23,7 @@ public class BloomVirusMovement : MonoBehaviour
 
     Collider ownCollider;
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     WallHealth wall;
     float nextSearch;
@@ -33,6 +35,7 @@ public class BloomVirusMovement : MonoBehaviour
     {
         ownCollider = GetComponent<Collider>();
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -50,18 +53,20 @@ public class BloomVirusMovement : MonoBehaviour
 
         Vector3 dir = toWall.normalized;
 
-        //it keeps facing the wall even once it has stopped, so it is hitting what it looks at
-        if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                          Quaternion.LookRotation(dir),
-                                                          turnSpeed * Time.deltaTime);
+        if (BloomVirusTarget.SurfaceGap(transform, ownCollider, wall) <= contactBuffer)
+        {
+            //it keeps facing the wall once it has stopped, so it is hitting what it looks at.
+            //while it walks it faces the way it is going
+            if (dir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                              Quaternion.LookRotation(dir),
+                                                              turnSpeed * Time.deltaTime);
+            return;
+        }
 
-        if (BloomVirusTarget.SurfaceGap(transform, ownCollider, wall) <= contactBuffer) return;
-
-        //something climbable in the way is hopped onto rather than walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += speed * Time.deltaTime * dir;
+        //the way there, round whatever is in the way, is the navigator's - hops included. it is
+        //aimed at the nearest part of the wall, the same as WallPoint
+        navigator.MoveTo(wall.transform, speed, turnSpeed);
     }
 
     void FindWall()

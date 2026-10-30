@@ -53,6 +53,9 @@ public class VirusLedgeJump : MonoBehaviour
 
     public float JumpDuration => jumpDuration;
 
+    //the navigator finds its place on the navmesh from the soles, not the middle of the body
+    public float FeetOffset => feetOffset;
+
     bool jumping;
     float jumpStarted;
     Vector3 jumpFrom, jumpTo;
@@ -198,19 +201,44 @@ public class VirusLedgeJump : MonoBehaviour
         Vector3 from = transform.position + Vector3.up * 0.2f;
         float reach = feetOffset + 0.4f + step;
 
-        if (Physics.Raycast(from, Vector3.down, out RaycastHit hit, reach + 0.2f,
-                            groundMask, QueryTriggerInteraction.Ignore) &&
-            hit.collider.GetComponentInParent<VirusHealthBase>() == null)
+        if (FindGround(from, reach + 0.2f, out float groundY))
         {
             //planted: sit exactly on whatever is underneath
             fallSpeed = 0f;
             Vector3 p = transform.position;
-            p.y = hit.point.y + feetOffset;
+            p.y = groundY + feetOffset;
             transform.position = p;
             return;
         }
 
         fallSpeed = nextSpeed;
         transform.position += Vector3.down * step;
+    }
+
+    static readonly RaycastHit[] groundHits = new RaycastHit[8];
+
+    //the nearest thing below that is actually ground. viruses are not ground - and that includes its
+    //own colliders. the tank carries hitboxes on its spine, and the ray used to stop at the first
+    //thing it met: once one of those dipped below where the ray starts, it was all the ray ever
+    //found, so the tank sank with its own hitbox under it and fell through the floor for good
+    bool FindGround(Vector3 from, float distance, out float groundY)
+    {
+        int count = Physics.RaycastNonAlloc(from, Vector3.down, groundHits, distance,
+                                            groundMask, QueryTriggerInteraction.Ignore);
+
+        float nearest = float.MaxValue;
+        groundY = 0f;
+
+        for (int i = 0; i < count; i++)
+        {
+            RaycastHit hit = groundHits[i];
+            if (hit.distance >= nearest) continue;
+            if (hit.collider.GetComponentInParent<VirusHealthBase>() != null) continue;
+
+            nearest = hit.distance;
+            groundY = hit.point.y;
+        }
+
+        return nearest < float.MaxValue;
     }
 }

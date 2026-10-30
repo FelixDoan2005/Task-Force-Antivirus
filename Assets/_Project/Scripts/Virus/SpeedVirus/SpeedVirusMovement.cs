@@ -1,16 +1,22 @@
 using UnityEngine;
 
+[RequireComponent(typeof(NpcNavigator))]
 public class SpeedVirusMovement : MonoBehaviour
 {
     public float speed = 7f;
     public float stopDistance = 1.2f;
     public float detectionRange = 40f;
 
+    [Tooltip("How fast it turns to face the way it is walking.")]
+    public float turnSpeed = 720f;
+
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     void Awake()
     {
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -31,15 +37,9 @@ public class SpeedVirusMovement : MonoBehaviour
         float dist = toTarget.magnitude;
         if (dist <= stopDistance) return;
 
-        Vector3 dir = toTarget.normalized;
-
-        //something climbable in the way is hopped onto instead of walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += speed * Time.deltaTime * dir;
-
-        if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.LookRotation(dir);
+        //the way there - round whatever is in the way, and up onto it if that is where the target
+        //is - is the navigator's
+        navigator.MoveTo(targetTransform, speed, turnSpeed);
     }
 
     IDamageable FindNearestTarget()
