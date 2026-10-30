@@ -1342,6 +1342,8 @@ GameObject:
   - component: {fileID: 5798825279783684495}
   - component: {fileID: 597948684852892668}
   - component: {fileID: 3923208190188846560}
+  - component: {fileID: 8807506290961021412}
+  - component: {fileID: 427195211071944910}
   m_Layer: 0
   m_Name: Moundling
   m_TagString: Untagged
@@ -1510,6 +1512,45 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!195 &8807506290961021412
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2437189628443547014}
+  m_Enabled: 0
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &427195211071944910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2437189628443547014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8724a5e0ccc3cd4c9c54d7f46ca47a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcNavigator
+  acceleration: 40
+  repathInterval: 0.2
+  repathDistance: 0.4
+  straightOnWithin: 1
+  retreatLookAhead: 3
 --- !u!1 &2457861488800158697
 GameObject:
   m_ObjectHideFlags: 0

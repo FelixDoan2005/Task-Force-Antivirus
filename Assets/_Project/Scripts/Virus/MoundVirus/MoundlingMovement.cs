@@ -2,6 +2,7 @@ using UnityEngine;
 
 //goes for the player and only the player. it walks straight past the wall - by the time one of
 //these exists, the mound it came out of has already died trying to reach whatever was nearest.
+[RequireComponent(typeof(NpcNavigator))]
 public class MoundlingMovement : MonoBehaviour
 {
     [Tooltip("Matches the speed virus, the fastest thing in the set.")]
@@ -15,6 +16,7 @@ public class MoundlingMovement : MonoBehaviour
 
     Collider ownCollider;
     VirusLedgeJump traversal;
+    NpcNavigator navigator;
 
     PlayerHealth player;
     float nextSearch;
@@ -26,6 +28,7 @@ public class MoundlingMovement : MonoBehaviour
     {
         ownCollider = GetComponent<Collider>();
         traversal = GetComponent<VirusLedgeJump>();
+        navigator = GetComponent<NpcNavigator>();
     }
 
     void Update()
@@ -43,17 +46,19 @@ public class MoundlingMovement : MonoBehaviour
 
         Vector3 dir = toPlayer.normalized;
 
-        if (dir.sqrMagnitude > 0.0001f)
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                                                          Quaternion.LookRotation(dir),
-                                                          turnSpeed * Time.deltaTime);
+        if (MoundTarget.SurfaceGap(transform, ownCollider, player.transform) <= contactBuffer)
+        {
+            //stopped, it keeps turning to face the player; while it walks it faces the way it is
+            //going
+            if (dir.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                              Quaternion.LookRotation(dir),
+                                                              turnSpeed * Time.deltaTime);
+            return;
+        }
 
-        if (MoundTarget.SurfaceGap(transform, ownCollider, player.transform) <= contactBuffer) return;
-
-        //something climbable in the way is hopped onto rather than walked through
-        if (traversal != null && traversal.TryClimb(dir)) return;
-
-        transform.position += speed * Time.deltaTime * dir;
+        //the way there, round whatever is in the way, is the navigator's - hops included
+        navigator.MoveTo(player.transform, speed, turnSpeed);
     }
 
     void FindPlayer()
