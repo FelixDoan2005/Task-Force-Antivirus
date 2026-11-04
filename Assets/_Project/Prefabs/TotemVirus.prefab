@@ -79,6 +79,8 @@ GameObject:
   - component: {fileID: 5890363801534844967}
   - component: {fileID: 6669268839323301613}
   - component: {fileID: 2944916784785408994}
+  - component: {fileID: 3494021887221571916}
+  - component: {fileID: 3985659529505381676}
   m_Layer: 0
   m_Name: TotemVirus
   m_TagString: Untagged
@@ -157,6 +159,7 @@ MonoBehaviour:
   preferredRange: 16
   tooClose: 8
   turnSpeed: 180
+  wallSearchInterval: 1
 --- !u!114 &5890363801534844967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,6 +175,11 @@ MonoBehaviour:
   settleTime: 1.5
   settleTolerance: 0.15
   maxWalkTime: 12
+  uprootAfter: 15
+  seekRange: 60
+  replantFraction: 0.5
+  seekInterval: 0.5
+  maxRegroupTime: 45
   rootVfx: {fileID: 3659525299603683411, guid: c0a12d859b65c654aa37f4d2c5fd2c0b, type: 3}
   rootVfxRadius: 4
   rootVfxLifetime: 2
@@ -218,6 +226,45 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!195 &3494021887221571916
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7742272580729136}
+  m_Enabled: 0
+  m_AgentTypeID: -1372625422
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &3985659529505381676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7742272580729136}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8724a5e0ccc3cd4c9c54d7f46ca47a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcNavigator
+  acceleration: 40
+  repathInterval: 0.2
+  repathDistance: 0.4
+  straightOnWithin: 1
+  retreatLookAhead: 3
 --- !u!1 &8301565603901405
 GameObject:
   m_ObjectHideFlags: 0
