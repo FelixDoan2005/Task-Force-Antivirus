@@ -114,6 +114,7 @@ MonoBehaviour:
   repathDistance: 0.4
   straightOnWithin: 1
   retreatLookAhead: 3
+  bodyRadius: 0.65
 --- !u!114 &7177146194549274952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -132,7 +133,9 @@ MonoBehaviour:
   damagePerHit: 15
   hitsPerSecond: 0.55
   retargetInterval: 0.5
+  switchMargin: 1.5
   swingVariants: 6
+  slotTolerance: 0.6
 --- !u!1 &4439948754366091328
 GameObject:
   m_ObjectHideFlags: 0
