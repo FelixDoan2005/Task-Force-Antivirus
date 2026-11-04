@@ -27,6 +27,7 @@ public class NpcNavigator : MonoBehaviour
     NavMeshAgent agent;
     VirusLedgeJump traversal;
     float radius;
+    ObstacleAvoidanceType avoidance;
 
     //its own agent type's navmesh - big viruses have one baked further back from walls
     NavMeshQueryFilter filter;
@@ -65,6 +66,20 @@ public class NpcNavigator : MonoBehaviour
     public float Radius => radius;
     public int AgentTypeID => agent.agentTypeID;
 
+    //walks through others instead of round them - a soldier slipping through its own formation
+    //set, it keeps looking this way whichever way it walks
+    public Vector3 FaceOverride { get; set; }
+
+    public bool PassThrough
+    {
+        get => agent.obstacleAvoidanceType == ObstacleAvoidanceType.NoObstacleAvoidance;
+        set
+        {
+            ObstacleAvoidanceType wanted = value ? ObstacleAvoidanceType.NoObstacleAvoidance : avoidance;
+            if (agent.obstacleAvoidanceType != wanted) agent.obstacleAvoidanceType = wanted;
+        }
+    }
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -88,6 +103,7 @@ public class NpcNavigator : MonoBehaviour
         agent.stoppingDistance = 0f;
         agent.acceleration = acceleration;
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+        avoidance = agent.obstacleAvoidanceType;
 
         filter = new NavMeshQueryFilter { agentTypeID = agent.agentTypeID, areaMask = NavMesh.AllAreas };
         meshRadius = NavMesh.GetSettingsByID(agent.agentTypeID).agentRadius;
@@ -310,6 +326,7 @@ public class NpcNavigator : MonoBehaviour
 
     void Face(Vector3 direction, float turnSpeed)
     {
+        if (FaceOverride != Vector3.zero) direction = FaceOverride;
         direction.y = 0f;
         if (turnSpeed <= 0f || direction.sqrMagnitude < 0.01f) return;
 
@@ -327,9 +344,10 @@ public class NpcNavigator : MonoBehaviour
                                 ~0, QueryTriggerInteraction.Ignore))
             return false;
 
-        //other viruses are not walls, and nor are its own parts
+        //other viruses are not walls, and nor are its own parts, or anyone else it's passing through
         return hit.collider.GetComponentInParent<VirusHealthBase>() == null &&
-               !hit.collider.transform.IsChildOf(transform);
+               !hit.collider.transform.IsChildOf(transform) &&
+               !(PassThrough && hit.collider.GetComponentInParent<NpcNavigator>() != null);
     }
 
     //---------------------------------------------------------------- the agent
