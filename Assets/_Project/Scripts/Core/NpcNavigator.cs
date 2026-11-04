@@ -259,8 +259,16 @@ public class NpcNavigator : MonoBehaviour
 
         transform.position = new Vector3(flat.x, p.y, flat.z);
 
-        //it looks where it means to go, not wherever the crowd happens to be nudging it
-        Face(agent.desiredVelocity, orderTurn);
+        //it looks where it means to go, not wherever the crowd happens to be nudging it. pressed up
+        //close or barely moving, the steering flips about, so it just faces what it's after
+        Vector3 look = agent.desiredVelocity;
+        if (!orderAway)
+        {
+            Vector3 toAim = AimPoint() - transform.position;
+            toAim.y = 0f;
+            if (toAim.magnitude < radius + 1.5f || look.magnitude < orderSpeed * 0.5f) look = toAim;
+        }
+        Face(look, orderTurn);
     }
 
     void WalkStraight()
