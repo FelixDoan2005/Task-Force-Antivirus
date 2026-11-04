@@ -6651,6 +6651,8 @@ GameObject:
   - component: {fileID: 5556180842200414470}
   - component: {fileID: 6553323707638084443}
   - component: {fileID: 5244692299442515047}
+  - component: {fileID: 6975569134976745807}
+  - component: {fileID: 2828351391561065881}
   m_Layer: 0
   m_Name: ObeliskVirus
   m_TagString: Untagged
@@ -6735,6 +6737,7 @@ MonoBehaviour:
   preferredRange: 12
   tooClose: 8
   turnSpeed: 180
+  wallSearchInterval: 1
 --- !u!114 &5556180842200414470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6794,6 +6797,45 @@ MonoBehaviour:
   holdFraction: 0.7
   retreatFraction: 0.45
   keepInSync: 1
+--- !u!195 &6975569134976745807
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2505113126838914539}
+  m_Enabled: 0
+  m_AgentTypeID: -1372625422
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &2828351391561065881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2505113126838914539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8724a5e0ccc3cd4c9c54d7f46ca47a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcNavigator
+  acceleration: 40
+  repathInterval: 0.2
+  repathDistance: 0.4
+  straightOnWithin: 1
+  retreatLookAhead: 3
 --- !u!1 &2512328305641707599
 GameObject:
   m_ObjectHideFlags: 0

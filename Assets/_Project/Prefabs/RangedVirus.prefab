@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 6324509714778239492}
   - component: {fileID: 3885107404052256622}
   - component: {fileID: 8222824503073707524}
+  - component: {fileID: 8943261494402216720}
+  - component: {fileID: 8451306728981908445}
   m_Layer: 0
   m_Name: RangedVirus
   m_TagString: Untagged
@@ -92,6 +94,7 @@ MonoBehaviour:
   preferredRange: 14
   tooClose: 8
   turnSpeed: 240
+  wallSearchInterval: 1
 --- !u!114 &3885107404052256622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,6 +138,45 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!195 &8943261494402216720
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4501120054283815641}
+  m_Enabled: 0
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!114 &8451306728981908445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4501120054283815641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8724a5e0ccc3cd4c9c54d7f46ca47a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NpcNavigator
+  acceleration: 40
+  repathInterval: 0.2
+  repathDistance: 0.4
+  straightOnWithin: 1
+  retreatLookAhead: 3
 --- !u!1 &6122901509194361517
 GameObject:
   m_ObjectHideFlags: 0
