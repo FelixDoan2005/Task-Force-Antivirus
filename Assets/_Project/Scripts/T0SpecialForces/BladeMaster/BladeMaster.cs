@@ -559,11 +559,15 @@ public class BladeMaster : MonoBehaviour
             // physically instead of the CharacterController stopping on contact - only walls/terrain should block it
             // scan radius must cover this frame's full travel distance, not just dashHitRadius, or fast dashes
             // can reach a virus before it's ever been added to the ignore list
-            float scanRadius = Mathf.Max(dashHitRadius, dashSpeed * Time.deltaTime) + 0.5f;
-            Collider[] nearby = Physics.OverlapSphere(playerController.transform.position, scanRadius);
+            // a capsule the height of her whole body, not a sphere at her feet - a sphere missed tall
+            // viruses' upper hitboxes in a clump, and her body stopped on them
+            float scanRadius = Mathf.Max(dashHitRadius, dashSpeed * Time.deltaTime) + playerController.radius + 0.5f;
+            Vector3 centre = playerController.transform.TransformPoint(playerController.center);
+            float half = Mathf.Max(0f, playerController.height * 0.5f - playerController.radius);
+            Collider[] nearby = Physics.OverlapCapsule(centre - Vector3.up * half, centre + Vector3.up * half, scanRadius);
             foreach (Collider c in nearby)
             {
-                if (c.GetComponentInParent<VirusHealthBase>() == null) continue;
+                if (!PassThroughOnDash(c)) continue;
                 if (ignoredDuringDash.Add(c))
                     Physics.IgnoreCollision(playerController, c, true);
             }
@@ -843,6 +847,17 @@ public class BladeMaster : MonoBehaviour
         autoClickCounted = true;
 
         RegisterAutoHitLanded();
+    }
+
+    //during the dash she's intangible to every unit - viruses, soldiers, anything with health.
+    //walls and level geometry stay solid so she can't end up inside them or through the floor
+    bool PassThroughOnDash(Collider c)
+    {
+        if (c.isTrigger || c.transform.IsChildOf(playerController.transform)) return false;
+        if (c.GetComponentInParent<VirusHealthBase>() != null) return true;
+
+        IDamageable owner = c.GetComponentInParent<IDamageable>();
+        return owner != null && !(owner is WallHealth);
     }
 
     void TryActivateQ()
