@@ -21,6 +21,9 @@ public class NpcNavigator : MonoBehaviour
     [Tooltip("How far ahead it looks for room when backing away from something.")]
     public float retreatLookAhead = 3f;
 
+    [Tooltip("How much room it keeps from others. 0 uses its collider; set it wider when the model sticks out past it (a shield, a sword).")]
+    public float bodyRadius = 0f;
+
     NavMeshAgent agent;
     VirusLedgeJump traversal;
     float radius;
@@ -59,6 +62,8 @@ public class NpcNavigator : MonoBehaviour
 
     //false while it is falling, mid-hop, or in a scene with no navmesh - it walks straight then
     public bool IsOnNavMesh => attached;
+    public float Radius => radius;
+    public int AgentTypeID => agent.agentTypeID;
 
     void Awake()
     {
@@ -67,7 +72,7 @@ public class NpcNavigator : MonoBehaviour
 
         Collider body = GetComponent<Collider>();
         Bounds bounds = body != null ? body.bounds : new Bounds(transform.position, Vector3.one);
-        radius = Mathf.Max(bounds.extents.x, bounds.extents.z);
+        radius = bodyRadius > 0f ? bodyRadius : Mathf.Max(bounds.extents.x, bounds.extents.z);
 
         //it steers; the transform is written here and by the ledge jump, never by the agent
         agent.updatePosition = false;
