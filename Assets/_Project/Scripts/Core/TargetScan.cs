@@ -41,6 +41,7 @@ public static class TargetScan
         Vector3 from = self.position;
 
         IDamageable closest = null;
+        Collider closestCollider = null;
         float closestDistance = Mathf.Infinity;
 
         for (int i = 0; i < count; i++)
@@ -61,8 +62,32 @@ public static class TargetScan
 
             closestDistance = d;
             closest = damageable;
+            closestCollider = hit;
         }
 
+        return Sticky(self, range, includeWalls, closest, closestCollider, Mathf.Sqrt(closestDistance));
+    }
+
+    //keeps each caller on the target it already has unless another is clearly closer, so several
+    //near-equal targets shuffling about don't flip it back and forth every frame
+    const float SwitchMargin = 1.5f;
+
+    struct Pick { public IDamageable target; public Collider collider; }
+    static readonly Dictionary<(int, float, bool), Pick> picks = new Dictionary<(int, float, bool), Pick>();
+
+    static IDamageable Sticky(Transform self, float range, bool includeWalls, IDamageable closest, Collider closestCollider, float closestDistance)
+    {
+        var key = (self.GetInstanceID(), range, includeWalls);
+
+        if (picks.TryGetValue(key, out Pick prev) && prev.collider != null && prev.collider.enabled &&
+            prev.target != closest && prev.target.IsTargetable)
+        {
+            Vector3 from = self.position;
+            float prevDistance = (prev.collider.ClosestPoint(from) - from).magnitude;
+            if (prevDistance <= range && prevDistance - closestDistance < SwitchMargin) return prev.target;
+        }
+
+        picks[key] = new Pick { target = closest, collider = closestCollider };
         return closest;
     }
 
@@ -73,6 +98,7 @@ public static class TargetScan
         if (Time.unscaledTime >= forgetAt)
         {
             owners.Clear();
+            picks.Clear();
             forgetAt = Time.unscaledTime + ForgetAfter;
         }
 
