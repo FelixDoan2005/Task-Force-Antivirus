@@ -11,20 +11,22 @@ public class Squad : MonoBehaviour
 {
     public static readonly List<Squad> All = new List<Squad>();
 
-    public SquadOrder order = SquadOrder.SeekOut;
+    public SquadOrder order = SquadOrder.HoldPosition;
     public SquadFormation formation = SquadFormation.Wedge;
 
     [Tooltip("Gap between neighbours in the formation.")]
     public float spacing = 2f;
     [Tooltip("Gap between neighbours in the tight grid used when following or holding.")]
-    public float gridSpacing = 1.2f;
+    public float gridSpacing = 1.6f;
     [Tooltip("Soldiers on their way to a place go round the player at least this far off, never through them.")]
     public float playerClearance = 2.5f;
     [Tooltip("Soldiers this close to the player, or to the path ahead of them, step aside to let them through.")]
     public float makeWayRadius = 1.6f;
     [Tooltip("How far ahead of a walking player soldiers start stepping aside.")]
     public float makeWayAhead = 2f;
-    public int maxMembers = 320;
+    [Tooltip("In the surround, soldiers only make way while no virus is within this distance of their place.")]
+    public float wallMakeWayClear = 15f;
+    public int maxMembers = 1000;
 
     [Tooltip("Soldiers with no squad join this one while it has room.")]
     public bool autoRecruit = true;
@@ -55,6 +57,14 @@ public class Squad : MonoBehaviour
 
     [Header("Surround")]
     public SurroundPlan.Settings surround = new SurroundPlan.Settings();
+    [Tooltip("The soldiers inside the walls never stand more than this many rows deep: the square grows instead.")]
+    public int maxRingRows = 2;
+    [Tooltip("Gap between neighbours on the ring inside the walls.")]
+    public float ringSpacing = 1.4f;
+    [Tooltip("The walls may spread out to this many times their normal gap to close a bigger square.")]
+    public float maxWallStretch = 2f;
+    [Tooltip("With no spearmen, the swordsmen stand where the walls would be, this far apart.")]
+    public float swordWallSpacing = 1.5f;
     [Tooltip("How fast soldiers run to their places in the surround.")]
     public float surroundRunSpeed = 6f;
     [Tooltip("In the shield wall, the share of swings that are blocks rather than attacks.")]
@@ -193,6 +203,15 @@ public class Squad : MonoBehaviour
             return;
         }
 
+        //already standing in a grid (not the surround): hold just stops it where it is
+        bool inGrid = plan == null && Gridded;
+        if (next == SquadOrder.HoldPosition && inGrid)
+        {
+            order = next;
+            if (commander != null) leader = commander;
+            return;
+        }
+
         if (plan != null) lastPlan = plan;
         plan = null;
         occupants = null;
@@ -202,6 +221,18 @@ public class Squad : MonoBehaviour
         //hold and seek start from where the squad stands now
         if (members.Count > 0) anchor = Centroid();
         if (commander != null) facing = Flat(commander.forward, facing);
+
+        //holding, the grid forms where they are but never round the player: crowded round them, it moves off to one side
+        if (order == SquadOrder.HoldPosition && leader != null && members.Count > 0)
+        {
+            float half = Mathf.Sqrt(members.Count) * gridSpacing * 0.5f;
+            Vector3 centre = anchor;
+            Vector3 away = Flat(centre - leader.position);
+            float clear = half * 1.42f + followDistance;
+            if (away.magnitude < clear) centre = leader.position + Flat(away, -facing) * clear;
+            centre.y = anchor.y;
+            anchor = centre + facing * half;
+        }
 
         if (order == SquadOrder.FollowPlayer && leader != null)
         {
@@ -449,7 +480,8 @@ public class Squad : MonoBehaviour
     {
         //just back from a fight: it gets a place straight away
         if (!Surrounding && !places.ContainsKey(soldier)) Rebalance();
-        return Surrounding ? PlaceAt(soldier) : MakeWay(PlaceAt(soldier));
+        Vector3 place = PlaceAt(soldier);
+        return WallHolds(place) ? place : MakeWay(place);
     }
 
     Vector3 PlaceAt(SoldierAI soldier)
@@ -472,8 +504,9 @@ public class Squad : MonoBehaviour
     public bool MakingWay(SoldierAI soldier, out Vector3 look)
     {
         look = Vector3.zero;
-        if (Surrounding || leader == null || !places.ContainsKey(soldier)) return false;
+        if (leader == null || !places.ContainsKey(soldier)) return false;
         Vector3 raw = PlaceAt(soldier);
+        if (WallHolds(raw)) return false;
         if ((MakeWay(raw) - raw).sqrMagnitude < 0.0001f) return false;
         look = Flat(leader.position - soldier.transform.position, facing);
         return true;
@@ -578,16 +611,25 @@ public class Squad : MonoBehaviour
     //wedge and line places: 0 is the middle, odd numbers go down the left, even down the right
     bool Sided => Shape == SquadFormation.Wedge || Shape == SquadFormation.Line;
 
-    //following or holding they always stand in a tight grid; the chosen formation is for seeking out
-    public bool Gridded => order == SquadOrder.FollowPlayer || order == SquadOrder.HoldPosition;
+    //every order but the surround uses the tight grid (seeking out, it advances on the viruses in it)
+    public bool Gridded => order != SquadOrder.Surround;
     SquadFormation Shape => Gridded ? SquadFormation.Box : formation;
     float Gap => Gridded ? gridSpacing : spacing;
 
     //middle of the formation's shape; the front row is at the anchor
     Vector3 PackCentre() => anchor - facing * HalfDepth();
 
+    float nextLeaderSearch;
+
     void TrackLeader()
     {
+        //no order given yet (the default hold): the player still leads, so make way and routing work as if they'd pressed it
+        if (leader == null && Time.time >= nextLeaderSearch)
+        {
+            nextLeaderSearch = Time.time + 1f;
+            PlayerController player = FindFirstObjectByType<PlayerController>();
+            if (player != null) leader = player.transform;
+        }
         if (leader == null || Time.deltaTime <= 0f) return;
         Vector3 p = leader.position;
         if (velocityPrev == Vector3.zero) velocityPrev = p;
@@ -618,6 +660,30 @@ public class Squad : MonoBehaviour
         if (along < -r || along > r + makeWayAhead + leaderVelocity.magnitude * 0.5f || lateral.magnitude >= r) return p;
         Vector3 side = lateral.sqrMagnitude > 0.0001f ? lateral.normalized : Vector3.Cross(Vector3.up, v);
         return p + side * (r - lateral.magnitude);
+    }
+
+    //in the surround, a place with a virus nearby holds firm rather than opening for the player
+    bool WallHolds(Vector3 place)
+    {
+        if (!Surrounding) return false;
+        float clear = wallMakeWayClear * wallMakeWayClear;
+        foreach (VirusHealthBase v in LiveViruses())
+            if (v != null && !v.IsDead && !VirusAllegiance.IsConverted(v) && Flat(v.transform.position - place).sqrMagnitude < clear)
+                return true;
+        return false;
+    }
+
+    //every virus in the scene, looked up once a frame for all squads
+    static VirusHealthBase[] virusCache = new VirusHealthBase[0];
+    static int virusFrame = -1;
+    static VirusHealthBase[] LiveViruses()
+    {
+        if (virusFrame != Time.frameCount)
+        {
+            virusFrame = Time.frameCount;
+            virusCache = FindObjectsByType<VirusHealthBase>(FindObjectsSortMode.None);
+        }
+        return virusCache;
     }
 
     //on the way to a place: a point to head for first so it goes round the player, or the place itself
@@ -837,19 +903,65 @@ public class Squad : MonoBehaviour
         WallPoseData pose = members.Where(m => m.spearman).Select(m => m.GetComponentInChildren<WallPoseApplier>()).FirstOrDefault(a => a != null && a.pose != null)?.pose;
         surround.pairBehind = pose != null ? pose.pairBehind : 0f;
         surround.pairSide = pose != null ? pose.pairSide : 0f;
-        if (pose != null) surround.tightStep = 0;
+        surround.tightStep = pose != null ? 0 : 1;
+        surround.spacing = pose != null && pose.pairGap > 0f ? pose.pairGap : 1.1f;
         surround.maxLayers = pose != null ? 2 : 0;
+        if (baseInnerDistance <= 0f) baseInnerDistance = surround.innerDistance;
+        surround.innerDistance = baseInnerDistance;
+        surround.ringSpacing = ringSpacing;
 
-        //the walls are spearmen only; swordsmen stand in their own ring a soldier's length inside them
+        //the walls are spearmen; swordsmen stand in their own ring a soldier's length inside them. too few
+        //spearmen for even one wall and the roles swap: the swordsmen make the walls (standing, as they do behind
+        //the spears) and the spearmen take the ring inside
         int captainUnits = members.Count(m => m.captain);
-        int swords = members.Count(m => !m.captain && !m.spearman);
-        plan = SurroundPlan.Rebuild(members.Count - captainUnits - swords, plan ?? lastPlan, surround, anchor, facing, swords);
+        int spearCount = members.Count(m => !m.captain && m.spearman);
+        int swordCount = members.Count(m => !m.captain && !m.spearman);
+        swapped = swordCount > spearCount && spearCount < 4 * SurroundPlan.MinSide(surround);
+        int ring = swapped ? spearCount : swordCount;
+        if (swapped)
+        {
+            surround.spacing = swordWallSpacing;
+            surround.tightStep = 2;
+            surround.maxLayers = 0;
+            surround.pairBehind = 0f;
+        }
+        FitSquare(members.Count - captainUnits - ring, ring);
+
+        //the last walls are only reused while the same kind of soldier holds them in the same size square
+        SurroundPlan previous = plan ?? lastPlan;
+        if (previous != null && (swapped != planSwapped || !Mathf.Approximately(previous.Used.spacing, surround.spacing) ||
+                                 !Mathf.Approximately(previous.Used.innerDistance, surround.innerDistance))) previous = null;
+        plan = SurroundPlan.Rebuild(members.Count - captainUnits - ring, previous, surround.Copy(), anchor, facing, ring);
+        planSwapped = swapped;
         for (int i = 0; i < captainUnits; i++) plan.AddCaptain();
+
+        //places off the floor can't be stood in: whoever would have taken one stands inside as a captain instead
+        int offFloor = OffFloor().Count;
+        for (int i = 0; i < offFloor; i++) plan.AddCaptain();
+        blocked = OffFloor();
+        if (offFloor > 0) Debug.Log("Surround: " + offFloor + " places are off the floor; those knights stand inside as captains", this);
         Debug.Log(plan.Describe() + (captainUnits > 0 ? " (" + captainUnits + " of the captains are captain units)" : ""), this);
 
         places.Clear();
         occupants = new SoldierAI[plan.Slots.Count];
         FillSurround();
+    }
+
+    HashSet<int> blocked = new HashSet<int>();
+
+    //wall and swordsman places with no floor under them
+    HashSet<int> OffFloor()
+    {
+        var off = new HashSet<int>();
+        if (members.Count == 0) return off;
+        var filter = new NavMeshQueryFilter { agentTypeID = members[0].AgentTypeID, areaMask = NavMesh.AllAreas };
+        for (int i = 0; i < plan.Slots.Count; i++)
+        {
+            if (plan.Slots[i].row == SurroundPlan.Row.Captain) continue;
+            Vector3 p = plan.Slots[i].position;
+            if (!NavMesh.SamplePosition(p, out NavMeshHit hit, 0.6f, filter)) off.Add(i);
+        }
+        return off;
     }
 
     //outside wall first, from the knights furthest out, then inwards; the ones nearest the middle are captains
@@ -868,7 +980,7 @@ public class Squad : MonoBehaviour
         {
             var slots = new List<int>();
             for (int i = 0; i < plan.Slots.Count; i++)
-                if (plan.Slots[i].layer == wanted) slots.Add(i);
+                if (plan.Slots[i].layer == wanted && !blocked.Contains(i)) slots.Add(i);
 
             List<SoldierAI> chosen;
             if (wanted == -1)
@@ -876,8 +988,8 @@ public class Squad : MonoBehaviour
                 chosen = pool.Where(k => k.captain).Take(slots.Count).ToList();
                 chosen.AddRange(pool.Where(k => !k.captain).Take(slots.Count - chosen.Count));
             }
-            else if (wanted == -2) chosen = pool.Where(k => !k.captain && !k.spearman).Take(slots.Count).ToList();
-            else chosen = pool.Where(k => !k.captain && k.spearman).Take(slots.Count).ToList();
+            else if (wanted == -2) chosen = pool.Where(k => !k.captain && !WallUnit(k)).Take(slots.Count).ToList();
+            else chosen = pool.Where(k => !k.captain && WallUnit(k)).Take(slots.Count).ToList();
             foreach (SoldierAI k in chosen) pool.Remove(k);
             Match(chosen, slots);
         }
@@ -922,17 +1034,18 @@ public class Squad : MonoBehaviour
     void JoinSurround(SoldierAI soldier)
     {
         for (int i = 0; i < occupants.Length; i++)
-            if (occupants[i] == null && Fits(soldier, plan.Slots[i].row))
+            if (occupants[i] == null && !blocked.Contains(i) && Fits(soldier, plan.Slots[i].row))
             {
                 Seat(soldier, i);
                 return;
             }
 
         //a swordsman gets one more place on the swordsmen's ring, anyone else one more captain's spot
-        if (!soldier.captain && !soldier.spearman)
+        if (!soldier.captain && !WallUnit(soldier))
         {
             int last = plan.AddSword();
             System.Array.Resize(ref occupants, plan.Slots.Count);
+            blocked = OffFloor();
             Seat(soldier, last);
             return;
         }
@@ -943,14 +1056,52 @@ public class Squad : MonoBehaviour
         occupants = grown.ToArray();
         foreach (SoldierAI k in places.Keys.ToList())
             if (places[k] >= slot) places[k]++;
+        blocked = OffFloor();
         Seat(soldier, slot);
     }
 
-    //captain units only to captain spots, swordsmen only to their ring, spearmen to the walls or a captain spot
-    static bool Fits(SoldierAI soldier, SurroundPlan.Row row)
+    //swordsmen outnumber the spearmen: the swordsmen hold the walls and the spearmen the ring inside
+    bool swapped, planSwapped;
+    float baseInnerDistance;
+
+    //the square grows until the ring inside the walls fits in maxRingRows rows; the walls then spread out (up to
+    //maxWallStretch) so the soldiers they have still close it, two walls deep
+    void FitSquare(int wallKnights, int ringKnights)
+    {
+        if (ringKnights <= 0 || wallKnights <= 0) return;
+
+        //the outermost ring's half-size that holds them all in the rows allowed
+        float rs = surround.ringSpacing > 0f ? surround.ringSpacing : surround.spacing;
+        float half = surround.captainMinRing + surround.captainInset;
+        for (int guard = 0; guard < 500; guard++, half += 0.25f)
+        {
+            int room = 0;
+            for (int row = 0; row < maxRingRows; row++) room += Mathf.FloorToInt(8f * Mathf.Max(0f, half - row * surround.swordGap) / rs);
+            if (room >= ringKnights) break;
+        }
+
+        float inner = half + surround.swordGap + surround.pairBehind;
+        if (inner <= surround.innerDistance) return;
+        surround.innerDistance = inner;
+
+        //two walls round that square at their normal gap need this many knights; short of that they spread out
+        int side = SurroundPlan.MinSide(surround);
+        if (SurroundPlan.KnightsFor(2, SurroundPlan.NeededSide(2, surround), surround) <= wallKnights) return;
+        int fits = side;
+        while (fits > 1 && SurroundPlan.KnightsFor(2, fits + surround.growthPerWall, surround) > wallKnights) fits--;
+        float stretched = 2f * inner / fits;
+        float most = surround.spacing * maxWallStretch;
+        surround.spacing = Mathf.Min(stretched, most);
+        if (stretched > most) surround.innerDistance = Mathf.Max(baseInnerDistance, surround.spacing * fits * 0.5f);
+    }
+    bool WallUnit(SoldierAI k) => swapped ? !k.spearman : k.spearman;
+
+    //captain units only to captain spots, the ring's soldiers only to the ring, the walls' soldiers to the walls
+    //or a captain spot
+    bool Fits(SoldierAI soldier, SurroundPlan.Row row)
     {
         if (soldier.captain) return row == SurroundPlan.Row.Captain;
-        if (!soldier.spearman) return row == SurroundPlan.Row.Inside;
+        if (!WallUnit(soldier)) return row == SurroundPlan.Row.Inside;
         return row != SurroundPlan.Row.Inside;
     }
 
@@ -999,6 +1150,8 @@ public class Squad : MonoBehaviour
 
         SurroundPlan.Row r = plan.Slots[index].row;
         if (r == SurroundPlan.Row.Captain || r == SurroundPlan.Row.Inside) return false;
+        //swordsmen holding the walls stand as they do behind the spears, not in the wall pose
+        if (!soldier.spearman) return false;
         row = r == SurroundPlan.Row.Front ? 0f : 1f;
         return true;
     }

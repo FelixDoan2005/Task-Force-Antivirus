@@ -177,6 +177,7 @@ GameObject:
   - component: {fileID: 2938431782240443320}
   - component: {fileID: 3761603662116276457}
   - component: {fileID: 1654119213944890957}
+  - component: {fileID: 1266594897951040727}
   m_Layer: 0
   m_Name: TankVirus
   m_TagString: Untagged
@@ -312,7 +313,7 @@ MonoBehaviour:
   contactBuffer: 0.3
   stopDistance: 1.5
   detectionRange: 50
-  turnSpeed: 360
+  turnSpeed: 120
 --- !u!114 &6602947818543475581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -391,6 +392,26 @@ MonoBehaviour:
   repathDistance: 0.4
   straightOnWithin: 1
   retreatLookAhead: 3
+  bodyRadius: 1.2
+  faceSmoothing: 0.5
+--- !u!114 &1266594897951040727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3802212209892273281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 308ea43c28f5448488da66a1ca77f670, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SwarmClimb
+  visual: {fileID: 8403470813628204328}
+  minGap: 2.6
+  climbFrom: 3.4
+  maxLift: 0
+  maxPitch: 0
+  settleSpeed: 3
 --- !u!1 &5971209196058412109
 GameObject:
   m_ObjectHideFlags: 0

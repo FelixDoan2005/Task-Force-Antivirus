@@ -24,6 +24,10 @@ public class NpcNavigator : MonoBehaviour
     [Tooltip("How much room it keeps from others. 0 uses its collider; set it wider when the model sticks out past it (a shield, a sword).")]
     public float bodyRadius = 0f;
 
+    [Tooltip("Seconds to settle on a new heading. Above 0, it stops flicking about when the crowd jostles it.")]
+    public float faceSmoothing = 0f;
+    Vector3 smoothedLook;
+
     NavMeshAgent agent;
     VirusLedgeJump traversal;
     float radius;
@@ -93,9 +97,11 @@ public class NpcNavigator : MonoBehaviour
         agent.updatePosition = false;
         agent.updateRotation = false;
 
-        //sized to the body, so they keep to their own space rather than overlapping
-        agent.radius = radius;
-        agent.height = Mathf.Max(bounds.size.y, 0.5f);
+        //sized to the body, so they keep to their own space rather than overlapping. the agent scales its
+        //radius and height by the transform, so they're given unscaled
+        float scale = Mathf.Max(0.01f, Mathf.Max(transform.lossyScale.x, transform.lossyScale.z));
+        agent.radius = radius / scale;
+        agent.height = Mathf.Max(bounds.size.y, 0.5f) / Mathf.Max(0.01f, transform.lossyScale.y);
         agent.baseOffset = 0f;
 
         //it stops when its movement script says so, not when the agent thinks it has arrived
@@ -289,7 +295,16 @@ public class NpcNavigator : MonoBehaviour
             toAim.y = 0f;
             if (toAim.magnitude < radius + 1.5f || look.magnitude < orderSpeed * 0.5f) look = toAim;
         }
-        Face(look, orderTurn);
+        Face(Smoothed(look), orderTurn);
+    }
+
+    Vector3 Smoothed(Vector3 look)
+    {
+        look.y = 0f;
+        if (faceSmoothing <= 0f || look.sqrMagnitude < 0.0001f) return look;
+        if (smoothedLook.sqrMagnitude < 0.0001f) smoothedLook = look.normalized;
+        smoothedLook = Vector3.Slerp(smoothedLook, look.normalized, Mathf.Clamp01(Time.deltaTime / faceSmoothing));
+        return smoothedLook;
     }
 
     void WalkStraight()

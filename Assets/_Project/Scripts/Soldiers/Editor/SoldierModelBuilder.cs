@@ -296,6 +296,7 @@ public static class SoldierModelBuilder
             Hold(elf, "SM_Sword", sword);
             Hold(elf, "SM_Shield", shield);
             elf.AddComponent<ShieldWallBrace>().shield = elf.GetComponentsInChildren<Transform>(true).First(t => t.name == "SM_Shield");
+            elf.AddComponent<IdleStance>();
 
             return PrefabUtility.SaveAsPrefabAsset(elf, FootModel);
         }

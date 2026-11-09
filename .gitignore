@@ -14,3 +14,19 @@
 
 .DS_Store
 Thumbs.db
+
+# Paid assets: licensed, never commit. Import them from where they were bought (see PAID_ASSETS.md)
+/Assets/Novozhilov3D/
+/Assets/Novozhilov3D.meta
+/Assets/Virus/
+/Assets/Virus.meta
+
+# Generated from the paid packs (contain their mesh data)
+/Assets/_Project/Art/Characters/ElfSoldiers/ElfKnight_*.asset
+/Assets/_Project/Art/Characters/ElfSoldiers/ElfKnight_*.asset.meta
+/Assets/_Project/Meshes/VirusBaked/
+/Assets/_Project/Meshes/VirusBaked.meta
+
+# Unity crash backups
+/Assets/_Recovery/
+/Assets/_Recovery.meta

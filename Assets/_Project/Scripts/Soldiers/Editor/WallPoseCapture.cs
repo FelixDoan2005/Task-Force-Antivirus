@@ -33,11 +33,16 @@ public static class WallPoseCapture
         data.pairSide = -Vector3.Dot(d, f.right);
         data.pairLift = d.y;
 
+        //a second kneeling man beside the first sets the gap between pairs along the wall
+        Transform next = pair.transform.Find("Front - kneeling (1)");
+        WallPoseDummy nextDummy = next != null ? next.GetComponent<WallPoseDummy>() : null;
+        data.pairGap = nextDummy != null ? Mathf.Abs(Vector3.Dot(nextDummy.model.transform.position - f.position, f.right)) : 0f;
+
         if (created) AssetDatabase.CreateAsset(data, Asset);
         EditorUtility.SetDirty(data);
         AssetDatabase.SaveAssets();
-        Debug.Log(string.Format("Spear wall pose captured: {0} bones per row; the standing man {1:0.00}m behind, {2:0.00}m to the left, {3:0.00}m up. " +
-                                "Rebuild the soldiers (Tools > Squad > Build Elf Soldiers) to use it.", data.bones.Length, data.pairBehind, data.pairSide, data.pairLift));
+        Debug.Log(string.Format("Spear wall pose captured: {0} bones per row; the standing man {1:0.00}m behind, {2:0.00}m to the left, {3:0.00}m up; pairs {4:0.00}m apart. " +
+                                "Rebuild the soldiers (Tools > Squad > Build Elf Soldiers) to use it.", data.bones.Length, data.pairBehind, data.pairSide, data.pairLift, data.pairGap));
     }
 
     static Transform[] Skeleton(WallPoseDummy d) => d.model.transform.Find("Armature").GetComponentsInChildren<Transform>(true);

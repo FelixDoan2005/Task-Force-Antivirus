@@ -79,7 +79,7 @@ public class SoldierAI : MonoBehaviour
     public int AgentTypeID => navigator.AgentTypeID;
 
     //standing in its place in the formation, not on its way there
-    public bool AtPlace => squad != null && !returning;
+    public bool AtPlace => squad != null && !returning && DistanceToPlace <= slotTolerance + 0.3f;
 
     //how far it is from its place in the formation
     public float DistanceToPlace { get; private set; }
@@ -311,7 +311,8 @@ public class SoldierAI : MonoBehaviour
             float stuckFor = Time.time - lastProgress;
             if (stuckFor > 1f) passThrough = true;
 
-            if (DistanceToPlace < 0.2f || (!squadMoving && stuckFor > 3f))
+            //in the surround it never gives up on its place, so nobody takes the wall pose in the wrong spot
+            if (DistanceToPlace < 0.2f || (!squadMoving && !squad.Surrounding && stuckFor > 3f))
             {
                 returning = false;
                 placeMoved = false;

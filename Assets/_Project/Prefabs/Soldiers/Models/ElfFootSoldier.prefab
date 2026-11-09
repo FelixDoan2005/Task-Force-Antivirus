@@ -139,6 +139,7 @@ GameObject:
   - component: {fileID: 3540191588905702576}
   - component: {fileID: 4312215438117746371}
   - component: {fileID: 2491396386888662589}
+  - component: {fileID: 3168038789964050225}
   m_Layer: 0
   m_Name: ElfFootSoldier
   m_TagString: Untagged
@@ -202,6 +203,8 @@ MonoBehaviour:
   walkSpeed: 1.5
   runSpeed: 3.5
   blendDampTime: 0.12
+  runClipSpeed: 0.8
+  impactCooldown: 1.2
   sitDelay: 1
   standingSeconds: {x: 15, y: 30}
   readySeconds: {x: 2, y: 3.5}
@@ -227,6 +230,22 @@ MonoBehaviour:
   frontLean: 0
   lean: 15
   blendSpeed: 4
+--- !u!114 &3168038789964050225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 140660098925349536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09abea0a5672bed4ab192f08292aa870, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IdleStance
+  idleTurnLeft: 25
+  squareShield: 1
+  uprightWeapon: 1
+  blendSpeed: 3
 --- !u!1 &238243306588200924
 GameObject:
   m_ObjectHideFlags: 0

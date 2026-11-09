@@ -14,8 +14,8 @@ public class SoldierAnimatorDriver : MonoBehaviour
     public float runSpeed = 3.5f;
 
     public float blendDampTime = 0.12f;
-    [Tooltip("Running faster than the run clip, it plays up to this much faster.")]
-    public float maxClipSpeed = 1.4f;
+    [Tooltip("Speed the run clip plays at: below 1 the legs turn over slower.")]
+    public float runClipSpeed = 0.8f;
 
     [Tooltip("In the surround, it flinches (the impact clip) when hit, at most this often.")]
     public float impactCooldown = 1.2f;
@@ -95,7 +95,7 @@ public class SoldierAnimatorDriver : MonoBehaviour
             : 1f + Mathf.InverseLerp(walkSpeed, runSpeed, speed);
 
         //faster than its run clip (keeping up with the player), the clip plays faster so the feet don't slide
-        float target = speed > runSpeed ? Mathf.Min(speed / runSpeed, maxClipSpeed) : 1f;
+        float target = speed > walkSpeed ? runClipSpeed : 1f;
         animator.speed = Mathf.MoveTowards(animator.speed, target, 2f * Time.deltaTime);
 
         animator.SetFloat("MoveX", 0f, blendDampTime, Time.deltaTime);
@@ -116,9 +116,8 @@ public class SoldierAnimatorDriver : MonoBehaviour
         stillFor = !fighting && speed < 0.1f ? stillFor + Time.deltaTime : 0f;
 
         if (fighting || soldier.squad == null) return Ready;
-        //in the surround the swordsmen stand relaxed; everyone else stays ready
-        if (soldier.squad.Gridded) return Standing;
-        if (soldier.squad.Surrounding) return !soldier.spearman && !soldier.captain ? Standing : Ready;
+        //in any formation, everyone off the wall stands relaxed: the idle stance is set for the standing idle
+        if (soldier.squad.Gridded || soldier.squad.Surrounding) return Standing;
 
         if (soldier.squad.ShouldSit(soldier)) return stillFor >= sitDelay ? Sitting : Standing;
 

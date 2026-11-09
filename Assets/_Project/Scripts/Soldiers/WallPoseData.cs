@@ -21,6 +21,8 @@ public class WallPoseData : ScriptableObject
     public float pairBehind = 0.49f;
     public float pairSide = 0.65f;
     public float pairLift;
+    [Tooltip("Gap between one pair and the next along the wall, from a second posed pair. 0 uses the surround's spacing.")]
+    public float pairGap;
     public Pose front;
     public Pose back;
 }

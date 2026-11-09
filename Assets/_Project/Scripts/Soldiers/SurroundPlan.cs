@@ -40,6 +40,11 @@ public class SurroundPlan
         public float swordGap = 1.6f;
         [Tooltip("How far in from the inner wall (or the swordsmen) the captains stand.")]
         public float captainInset = 1.2f;
+        [Tooltip("Gap between neighbours on the ring inside the walls. 0 uses the walls' spacing.")]
+        public float ringSpacing = 0f;
+
+        //each plan keeps its own copy, so changing the squad's settings later doesn't move a plan's places
+        public Settings Copy() => (Settings)MemberwiseClone();
         [Tooltip("Captains never stand closer together than this.")]
         public float captainSpacing = 1.2f;
         [Tooltip("Captains never stand closer to the middle than this.")]
@@ -73,6 +78,8 @@ public class SurroundPlan
     int wallSlots;
 
     float Half => s.spacing * 0.5f;
+    float RingSpacing => s.ringSpacing > 0f ? s.ringSpacing : s.spacing;
+    public Settings Used => s;
     public float HalfSize(int layer) => Sides[layer] * Half;
     public bool Short(int layer) => Counts[layer] < 4 * Sides[layer];
 
@@ -269,7 +276,7 @@ public class SurroundPlan
         for (int left = Swords; left > 0; half -= s.swordGap)
         {
             bool last = half - s.swordGap < s.captainMinRing + s.captainInset;
-            int count = last ? left : Mathf.Min(left, Mathf.Max(1, Mathf.FloorToInt(8f * half / s.spacing)));
+            int count = last ? left : Mathf.Min(left, Mathf.Max(1, Mathf.FloorToInt(8f * half / RingSpacing)));
             swordRings.Add((count, half));
             left -= count;
         }
