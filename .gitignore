@@ -30,3 +30,14 @@ Thumbs.db
 # Unity crash backups
 /Assets/_Recovery/
 /Assets/_Recovery.meta
+
+# Rocky Hills Environment (paid). Folder name is a guess until imported; check `git status` after importing
+/Assets/*[Rr]ocky*[Hh]ills*
+/Assets/*[Rr]ocky*[Hh]ills*.meta
+/Assets/*[Ww]hitebark*
+/Assets/Toby Fredson/
+/Assets/Toby Fredson.meta
+
+# Anything generated from paid packs (terrain data, baked lighting) goes here, never committed
+/Assets/_Project/PaidData/
+/Assets/_Project/PaidData.meta
